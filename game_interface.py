@@ -18,7 +18,7 @@ class GameInterface:
         self.hpbar = ui_elements.HPBar(self.ui_group, self.logic, self)
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, self)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
-        self.map_renderer = map_renderer.MapRenderer(self.logic)
+        self.map_renderer = map_renderer.MapRenderer(self)
 
     def handle_events(self) -> None:
         for event in pg.event.get():

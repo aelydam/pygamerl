@@ -21,6 +21,7 @@ class MapHPBar(pg.sprite.Sprite):
         self.parent = parent
         self.fill = None
         self.is_in_fov = None
+        self.rect: pg.Rect
 
     def update(self):
         x, y = self.parent.rect.x, self.parent.rect.bottom
@@ -176,3 +177,24 @@ class Minimap(pg.sprite.Sprite):
         self.image = pg.surfarray.make_surface(grid.astype(np.uint8))
         self.image.set_colorkey((1, 1, 1))
         self.image = pg.transform.scale_by(self.image, self.scale)
+
+
+class EntityTooltip(pg.sprite.Sprite):
+    def __init__(self, parent: map_renderer.EntitySprite):
+        self._layer = map_renderer.UI_LAYER
+        super().__init__(parent.group)
+        self.parent = parent
+        self.group = parent.group
+        self.entity = parent.entity
+        text = self.entity.__class__.__name__
+        self.image: pg.Surface = \
+            self.group.interface.font.render(text, False, "#FFFFFF", "#000000")
+        self.image.set_colorkey("#000000")
+        self.rect = self.image.get_rect(topleft=parent.hpbar.rect.bottomleft)
+
+    def update(self):
+        if self.parent is None or not self.parent.alive():
+            return self.kill()
+        self.rect = self.image.get_rect(
+            topleft=self.parent.hpbar.rect.bottomleft)
+        super().update()

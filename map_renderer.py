@@ -35,6 +35,7 @@ class EntitySprite(pg.sprite.Sprite):
                     consts.TILE_SIZE, consts.TILE_SIZE))
         self.image = self.tile
         self.hpbar = ui_elements.MapHPBar(group, self)
+        self.tooltip = None
 
     def update(self):
         if self.entity.hp < 1:
@@ -43,6 +44,7 @@ class EntitySprite(pg.sprite.Sprite):
         x, y = self.interface.grid_to_screen(self.entity.x, self.entity.y)
         self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
         is_in_fov = self.game_logic.player.fov[self.entity.x, self.entity.y]
+        self.update_tooltip()
         if is_in_fov == self.is_in_fov:
             return
         self.is_in_fov = is_in_fov
@@ -51,6 +53,19 @@ class EntitySprite(pg.sprite.Sprite):
         else:
             self.image = pg.Surface((1, 1)).convert_alpha()
             self.image.fill("#00000000")
+
+    def update_tooltip(self):
+        x, y = pg.mouse.get_pos()
+        pressed = pg.key.get_pressed()
+        self.hovered = self.rect.collidepoint(x, y)
+        show_tooltip = self.hovered or pressed[pg.K_RALT] or pressed[pg.K_LALT]
+        show_tooltip = show_tooltip and self.is_in_fov
+        show_tooltip = show_tooltip and self.entity.hp > 0
+        if show_tooltip and self.tooltip is None:
+            self.tooltip = ui_elements.EntityTooltip(self)
+        elif not show_tooltip and self.tooltip is not None:
+            self.tooltip.kill()
+            self.tooltip = None
 
 
 class TileSprite(pg.sprite.Sprite):
@@ -91,10 +106,11 @@ class TileSprite(pg.sprite.Sprite):
 
 
 class MapRenderer(pg.sprite.LayeredUpdates):
-    def __init__(self, logic: GameLogic):
+    def __init__(self, interface: GameInterface):
         super().__init__()
-        self.logic = logic
-        self.map = logic.map
+        self.interface = interface
+        self.logic = interface.logic
+        self.map = self.logic.map
         self.shape = pg.display.get_window_size()
         self.tile_sprite_map: dict[tuple[int, int], TileSprite] = {}
         self.tile_surfaces: dict[int, pg.Surface] = {}
