@@ -134,7 +134,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         y = self.shape[1]//2 + (j-pj) * consts.TILE_SIZE
         return (x, y)
 
-    def screen_to_grid(self, x: int, y, int) -> tuple[int, int]:
+    def screen_to_grid(self, x: int, y: int) -> tuple[int, int]:
         pi, pj = self.logic.player.x, self.logic.player.y
         i = (x - self.shape[0]//2) // consts.TILE_SIZE + pi
         j = (y - self.shape[1]//2) // consts.TILE_SIZE + pj
