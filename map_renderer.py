@@ -108,12 +108,13 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.void_surdace = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
         self.void_surdace.fill("#000000")
         self.tile_surfaces[0] = self.tilesheet.subsurface(
-            (consts.TILE_SIZE, consts.TILE_SIZE,
+            (0, consts.TILE_SIZE,
              consts.TILE_SIZE, consts.TILE_SIZE))
         self.tile_surfaces[1] = self.void_surdace.copy()
         self.tile_surfaces[1].fill("#222034")
         self.tile_surfaces[2] = self.tilesheet.subsurface(
-            (0, consts.TILE_SIZE, consts.TILE_SIZE, consts.TILE_SIZE))
+            (consts.TILE_SIZE, consts.TILE_SIZE,
+             consts.TILE_SIZE, consts.TILE_SIZE))
         for k, v in self.tile_surfaces.items():
             self.dark_surfaces[k] = pg.transform.grayscale(v)
             self.dark_surfaces[k].fill(

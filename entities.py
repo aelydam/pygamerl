@@ -25,7 +25,7 @@ class Entity:
         self.update_fov()
 
     def update_fov(self):
-        transparency = self.game_logic.map != 0
+        transparency = self.game_logic.map == 1
         self.fov = tcod.map.compute_fov(
             transparency, (self.x, self.y), self.fov_radius,
             algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST)

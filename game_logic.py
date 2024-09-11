@@ -41,6 +41,10 @@ class GameLogic:
                     self.map[x, y] = 1
                 else:
                     break
+        # Find wall tiles that are above floor tiles
+        cond = (self.map[:, 1:] == 1) & (self.map[:, :-1] == 0)
+        self.map[:, :-1] = np.where(cond, 2, self.map[:, :-1])
+
         self.explored = np.full(consts.MAP_SHAPE, False)
 
     def init_player(self):
@@ -91,7 +95,7 @@ class GameLogic:
         return pathfinder.path_to(target).tolist()
 
     def is_walkable(self, x: int, y: int) -> bool:
-        if self.map[x, y] == 0:
+        if self.map[x, y] != 1:
             return False
         for e in self.entities:
             if e.x == x and e.y == y:
