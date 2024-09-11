@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 import numpy as np
 import tcod
@@ -5,19 +7,24 @@ import tcod
 import consts
 import entities
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import actions
+    import game_interface
+
 
 class GameLogic:
-    def __init__(self, interface):
-        self.entities = []
+    def __init__(self, interface: game_interface.GameInterface):
+        self.entities: list[entities.Entity] = []
         self.current_turn = -1
         self.interface = interface
-        self.input_action = None
-        self.message_log = []
-        self.last_action = None
+        self.input_action: actions.Action | None = None
+        self.message_log: list[str] = []
+        self.last_action: actions.Action | None = None
         self.init_map()
         self.init_player()
 
-    def log(self, text):
+    def log(self, text: str):
         self.message_log.append(text)
 
     def init_map(self):
