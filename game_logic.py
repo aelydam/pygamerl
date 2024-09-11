@@ -55,10 +55,10 @@ class GameLogic:
             self.entities.remove(entity)
             return
         if isinstance(entity, entities.Player):
-            if self.input_action is None:
-                return
-            else:
+            if self.input_action is not None and self.input_action.can():
                 action = self.input_action
+            else:
+                return
         else:
             action = entity.next_action()
         if action is not None:

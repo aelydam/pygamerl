@@ -18,7 +18,7 @@ class MapHPBar(pg.sprite.Sprite):
                  parent: map_renderer.EntitySprite):
         super().__init__(group)
         self.parent = parent
-        self.fill = 0
+        self.fill = None
         self.is_in_fov = None
 
     def update(self):
@@ -32,7 +32,9 @@ class MapHPBar(pg.sprite.Sprite):
         is_in_fov = self.parent.is_in_fov
         if fill == self.fill and self.is_in_fov == is_in_fov:
             return
-        if fill > self.fill:
+        if self.fill is None:
+            self.fill = fill
+        elif fill > self.fill:
             self.fill += 1
         elif fill < self.fill:
             self.fill -= 1
@@ -57,13 +59,15 @@ class HPBar(pg.sprite.Sprite):
         self.game_logic = game_logic
         self.font: pg.font.Font = interface.font
         self.rect = pg.Rect(16, 16, 200, 20)
-        self.fill = 0
+        self.fill = None
 
     def update(self):
         player = self.game_logic.player
         fill = int(self.rect.width * player.hp / player.max_hp)
         if fill == self.fill:
             return
+        if self.fill is None:
+            self.fill = fill
         if fill > self.fill:
             self.fill += 1
         elif fill < self.fill:
@@ -105,11 +109,11 @@ class MessageLog(pg.sprite.Sprite):
         if last_text == self.last_text and log_len == self.log_len:
             return
         self.image.fill("#00000000")
-        for i in range(1, min(11, log_len)):
+        for i in range(1, min(11, log_len+1)):
             text = self.game_logic.message_log[-i]
             surf = self.font.render(text, False, "#FFFFFF", "#000000")
             surf.set_colorkey("#000000")
-            self.image.blit(surf, (0, i*20))
+            self.image.blit(surf, (0, (i - 1)*20))
 
 
 class Popup(pg.sprite.Sprite):

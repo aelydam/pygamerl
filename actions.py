@@ -72,7 +72,7 @@ class AttackAction(Action):
             self.damage = 0
             text += "Miss!"
         self.actor.game_logic.log(text)
-        if self.target.hp < 0:
+        if self.target.hp < 1:
             if isinstance(self.target, entities.Player):
                 self.actor.game_logic.log("You die!")
             else:
