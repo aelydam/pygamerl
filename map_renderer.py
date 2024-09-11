@@ -115,14 +115,14 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.tile_sprite_map: dict[tuple[int, int], TileSprite] = {}
         self.tile_surfaces: dict[int, pg.Surface] = {}
         self.dark_surfaces: dict[int, pg.Surface] = {}
-        self.dark_tint = "#303030"
+        self.dark_tint = consts.UNEXPLORED_TINT
         self.tilesheet = pg.image.load('32rogues/tiles.png').convert_alpha()
         self.create_surfaces()
         self.create_sprites()
 
     def create_surfaces(self):
         self.void_surdace = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
-        self.void_surdace.fill("#000000")
+        self.void_surdace.fill(consts.BACKGROUND_COLOR)
         self.tile_surfaces[0] = self.tilesheet.subsurface(
             (0, consts.TILE_SIZE,
              consts.TILE_SIZE, consts.TILE_SIZE))

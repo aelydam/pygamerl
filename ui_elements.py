@@ -45,11 +45,11 @@ class MapHPBar(pg.sprite.Sprite):
         if not is_in_fov:
             self.image.fill("#00000000")
             return
-        self.image.fill("#808080")
+        self.image.fill(consts.HPBAR_BG_COLOR)
         if self.fill >= self.rect.width // 2:
-            color = '#00FF00'
+            color = consts.HPBAR_GOOD_COLOR
         else:
-            color = '#FF0000'
+            color = consts.HPBAR_BAD_COLOR
         pg.draw.rect(self.image, color,
                      pg.Rect(0, 0, self.fill, self.rect.height))
 
@@ -75,16 +75,15 @@ class HPBar(pg.sprite.Sprite):
         elif fill < self.fill:
             self.fill -= 1
         if self.fill >= self.rect.width // 2:
-            color = '#00FF00'
+            color = consts.HPBAR_GOOD_COLOR
         else:
-            color = '#FF0000'
+            color = consts.HPBAR_BAD_COLOR
         self.image = pg.Surface(self.rect.size)
-        self.image.fill("#808080")
+        self.image.fill(consts.HPBAR_BG_COLOR)
         pg.draw.rect(self.image, color,
                      pg.Rect(0, 0, self.fill, self.rect.height))
         surf = self.font.render(f"{player.hp}/{player.max_hp}", False,
-                                '#000000', '#FFFFFF')
-        surf.set_colorkey("#FFFFFF")
+                                consts.HPBAR_TEXT_COLOR)
         self.image.blit(surf,
                         surf.get_rect(center=(self.rect.width//2,
                                               self.rect.height//2)))
@@ -113,8 +112,7 @@ class MessageLog(pg.sprite.Sprite):
         self.image.fill("#00000000")
         for i in range(1, min(11, log_len+1)):
             text = self.game_logic.message_log[-i]
-            surf = self.font.render(text, False, "#FFFFFF", "#000000")
-            surf.set_colorkey("#000000")
+            surf = self.font.render(text, False, consts.LOG_TEXT_COLOR, None)
             self.image.blit(surf, (0, (i - 1)*20))
 
 
@@ -133,8 +131,8 @@ class Popup(pg.sprite.Sprite):
         if text == '0':
             text = 'MISS'
         self.image: pg.Surface = \
-            self.interface.font.render(text, False, "#FFFFFF", "#000000")
-        self.image.set_colorkey("#000000")
+            self.interface.font.render(text, False, consts.POPUP_TEXT_COLOR,
+                                       None)
 
     def update(self):
         if self.counter > consts.TILE_SIZE:
@@ -148,7 +146,7 @@ class Popup(pg.sprite.Sprite):
 
 
 class Minimap(pg.sprite.Sprite):
-    def __init__(self, group, game_logic):
+    def __init__(self, group: pg.sprite.Group, game_logic: GameLogic):
         super().__init__(group)
         self.game_logic = game_logic
         self.scale = 4
@@ -188,8 +186,8 @@ class EntityTooltip(pg.sprite.Sprite):
         self.entity = parent.entity
         text = self.entity.__class__.__name__
         self.image: pg.Surface = \
-            self.group.interface.font.render(text, False, "#FFFFFF", "#000000")
-        self.image.set_colorkey("#000000")
+            self.group.interface.font.render(text, False,
+                                             consts.TOOLTIP_TEXT_COLOR, None)
         self.rect = self.image.get_rect(topleft=parent.hpbar.rect.bottomleft)
 
     def update(self):

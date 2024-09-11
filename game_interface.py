@@ -64,7 +64,7 @@ class GameInterface:
             self.logic.last_action = None
         self.map_renderer.update()
         self.ui_group.update()
-        self.screen.fill("#000000")
+        self.screen.fill(consts.BACKGROUND_COLOR)
         self.map_renderer.draw(self.screen)
         self.ui_group.draw(self.screen)
         pg.display.flip()
