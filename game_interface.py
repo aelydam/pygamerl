@@ -14,33 +14,11 @@ class GameInterface:
         self.clock = pg.time.Clock()
         self.font = pg.font.Font()
         self.logic = game_logic.GameLogic(self)
-        self.sprite_group = pg.sprite.Group()
         self.ui_group = pg.sprite.Group()
-        self.tilesheet = pg.image.load('32rogues/tiles.png').convert_alpha()
         self.hpbar = ui_elements.HPBar(self.ui_group, self.logic, self)
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, self)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
-        self.init_sprites()
-
-    def init_sprites(self):
-        for x in range(consts.MAP_SHAPE[0]):
-            for y in range(consts.MAP_SHAPE[1]):
-                map_renderer.TileSprite(self.sprite_group, self, self.logic,
-                                        x, y)
-        for e in self.logic.entities:
-            map_renderer.EntitySprite(self.sprite_group, self, self.logic, e)
-
-    def grid_to_screen(self, i: int, j: int) -> tuple[int, int]:
-        pi, pj = self.logic.player.x, self.logic.player.y
-        x = consts.SCREEN_SHAPE[0]//2 + (i-pi) * consts.TILE_SIZE
-        y = consts.SCREEN_SHAPE[1]//2 + (j-pj) * consts.TILE_SIZE
-        return (x, y)
-
-    def screen_to_grid(self, x: int, y, int) -> tuple[int, int]:
-        pi, pj = self.logic.player.x, self.logic.player.y
-        i = (x - consts.SCREEN_SHAPE[0]//2) // consts.TILE_SIZE + pi
-        j = (y - consts.SCREEN_SHAPE[1]//2) // consts.TILE_SIZE + pj
-        return (i, j)
+        self.map_renderer = map_renderer.MapRenderer(self.logic)
 
     def handle_events(self):
         for event in pg.event.get():
@@ -59,12 +37,12 @@ class GameInterface:
 
     def render(self):
         if isinstance(self.logic.last_action, actions.AttackAction):
-            ui_elements.Popup(self.ui_group, self.logic.last_action, self)
+            ui_elements.Popup(self.map_renderer, self.logic.last_action, self)
             self.logic.last_action = None
-        self.sprite_group.update()
+        self.map_renderer.update()
         self.ui_group.update()
         self.screen.fill("#000000")
-        self.sprite_group.draw(self.screen)
+        self.map_renderer.draw(self.screen)
         self.ui_group.draw(self.screen)
         pg.display.flip()
 

@@ -4,18 +4,19 @@ import numpy as np
 
 import consts
 import entities
+import map_renderer
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from game_logic import GameLogic
     from game_interface import GameInterface
-    import map_renderer
     import actions
 
 
 class MapHPBar(pg.sprite.Sprite):
-    def __init__(self, group: pg.sprite.Group,
+    def __init__(self, group: map_renderer.MapRenderer,
                  parent: map_renderer.EntitySprite):
+        self._layer = map_renderer.UI_LAYER
         super().__init__(group)
         self.parent = parent
         self.fill = None
@@ -117,11 +118,13 @@ class MessageLog(pg.sprite.Sprite):
 
 
 class Popup(pg.sprite.Sprite):
-    def __init__(self, group: pg.sprite.Group,
+    def __init__(self, group: map_renderer.MapRenderer,
                  action: actions.AttackAction,
                  interface: GameInterface):
+        self._layer = map_renderer.UI_LAYER
         super().__init__(group)
         self.action = action
+        self.group = group
         self.counter = 0
         self.interface = interface
         self.x, self.y = self.action.target.x, self.action.target.y
@@ -136,7 +139,7 @@ class Popup(pg.sprite.Sprite):
         if self.counter > consts.TILE_SIZE:
             self.kill()
             return
-        x, y = self.interface.grid_to_screen(self.x, self.y)
+        x, y = self.group.grid_to_screen(self.x, self.y)
         x += consts.TILE_SIZE // 2
         y -= self.counter // 2
         self.rect = self.image.get_rect(center=(x, y))
