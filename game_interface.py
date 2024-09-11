@@ -25,17 +25,18 @@ class GameInterface:
     def init_sprites(self):
         for x in range(consts.MAP_SHAPE[0]):
             for y in range(consts.MAP_SHAPE[1]):
-                map_renderer.TileSprite(self.sprite_group, self, self.logic, x, y)
+                map_renderer.TileSprite(self.sprite_group, self, self.logic,
+                                        x, y)
         for e in self.logic.entities:
             map_renderer.EntitySprite(self.sprite_group, self, self.logic, e)
 
-    def grid_to_screen(self, i, j):
+    def grid_to_screen(self, i: int, j: int) -> tuple[int, int]:
         pi, pj = self.logic.player.x, self.logic.player.y
         x = consts.SCREEN_SHAPE[0]//2 + (i-pi) * consts.TILE_SIZE
         y = consts.SCREEN_SHAPE[1]//2 + (j-pj) * consts.TILE_SIZE
         return (x, y)
 
-    def screen_to_grid(self, x, y):
+    def screen_to_grid(self, x: int, y, int) -> tuple[int, int]:
         pi, pj = self.logic.player.x, self.logic.player.y
         i = (x - consts.SCREEN_SHAPE[0]//2) // consts.TILE_SIZE + pi
         j = (y - consts.SCREEN_SHAPE[1]//2) // consts.TILE_SIZE + pj
@@ -48,7 +49,8 @@ class GameInterface:
             elif event.type == pg.KEYDOWN:
                 if event.key in consts.MOVE_KEYS.keys():
                     dx, dy = consts.MOVE_KEYS[event.key]
-                    self.logic.input_action = actions.BumpAction(dx, dy, self.logic.player)
+                    self.logic.input_action = \
+                        actions.BumpAction(dx, dy, self.logic.player)
                 elif event.key in consts.WAIT_KEYS:
                     self.logic.input_action = actions.WaitAction()
 

@@ -1,12 +1,18 @@
-
+from __future__ import annotations
 import random
 import tcod
 
 import actions
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from game_logic import GameLogic
+
 
 class Entity:
-    def __init__(self, game_logic, x, y, sprite, row, col):
+    def __init__(self, game_logic: GameLogic,
+                 x: int, y: int,
+                 sprite: str, row: int, col: int):
         self.game_logic = game_logic
         self.x, self.y = x, y
         self.sprite, self.row, self.col = sprite, row, col
@@ -26,7 +32,7 @@ class Entity:
 
 
 class Player(Entity):
-    def __init__(self, game_logic, x, y):
+    def __init__(self, game_logic: GameLogic, x: int, y: int):
         super().__init__(game_logic, x, y, '32rogues/rogues.png', 1, 1)
         self.max_hp = 40
         self.hp = 40
@@ -37,10 +43,10 @@ class Player(Entity):
 
 
 class Enemy(Entity):
-    def __init__(self, game_logic, x, y):
+    def __init__(self, game_logic: GameLogic, x: int, y: int):
         super().__init__(game_logic, x, y, '32rogues/monsters.png', 0, 0)
 
-    def next_action(self):
+    def next_action(self) -> actions.Action:
         player = self.game_logic.player
         px, py = player.x, player.y
         dist = ((px-self.x)**2 + (py-self.y)**2)**0.5
@@ -49,7 +55,8 @@ class Enemy(Entity):
             return actions.MoveAction(dx, dy, self)
         if dist < 1.5:
             return actions.AttackAction(player, self)
-        path = self.game_logic.astar_path((self.x, self.y), (player.x, player.y))
+        path = self.game_logic.astar_path(
+            (self.x, self.y), (player.x, player.y))
         if len(path) < 2:
             return actions.WaitAction()
         dx = path[1][0] - path[0][0]

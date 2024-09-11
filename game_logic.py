@@ -26,14 +26,15 @@ class GameLogic:
             x, y = (consts.MAP_SHAPE[0] // 2, consts.MAP_SHAPE[1] // 2)
             self.map[x, y] = 1
             for iterators in range(500):
-                dx, dy = random.choice([(0,1), (1,0), (0,-1), (-1,0)])
-                if x+dx>0 and y+dy>0 and x+dx<consts.MAP_SHAPE[0]-1 and y+dy<consts.MAP_SHAPE[1]-1:
+                dx, dy = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])
+                if x + dx > 0 and x + dx < consts.MAP_SHAPE[0] - 1 and \
+                        y + dy > 0 and y + dy < consts.MAP_SHAPE[1] - 1:
                     x += dx
                     y += dy
                     self.map[x, y] = 1
                 else:
                     break
-        self.explored = np.zeros(consts.MAP_SHAPE)!=0
+        self.explored = np.full(consts.MAP_SHAPE, False)
 
     def init_player(self):
         x, y = np.where(self.map == 1)
@@ -68,18 +69,21 @@ class GameLogic:
             self.current_turn = 0
         self.entities[self.current_turn].update_fov()
 
-    def astar_path(self, origin, target):
+    def astar_path(self,
+                   origin: tuple[int, int],
+                   target: tuple[int, int]) -> list[tuple[int, int]]:
         cost = self.map.copy()
         for e in self.entities:
             cost[e.x, e.y] = 0
         cost[origin[0], origin[1]] = 1
         cost[target[0], target[1]] = 1
-        graph = tcod.path.SimpleGraph(cost=cost.astype(np.int8), cardinal=5, diagonal=7)
+        graph = tcod.path.SimpleGraph(cost=cost.astype(np.int8),
+                                      cardinal=5, diagonal=7)
         pathfinder = tcod.path.Pathfinder(graph)
         pathfinder.add_root(origin)
         return pathfinder.path_to(target).tolist()
 
-    def is_walkable(self, x, y):
+    def is_walkable(self, x: int, y: int) -> bool:
         if self.map[x, y] == 0:
             return False
         for e in self.entities:

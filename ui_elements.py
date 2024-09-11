@@ -1,12 +1,21 @@
+from __future__ import annotations
 import pygame as pg
 import numpy as np
 
 import consts
 import entities
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from game_logic import GameLogic
+    from game_interface import GameInterface
+    import map_renderer
+    import actions
+
 
 class MapHPBar(pg.sprite.Sprite):
-    def __init__(self, group, parent):
+    def __init__(self, group: pg.sprite.Group,
+                 parent: map_renderer.EntitySprite):
         super().__init__(group)
         self.parent = parent
         self.fill = 0
@@ -37,11 +46,13 @@ class MapHPBar(pg.sprite.Sprite):
             color = '#00FF00'
         else:
             color = '#FF0000'
-        pg.draw.rect(self.image, color, pg.Rect(0, 0, self.fill, self.rect.height))
+        pg.draw.rect(self.image, color,
+                     pg.Rect(0, 0, self.fill, self.rect.height))
 
 
 class HPBar(pg.sprite.Sprite):
-    def __init__(self, group, game_logic, interface):
+    def __init__(self, group: pg.sprite.Group,
+                 game_logic: GameLogic, interface: GameInterface):
         super().__init__(group)
         self.game_logic = game_logic
         self.font: pg.font.Font = interface.font
@@ -63,14 +74,20 @@ class HPBar(pg.sprite.Sprite):
             color = '#FF0000'
         self.image = pg.Surface(self.rect.size)
         self.image.fill("#808080")
-        pg.draw.rect(self.image, color, pg.Rect(0, 0, self.fill, self.rect.height))
-        surf = self.font.render(f"{player.hp}/{player.max_hp}", False, '#000000', '#FFFFFF')
+        pg.draw.rect(self.image, color,
+                     pg.Rect(0, 0, self.fill, self.rect.height))
+        surf = self.font.render(f"{player.hp}/{player.max_hp}", False,
+                                '#000000', '#FFFFFF')
         surf.set_colorkey("#FFFFFF")
-        self.image.blit(surf, surf.get_rect(center=(self.rect.width//2, self.rect.height//2)))
+        self.image.blit(surf,
+                        surf.get_rect(center=(self.rect.width//2,
+                                              self.rect.height//2)))
 
 
 class MessageLog(pg.sprite.Sprite):
-    def __init__(self, group, game_logic, interface):
+    def __init__(self, group: pg.sprite.Group,
+                 game_logic: GameLogic,
+                 interface: GameInterface):
         super().__init__(group)
         self.rect = pg.Rect(16, 16+24, consts.SCREEN_SHAPE[0]//2, 24*10)
         self.image = pg.Surface(self.rect.size).convert_alpha()
@@ -96,7 +113,9 @@ class MessageLog(pg.sprite.Sprite):
 
 
 class Popup(pg.sprite.Sprite):
-    def __init__(self, group, action, interface):
+    def __init__(self, group: pg.sprite.Group,
+                 action: actions.AttackAction,
+                 interface: GameInterface):
         super().__init__(group)
         self.action = action
         self.counter = 0
@@ -105,7 +124,8 @@ class Popup(pg.sprite.Sprite):
         text = str(self.action.damage)
         if text == '0':
             text = 'MISS'
-        self.image = self.interface.font.render(text, False, "#FFFFFF", "#000000")
+        self.image: pg.Surface = \
+            self.interface.font.render(text, False, "#FFFFFF", "#000000")
         self.image.set_colorkey("#000000")
 
     def update(self):
@@ -115,7 +135,7 @@ class Popup(pg.sprite.Sprite):
         x, y = self.interface.grid_to_screen(self.x, self.y)
         x += consts.TILE_SIZE // 2
         y -= self.counter // 2
-        self.rect = self.image.get_rect(center=(x,y))
+        self.rect = self.image.get_rect(center=(x, y))
         self.counter += 1
 
 
@@ -124,7 +144,8 @@ class Minimap(pg.sprite.Sprite):
         super().__init__(group)
         self.game_logic = game_logic
         self.scale = 4
-        w, h = consts.MAP_SHAPE[0] * self.scale, consts.MAP_SHAPE[1] * self.scale
+        w = consts.MAP_SHAPE[0] * self.scale
+        h = consts.MAP_SHAPE[1] * self.scale
         x, y = consts.SCREEN_SHAPE[0] - w - 16, 16
         self.rect = pg.Rect(x, y, w, h)
 
@@ -135,10 +156,10 @@ class Minimap(pg.sprite.Sprite):
         fov = player.fov
         grid = np.ones((consts.MAP_SHAPE[0], consts.MAP_SHAPE[1], 3))
         for k in range(3):
-            grid[:,:,k] += 120 * explored * walkable
-            grid[:,:,k] += 120 * explored * walkable * fov
-            grid[:,:,k] += 40 * explored * (walkable==False)
-            grid[:,:,k] += 40 * explored * (walkable==False) * fov
+            grid[:, :, k] += 120 * explored * walkable
+            grid[:, :, k] += 120 * explored * walkable * fov
+            grid[:, :, k] += 40 * explored * (~walkable)
+            grid[:, :, k] += 40 * explored * (~walkable) * fov
         for e in self.game_logic.entities:
             if fov[e.x, e.y]:
                 if isinstance(e, entities.Player):
@@ -146,5 +167,5 @@ class Minimap(pg.sprite.Sprite):
                 else:
                     grid[e.x, e.y, :] = [255, 0, 0]
         self.image = pg.surfarray.make_surface(grid.astype(np.uint8))
-        self.image.set_colorkey((1,1,1))
+        self.image.set_colorkey((1, 1, 1))
         self.image = pg.transform.scale_by(self.image, self.scale)
