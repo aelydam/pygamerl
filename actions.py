@@ -38,6 +38,7 @@ class MoveAction(Action):
         self.actor.x += self.dx
         self.actor.y += self.dy
         self.actor.dx, self.actor.dy = self.dx, self.dy
+        self.actor.steps += (self.dx**2 + self.dy**2)**0.5
         return self
 
 
@@ -69,11 +70,14 @@ class AttackAction(Action):
             self.damage = random.randint(1, self.actor.damage)
             self.target.hp = max(0, self.target.hp - self.damage)
             text += f"{self.damage} points of damage!"
+            self.actor.hits += 1
         else:
+            self.actor.misses += 1
             self.damage = 0
             text += "Miss!"
         self.actor.map.logic.log(text)
         if self.target.hp < 1:
+            self.actor.kills += 1
             if isinstance(self.target, entities.Player):
                 self.actor.map.logic.log("You die!")
             else:

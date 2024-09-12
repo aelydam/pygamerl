@@ -197,3 +197,29 @@ class EntityTooltip(pg.sprite.Sprite):
         self.rect = self.image.get_rect(
             topleft=self.parent.hpbar.rect.bottomleft)
         super().update()
+
+
+class StatsHUD(pg.sprite.Sprite):
+    def __init__(self, group: pg.sprite.Group, interface: GameInterface):
+        super().__init__(group)
+        self.group = group
+        self.interface = interface
+        self.text = ''
+
+    def update(self):
+        turns = self.interface.logic.turn_count
+        player = self.interface.logic.player
+        font = self.interface.font
+        explored = self.interface.logic.map.explored
+        walkable = self.interface.logic.map.walkable
+        explored_ratio = 100 * np.sum(explored & walkable) / np.sum(walkable)
+
+        text = f'Turns: {turns:.0f}  Steps: {player.steps:.0f}  ' + \
+            f'Explored: {explored_ratio:.0f}%  ' + \
+            f'Hits: {player.hits:.0f}  Misses: {player.misses:.0f}  ' + \
+            f'Kills: {player.kills:.0f}'
+        if self.text == text:
+            return
+        self.image = font.render(text, False, "#FFFFFF")
+
+        self.rect = self.image.get_rect(topleft=(16, 0))

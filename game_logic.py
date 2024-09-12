@@ -36,6 +36,7 @@ class GameLogic:
         self.map = maps.Map(consts.MAP_SHAPE, self)
         procgen.generate(self.map)
         self.init_player()
+        self.next_turn()
 
     def init_player(self):
         x, y = np.where(self.map.walkable)
@@ -56,6 +57,7 @@ class GameLogic:
 
     def next_turn(self):
         self.turn_count += 1
+        self.current_turn = 0
 
     def next_entity(self):
         self.current_turn += 1

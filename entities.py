@@ -21,6 +21,10 @@ class Entity:
         self.damage = 6
         self.ac = 12
         self.fov_radius = consts.FOV_RADIUS
+        self.kills = 0
+        self.hits = 0
+        self.misses = 0
+        self.steps = 0
         self.update_fov()
 
     def update_fov(self):
