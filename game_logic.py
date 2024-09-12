@@ -6,6 +6,7 @@ import numpy as np
 import consts
 import entities
 import maps
+import procgen
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -27,14 +28,14 @@ class GameLogic:
         self.input_action = None
         self.message_log = []
         self.last_action = None
-        self.map = maps.Map.random_walk(consts.MAP_SHAPE, self)
-        self.map.spawn_enemies(consts.N_ENEMIES)
+        self.map = maps.Map(consts.MAP_SHAPE, self)
+        procgen.random_walk(self.map)
         self.init_player()
 
     def init_player(self):
         x, y = np.where(self.map.walkable)
         i = random.randint(0, len(x) - 1)
-        self.player = entities.Player(self, x[i], y[i])
+        self.player = entities.Player(self.map, x[i], y[i])
         self.entities.append(self.player)
 
     def log(self, text: str):

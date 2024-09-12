@@ -30,7 +30,7 @@ class MoveAction(Action):
         if new_x < 0 or new_y < 0 or new_x >= consts.MAP_SHAPE[0] or \
                 new_y >= consts.MAP_SHAPE[1]:
             return False
-        return self.actor.game_logic.map.is_walkable(new_x, new_y)
+        return self.actor.map.is_walkable(new_x, new_y)
 
     def perform(self) -> Action | None:
         if not self.can():
@@ -72,12 +72,12 @@ class AttackAction(Action):
         else:
             self.damage = 0
             text += "Miss!"
-        self.actor.game_logic.log(text)
+        self.actor.map.logic.log(text)
         if self.target.hp < 1:
             if isinstance(self.target, entities.Player):
-                self.actor.game_logic.log("You die!")
+                self.actor.map.logic.log("You die!")
             else:
-                self.actor.game_logic.log("The enemy dies!")
+                self.actor.map.logic.log("The enemy dies!")
         self.actor.dx = self.target.x - self.actor.x
         self.actor.dy = self.target.y - self.actor.y
         return self
@@ -90,7 +90,7 @@ class BumpAction(Action):
     def get_entity(self) -> entities.Entity | None:
         new_x = self.actor.x + self.dx
         new_y = self.actor.y + self.dy
-        for e in self.actor.game_logic.entities:
+        for e in self.actor.map.entities:
             if e.x == new_x and e.y == new_y and e != self.actor:
                 return e
         return None

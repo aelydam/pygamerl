@@ -3,17 +3,14 @@ import random
 import tcod
 
 import actions
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from game_logic import GameLogic
+import maps
 
 
 class Entity:
-    def __init__(self, game_logic: GameLogic,
+    def __init__(self, map_: maps.Map,
                  x: int, y: int,
                  sprite: str, row: int, col: int):
-        self.game_logic = game_logic
+        self.map = map_
         self.x, self.y = x, y
         self.dx, self.dy = 0, 0
         self.sprite, self.row, self.col = sprite, row, col
@@ -26,29 +23,29 @@ class Entity:
         self.update_fov()
 
     def update_fov(self):
-        transparency = self.game_logic.map.transparent
+        transparency = self.map.transparent
         self.fov = tcod.map.compute_fov(
             transparency, (self.x, self.y), self.fov_radius,
             algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST)
 
 
 class Player(Entity):
-    def __init__(self, game_logic: GameLogic, x: int, y: int):
-        super().__init__(game_logic, x, y, '32rogues/rogues.png', 1, 1)
+    def __init__(self, map_: maps.Map, x: int, y: int):
+        super().__init__(map_, x, y, '32rogues/rogues.png', 1, 1)
         self.max_hp = 40
         self.hp = 40
 
     def update_fov(self):
         super().update_fov()
-        self.game_logic.map.explored |= self.fov
+        self.map.explored |= self.fov
 
 
 class Enemy(Entity):
-    def __init__(self, game_logic: GameLogic, x: int, y: int):
-        super().__init__(game_logic, x, y, '32rogues/monsters.png', 0, 0)
+    def __init__(self, map_: maps.Map, x: int, y: int):
+        super().__init__(map_, x, y, '32rogues/monsters.png', 0, 0)
 
     def next_action(self) -> actions.Action:
-        player = self.game_logic.player
+        player = self.map.logic.player
         px, py = player.x, player.y
         dist = ((px-self.x)**2 + (py-self.y)**2)**0.5
         if player.hp < 1 or not self.fov[px, py]:
@@ -56,7 +53,7 @@ class Enemy(Entity):
             return actions.MoveAction(dx, dy, self)
         if dist < 1.5:
             return actions.AttackAction(player, self)
-        path = self.game_logic.map.astar_path(
+        path = self.map.astar_path(
             (self.x, self.y), (player.x, player.y))
         if len(path) < 2:
             return actions.WaitAction()
