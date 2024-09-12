@@ -79,6 +79,7 @@ class GameOverState(game_interface.State):
 
     def render(self, screen: pg.Surface):
         self.parent.render(screen)
+        screen.fill(consts.UNEXPLORED_TINT, special_flags=pg.BLEND_MULT)
         pos = (screen.width // 2, screen.height // 2)
         rect = self.text_surface.get_rect(center=pos)
         screen.blit(self.text_surface, rect)
