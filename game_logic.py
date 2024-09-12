@@ -29,7 +29,7 @@ class GameLogic:
         self.message_log = []
         self.last_action = None
         self.map = maps.Map(consts.MAP_SHAPE, self)
-        procgen.random_walk(self.map)
+        procgen.generate(self.map)
         self.init_player()
 
     def init_player(self):

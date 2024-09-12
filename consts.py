@@ -3,11 +3,11 @@ import numpy as np
 
 
 SCREEN_SHAPE = (1280, 720)
-MAP_SHAPE = (60, 60)
+FPS = 60
+
 TILE_SIZE = 32
 ENTITY_YOFFSET = TILE_SIZE // 4
-FPS = 60
-N_ENEMIES = 5
+
 MOVE_KEYS = {
     pg.K_UP: (0, -1),
     pg.K_DOWN: (0, 1),
@@ -23,6 +23,10 @@ MOVE_KEYS = {
     pg.K_c: (1, 1)
 }
 WAIT_KEYS = (pg.K_RETURN, pg.K_SPACE, pg.K_PERIOD)
+
+MAP_SHAPE = (60, 60)
+N_ENEMIES = 10
+ENEMY_RADIUS = 5
 
 BACKGROUND_COLOR = "#000000"
 UNEXPLORED_TINT = "#808080"
