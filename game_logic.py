@@ -15,27 +15,34 @@ if TYPE_CHECKING:
 
 class GameLogic:
     def __init__(self, interface: game_interface.GameInterface):
-        self.current_turn = -1
         self.interface = interface
-        self.input_action: actions.Action | None = None
-        self.message_log: list[str] = []
-        self.last_action: actions.Action | None = None
+        self.input_action: actions.Action | None
+        self.message_log: list[str]
+        self.last_action: actions.Action | None
+        self.map: maps.Map
+        self.new_game()
+
+    def new_game(self) -> None:
+        self.current_turn = -1
+        self.input_action = None
+        self.message_log = []
+        self.last_action = None
         self.map = maps.Map.random_walk(consts.MAP_SHAPE, self)
         self.map.spawn_enemies(consts.N_ENEMIES)
         self.init_player()
-
-    def log(self, text: str):
-        self.message_log.append(text)
-
-    @property
-    def entities(self):
-        return self.map.entities
 
     def init_player(self):
         x, y = np.where(self.map.walkable)
         i = random.randint(0, len(x) - 1)
         self.player = entities.Player(self, x[i], y[i])
         self.entities.append(self.player)
+
+    def log(self, text: str):
+        self.message_log.append(text)
+
+    @property
+    def entities(self) -> list[entities.Entity]:
+        return self.map.entities
 
     def update(self):
         if self.current_turn >= len(self.entities):

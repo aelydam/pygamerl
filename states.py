@@ -51,6 +51,9 @@ class InGameState(game_interface.State):
 
     def update(self):
         self.logic.update()
+        if self.logic.player.hp < 1:
+            self.interface.push(GameOverState(self))
+            return
         if isinstance(self.logic.last_action, actions.AttackAction):
             ui_elements.Popup(self.map_renderer, self.logic.last_action,
                               self.interface)
@@ -62,3 +65,32 @@ class InGameState(game_interface.State):
         screen.fill(consts.BACKGROUND_COLOR)
         self.map_renderer.draw(screen)
         self.ui_group.draw(screen)
+
+
+class GameOverState(game_interface.State):
+    def __init__(self, parent: InGameState):
+        self.parent = parent
+        self.interface = parent.interface
+        font = pg.Font(size=48)
+        self.text_surface = \
+            font.render("GAME OVER", False, consts.GAMEOVER_TEXT_COLOR, None)
+        self.text_surface = pg.transform.scale_by(self.text_surface, 3)
+
+    def render(self, screen: pg.Surface):
+        self.parent.render(screen)
+        pos = (screen.width // 2, screen.height // 2)
+        rect = self.text_surface.get_rect(center=pos)
+        screen.blit(self.text_surface, rect)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key in (pg.K_RETURN, pg.K_SPACE, pg.K_ESCAPE):
+                self.pop()
+        if event.type == pg.MOUSEBUTTONUP:
+            self.pop()
+
+    def pop(self):
+        self.interface.logic.new_game()
+        self.interface.pop()
+        self.interface.pop()
+        self.interface.push(InGameState(self.interface))
