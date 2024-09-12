@@ -72,7 +72,7 @@ class GameOverState(game_interface.State):
     def __init__(self, parent: InGameState):
         self.parent = parent
         self.interface = parent.interface
-        font = pg.Font(size=48)
+        font = pg.Font(consts.FONTNAME, consts.FONTSIZE * 3)
         self.text_surface = \
             font.render("GAME OVER", False, consts.GAMEOVER_TEXT_COLOR, None)
         self.text_surface = pg.transform.scale_by(self.text_surface, 3)

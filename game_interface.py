@@ -24,7 +24,7 @@ class GameInterface:
         pg.init()
         self.screen = pg.display.set_mode(consts.SCREEN_SHAPE)
         self.clock = pg.time.Clock()
-        self.font = pg.font.Font()
+        self.font = pg.font.Font(consts.FONTNAME, consts.FONTSIZE)
         self.logic = game_logic.GameLogic(self)
         self.state_stack: list[State] = []
 
