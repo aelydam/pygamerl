@@ -48,11 +48,14 @@ class Map:
     def astar_path(self,
                    origin: tuple[int, int],
                    target: tuple[int, int]) -> list[tuple[int, int]]:
+        # Create walking cost matrix
         cost = self.walkable * 1
         for e in self.entities:
             cost[e.x, e.y] = 0
         cost[origin[0], origin[1]] = 1
         cost[target[0], target[1]] = 1
+        # Use tcod pathfinding stuff
+        # diagonal uses 7 and cardinal 5 because 7/5=1.4 ~= sqrt(2)
         graph = tcod.path.SimpleGraph(cost=cost.astype(np.int8),
                                       cardinal=5, diagonal=7)
         pathfinder = tcod.path.Pathfinder(graph)

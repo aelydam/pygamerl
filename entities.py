@@ -44,6 +44,7 @@ class Player(Entity):
 
     def update_fov(self):
         super().update_fov()
+        # Set visible tiles as explored
         self.map.explored |= self.fov
 
 
@@ -56,13 +57,17 @@ class Enemy(Entity):
         player = self.map.logic.player
         px, py = player.x, player.y
         dist = ((px-self.x)**2 + (py-self.y)**2)**0.5
+        # Move if player dead or not in FOV
         if player.hp < 1 or not self.fov[px, py]:
             dx, dy = random.randint(-1, 1), random.randint(-1, 1)
             return actions.MoveAction(dx, dy, self)
+        # Attack player if in reach
         if dist < 1.5:
             return actions.AttackAction(player, self)
+        # Move towards player
         path = self.map.astar_path(
             (self.x, self.y), (player.x, player.y))
+        # Wait if path not found
         if len(path) < 2:
             return actions.WaitAction()
         dx = path[1][0] - path[0][0]

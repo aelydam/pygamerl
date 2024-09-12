@@ -11,7 +11,7 @@ import entities
 
 
 def add_walls(map_: maps.Map):
-    # Add walls
+    # Find tiles that are void but are neighbors to a floor
     walls = (funcs.moore(map_.tiles == consts.TILE_FLOOR) > 0) & \
         (map_.tiles == consts.TILE_VOID)
     map_.tiles[walls] = consts.TILE_WALL
@@ -46,15 +46,21 @@ def spawn_enemies(map_: maps.Map, radius: int, max_count: int = 0):
 def random_walk(map_: maps.Map,
                 walkers: int = 5, steps: int = 500):
     # Random walk algorithm
+    # Repeat for each walker
     for walkers in range(walkers):
         x, y = (consts.MAP_SHAPE[0] // 2, consts.MAP_SHAPE[1] // 2)
         map_.tiles[x, y] = consts.TILE_FLOOR
+        # Walk each step
         for step in range(steps):
+            # Choose a random direction
             dx, dy = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])
+            # If next step is within map bounds
             if x + dx > 0 and x + dx < consts.MAP_SHAPE[0] - 1 and \
                     y + dy > 0 and y + dy < consts.MAP_SHAPE[1] - 1:
+                # Walk
                 x += dx
                 y += dy
+                # Set as floor
                 map_.tiles[x, y] = consts.TILE_FLOOR
             else:
                 break

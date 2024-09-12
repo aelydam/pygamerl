@@ -6,7 +6,6 @@ import ui_elements
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from game_logic import GameLogic
     from game_interface import GameInterface
     import entities
 
@@ -17,18 +16,13 @@ UI_LAYER = 2
 
 
 class EntitySprite(pg.sprite.Sprite):
-    def __init__(self, group: MapRenderer,
-                 interface: GameInterface,
-                 game_logic: GameLogic,
-                 entity: entities.Entity):
+    def __init__(self, group: MapRenderer, entity: entities.Entity):
         self._layer = ENTITY_LAYER
         super().__init__(group)
         self.group = group
         self.entity = entity
-        self.game_logic = game_logic
-        self.interface = interface
-        self.is_in_fov = None
-        self.flip = None
+        self.is_in_fov: bool | None = None
+        self.flip: bool | None = None
         tilesheet = pg.image.load(self.entity.sprite).convert_alpha()
         self.tile = tilesheet.subsurface(
             pg.Rect(self.entity.row*consts.TILE_SIZE,
@@ -37,16 +31,16 @@ class EntitySprite(pg.sprite.Sprite):
         self.flip_tile = pg.transform.flip(self.tile, True, False)
         self.image = self.tile
         self.hpbar = ui_elements.MapHPBar(group, self)
-        self.tooltip = None
+        self.tooltip: ui_elements.EntityTooltip | None = None
 
-    def update(self):
+    def update(self) -> None:
         if self.entity.hp < 1:
             self.kill()
             return
         x, y = self.group.grid_to_screen(self.entity.x, self.entity.y)
         y -= consts.ENTITY_YOFFSET
         self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
-        is_in_fov = self.game_logic.player.fov[self.entity.x, self.entity.y]
+        is_in_fov = self.group.logic.player.fov[self.entity.x, self.entity.y]
         self.update_tooltip()
         flip = (self.entity.dx > 0) or \
             (self.entity.dx >= 0 and self.entity.dy > 0)
@@ -78,27 +72,24 @@ class EntitySprite(pg.sprite.Sprite):
 
 
 class TileSprite(pg.sprite.Sprite):
-    def __init__(self, group: MapRenderer,
-                 interface: GameInterface,
-                 game_logic: GameLogic,
-                 x: int, y: int):
+    def __init__(self, group: MapRenderer, x: int, y: int):
         self._layer = TILE_LAYER
         super().__init__(group)
         self.group = group
         self.x, self.y = x, y
-        self.game_logic = game_logic
-        self.interface = interface
         self.is_explored = False
         self.is_in_fov = False
-        self.tile_id = None
+        self.tile_id: int | None = None
         self.image = group.void_surface
 
-    def update(self):
-        x, y = self.interface.grid_to_screen(self.x, self.y)
+    def update(self) -> None:
+        x, y = self.group.grid_to_screen(self.x, self.y)
+        map_ = self.group.map
+        player = self.group.logic.player
         self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
-        tile_id = int(self.game_logic.map.tiles[self.x, self.y])
-        is_explored = self.game_logic.map.explored[self.x, self.y]
-        is_in_fov = self.game_logic.player.fov[self.x, self.y]
+        tile_id = int(map_.tiles[self.x, self.y])
+        is_explored = map_.explored[self.x, self.y]
+        is_in_fov = player.fov[self.x, self.y]
         if is_explored == self.is_explored and is_in_fov == self.is_in_fov \
                 and tile_id == self.tile_id:
             return
@@ -128,7 +119,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.create_surfaces()
         self.create_sprites()
 
-    def create_surfaces(self):
+    def create_surfaces(self) -> None:
         self.void_surface = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
         self.void_surface.fill(consts.BACKGROUND_COLOR)
         for i, tile in enumerate(consts.TILE_ARRAY):
@@ -149,13 +140,13 @@ class MapRenderer(pg.sprite.LayeredUpdates):
             self.dark_surfaces[i].fill(
                 self.dark_tint, special_flags=pg.BLEND_MULT)
 
-    def create_sprites(self):
+    def create_sprites(self) -> None:
         shape = self.map.shape
         for x in range(shape[0]):
             for y in range(shape[1]):
-                TileSprite(self, self, self.logic, x, y)
+                TileSprite(self, x, y)
         for e in self.logic.entities:
-            EntitySprite(self, self, self.logic, e)
+            EntitySprite(self, e)
 
     def grid_to_screen(self, i: int, j: int) -> tuple[int, int]:
         pi, pj = self.logic.player.x, self.logic.player.y
