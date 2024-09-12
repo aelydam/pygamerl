@@ -28,11 +28,13 @@ class EntitySprite(pg.sprite.Sprite):
         self.game_logic = game_logic
         self.interface = interface
         self.is_in_fov = None
+        self.flip = None
         tilesheet = pg.image.load(self.entity.sprite).convert_alpha()
         self.tile = tilesheet.subsurface(
             pg.Rect(self.entity.row*consts.TILE_SIZE,
                     self.entity.col*consts.TILE_SIZE,
                     consts.TILE_SIZE, consts.TILE_SIZE))
+        self.flip_tile = pg.transform.flip(self.tile, True, False)
         self.image = self.tile
         self.hpbar = ui_elements.MapHPBar(group, self)
         self.tooltip = None
@@ -46,11 +48,17 @@ class EntitySprite(pg.sprite.Sprite):
         self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
         is_in_fov = self.game_logic.player.fov[self.entity.x, self.entity.y]
         self.update_tooltip()
-        if is_in_fov == self.is_in_fov:
+        flip = (self.entity.dx > 0) or \
+            (self.entity.dx >= 0 and self.entity.dy > 0)
+        if is_in_fov == self.is_in_fov and flip == self.flip:
             return
         self.is_in_fov = is_in_fov
+        self.flip = flip
         if is_in_fov:
-            self.image = self.tile
+            if flip:
+                self.image = self.flip_tile
+            else:
+                self.image = self.tile
         else:
             self.image = pg.Surface((1, 1)).convert_alpha()
             self.image.fill("#00000000")

@@ -15,6 +15,7 @@ class Entity:
                  sprite: str, row: int, col: int):
         self.game_logic = game_logic
         self.x, self.y = x, y
+        self.dx, self.dy = 0, 0
         self.sprite, self.row, self.col = sprite, row, col
         self.max_hp = 10
         self.hp = 10

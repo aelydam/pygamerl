@@ -37,6 +37,7 @@ class MoveAction(Action):
             return None
         self.actor.x += self.dx
         self.actor.y += self.dy
+        self.actor.dx, self.actor.dy = self.dx, self.dy
         return self
 
 
@@ -77,6 +78,8 @@ class AttackAction(Action):
                 self.actor.game_logic.log("You die!")
             else:
                 self.actor.game_logic.log("The enemy dies!")
+        self.actor.dx = self.target.x - self.actor.x
+        self.actor.dy = self.target.y - self.actor.y
         return self
 
 
