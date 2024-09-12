@@ -25,6 +25,7 @@ class Entity:
         self.hits = 0
         self.misses = 0
         self.steps = 0
+        self.name = ''
         self.update_fov()
 
     def update_fov(self):
@@ -39,6 +40,7 @@ class Player(Entity):
         super().__init__(map_, x, y, '32rogues/rogues.png', 1, 1)
         self.max_hp = 40
         self.hp = 40
+        self.name = 'Player'
 
     def update_fov(self):
         super().update_fov()
@@ -48,6 +50,7 @@ class Player(Entity):
 class Enemy(Entity):
     def __init__(self, map_: maps.Map, x: int, y: int):
         super().__init__(map_, x, y, '32rogues/monsters.png', 0, 0)
+        self.name = 'Enemy'
 
     def next_action(self) -> actions.Action:
         player = self.map.logic.player

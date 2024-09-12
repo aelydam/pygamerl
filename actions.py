@@ -62,10 +62,7 @@ class AttackAction(Action):
         if not self.can():
             return None
         roll = random.randint(1, 20) + self.actor.tohit
-        if isinstance(self.actor, entities.Player):
-            text = "You attack the enemy: "
-        else:
-            text = "The enemy attacks you: "
+        text = f"{self.actor.name} attacks {self.target.name}: "
         if roll >= self.target.ac:
             self.damage = random.randint(1, self.actor.damage)
             self.target.hp = max(0, self.target.hp - self.damage)
@@ -78,10 +75,7 @@ class AttackAction(Action):
         self.actor.map.logic.log(text)
         if self.target.hp < 1:
             self.actor.kills += 1
-            if isinstance(self.target, entities.Player):
-                self.actor.map.logic.log("You die!")
-            else:
-                self.actor.map.logic.log("The enemy dies!")
+            self.actor.map.logic.log(f"{self.target.name} dies!")
         self.actor.dx = self.target.x - self.actor.x
         self.actor.dy = self.target.y - self.actor.y
         return self
