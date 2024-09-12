@@ -4,6 +4,7 @@ import tcod
 
 import actions
 import maps
+import consts
 
 
 class Entity:
@@ -19,7 +20,7 @@ class Entity:
         self.tohit = 4
         self.damage = 6
         self.ac = 12
-        self.fov_radius = 5
+        self.fov_radius = consts.FOV_RADIUS
         self.update_fov()
 
     def update_fov(self):
