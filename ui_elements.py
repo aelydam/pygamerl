@@ -157,10 +157,11 @@ class Minimap(pg.sprite.Sprite):
 
     def update(self):
         player = self.game_logic.player
-        walkable = self.game_logic.map == 1
-        explored = self.game_logic.explored
+        walkable = self.game_logic.map.walkable
+        explored = self.game_logic.map.explored
+        shape = self.game_logic.map.shape
         fov = player.fov
-        grid = np.ones((consts.MAP_SHAPE[0], consts.MAP_SHAPE[1], 3))
+        grid = np.ones((shape[0], shape[1], 3))
         for k in range(3):
             grid[:, :, k] += 120 * explored * walkable
             grid[:, :, k] += 120 * explored * walkable * fov

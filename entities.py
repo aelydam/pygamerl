@@ -25,7 +25,7 @@ class Entity:
         self.update_fov()
 
     def update_fov(self):
-        transparency = self.game_logic.map == 1
+        transparency = self.game_logic.map.transparent
         self.fov = tcod.map.compute_fov(
             transparency, (self.x, self.y), self.fov_radius,
             algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST)
@@ -39,7 +39,7 @@ class Player(Entity):
 
     def update_fov(self):
         super().update_fov()
-        self.game_logic.explored |= self.fov
+        self.game_logic.map.explored |= self.fov
 
 
 class Enemy(Entity):
@@ -55,7 +55,7 @@ class Enemy(Entity):
             return actions.MoveAction(dx, dy, self)
         if dist < 1.5:
             return actions.AttackAction(player, self)
-        path = self.game_logic.astar_path(
+        path = self.game_logic.map.astar_path(
             (self.x, self.y), (player.x, player.y))
         if len(path) < 2:
             return actions.WaitAction()

@@ -1,4 +1,5 @@
 import pygame as pg
+import numpy as np
 
 
 SCREEN_SHAPE = (1280, 720)
@@ -33,3 +34,22 @@ HPBAR_TEXT_COLOR = "#000000"
 LOG_TEXT_COLOR = "#FFFFFF"
 POPUP_TEXT_COLOR = "#FFFFFF"
 TOOLTIP_TEXT_COLOR = "#FFFFFF"
+
+
+TILE_DTYPE = np.dtype([
+    ('obstacle', bool), ('opaque', bool), ('color', '3B'), ('sprite', '2B')
+])
+TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int]]] = {
+    'void': (True, False, (0, 0, 0), (0, 0)),
+    'floor': (False, False, (34, 32, 52), (0, 0)),
+    'wall': (True, True, (90, 88, 117), (1, 2)),
+    'wall2': (True, True, (90, 88, 117), (2, 2))
+}
+TILE_ARRAY = np.asarray([
+    np.array(tile, dtype=TILE_DTYPE)
+    for tile in TILES.values()
+], dtype=TILE_DTYPE)
+TILE_VOID = list(TILES.keys()).index('void')
+TILE_FLOOR = list(TILES.keys()).index('floor')
+TILE_WALL = list(TILES.keys()).index('wall')
+TILE_WALL2 = list(TILES.keys()).index('wall2')

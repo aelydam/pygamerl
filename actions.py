@@ -30,7 +30,7 @@ class MoveAction(Action):
         if new_x < 0 or new_y < 0 or new_x >= consts.MAP_SHAPE[0] or \
                 new_y >= consts.MAP_SHAPE[1]:
             return False
-        return self.actor.game_logic.is_walkable(new_x, new_y)
+        return self.actor.game_logic.map.is_walkable(new_x, new_y)
 
     def perform(self) -> Action | None:
         if not self.can():

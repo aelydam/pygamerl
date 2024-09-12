@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import random
 import numpy as np
-import tcod
 
 import consts
 import entities
+import maps
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -15,47 +15,27 @@ if TYPE_CHECKING:
 
 class GameLogic:
     def __init__(self, interface: game_interface.GameInterface):
-        self.entities: list[entities.Entity] = []
         self.current_turn = -1
         self.interface = interface
         self.input_action: actions.Action | None = None
         self.message_log: list[str] = []
         self.last_action: actions.Action | None = None
-        self.init_map()
+        self.map = maps.Map.random_walk(consts.MAP_SHAPE, self)
+        self.map.spawn_enemies(consts.N_ENEMIES)
         self.init_player()
 
     def log(self, text: str):
         self.message_log.append(text)
 
-    def init_map(self):
-        self.map = np.zeros(consts.MAP_SHAPE)
-        for walkers in range(5):
-            x, y = (consts.MAP_SHAPE[0] // 2, consts.MAP_SHAPE[1] // 2)
-            self.map[x, y] = 1
-            for iterators in range(500):
-                dx, dy = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])
-                if x + dx > 0 and x + dx < consts.MAP_SHAPE[0] - 1 and \
-                        y + dy > 0 and y + dy < consts.MAP_SHAPE[1] - 1:
-                    x += dx
-                    y += dy
-                    self.map[x, y] = 1
-                else:
-                    break
-        # Find wall tiles that are above floor tiles
-        cond = (self.map[:, 1:] == 1) & (self.map[:, :-1] == 0)
-        self.map[:, :-1] = np.where(cond, 2, self.map[:, :-1])
-
-        self.explored = np.full(consts.MAP_SHAPE, False)
+    @property
+    def entities(self):
+        return self.map.entities
 
     def init_player(self):
-        x, y = np.where(self.map == 1)
-        i = list(range(len(x)))
-        random.shuffle(i)
-        self.player = entities.Player(self, x[i[0]], y[i[0]])
+        x, y = np.where(self.map.walkable)
+        i = random.randint(0, len(x) - 1)
+        self.player = entities.Player(self, x[i], y[i])
         self.entities.append(self.player)
-        for k in range(1, consts.N_ENEMIES+1):
-            enemy = entities.Enemy(self, x[i[k]], y[i[k]])
-            self.entities.append(enemy)
 
     def update(self):
         if self.current_turn >= len(self.entities):
@@ -79,25 +59,3 @@ class GameLogic:
         if self.current_turn >= len(self.entities):
             self.current_turn = 0
         self.entities[self.current_turn].update_fov()
-
-    def astar_path(self,
-                   origin: tuple[int, int],
-                   target: tuple[int, int]) -> list[tuple[int, int]]:
-        cost = self.map.copy()
-        for e in self.entities:
-            cost[e.x, e.y] = 0
-        cost[origin[0], origin[1]] = 1
-        cost[target[0], target[1]] = 1
-        graph = tcod.path.SimpleGraph(cost=cost.astype(np.int8),
-                                      cardinal=5, diagonal=7)
-        pathfinder = tcod.path.Pathfinder(graph)
-        pathfinder.add_root(origin)
-        return pathfinder.path_to(target).tolist()
-
-    def is_walkable(self, x: int, y: int) -> bool:
-        if self.map[x, y] != 1:
-            return False
-        for e in self.entities:
-            if e.x == x and e.y == y:
-                return False
-        return True

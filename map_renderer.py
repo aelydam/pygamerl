@@ -82,14 +82,13 @@ class TileSprite(pg.sprite.Sprite):
         self.is_explored = False
         self.is_in_fov = False
         self.tile_id = None
-        self.image = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE)) \
-            .convert_alpha()
+        self.image = group.void_surface
 
     def update(self):
         x, y = self.interface.grid_to_screen(self.x, self.y)
         self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
-        tile_id = self.game_logic.map[self.x, self.y]
-        is_explored = self.game_logic.explored[self.x, self.y]
+        tile_id = int(self.game_logic.map.tiles[self.x, self.y])
+        is_explored = self.game_logic.map.explored[self.x, self.y]
         is_in_fov = self.game_logic.player.fov[self.x, self.y]
         if is_explored == self.is_explored and is_in_fov == self.is_in_fov \
                 and tile_id == self.tile_id:
@@ -98,7 +97,7 @@ class TileSprite(pg.sprite.Sprite):
         self.is_explored = is_explored
         self.is_in_fov = is_in_fov
         if not is_explored:
-            self.group.void_surdace
+            self.group.void_surface
         elif not is_in_fov:
             self.image = self.group.dark_surfaces[tile_id]
         else:
@@ -121,19 +120,24 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.create_sprites()
 
     def create_surfaces(self):
-        self.void_surdace = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
-        self.void_surdace.fill(consts.BACKGROUND_COLOR)
-        self.tile_surfaces[0] = self.tilesheet.subsurface(
-            (0, consts.TILE_SIZE,
-             consts.TILE_SIZE, consts.TILE_SIZE))
-        self.tile_surfaces[1] = self.void_surdace.copy()
-        self.tile_surfaces[1].fill("#222034")
-        self.tile_surfaces[2] = self.tilesheet.subsurface(
-            (consts.TILE_SIZE, consts.TILE_SIZE,
-             consts.TILE_SIZE, consts.TILE_SIZE))
-        for k, v in self.tile_surfaces.items():
-            self.dark_surfaces[k] = pg.transform.grayscale(v)
-            self.dark_surfaces[k].fill(
+        self.void_surface = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
+        self.void_surface.fill(consts.BACKGROUND_COLOR)
+        for i, tile in enumerate(consts.TILE_ARRAY):
+            color = tile[2]
+            sprite = tile[3]
+            self.tile_surfaces[i] = \
+                pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
+            self.tile_surfaces[i].fill(color)
+            if sprite[0] > 0 and sprite[1] > 0:
+                src = self.tilesheet.subsurface(
+                    (consts.TILE_SIZE * (sprite[0] - 1),
+                     consts.TILE_SIZE * (sprite[1] - 1),
+                     consts.TILE_SIZE, consts.TILE_SIZE))
+                self.tile_surfaces[i].blit(src, (0, 0))
+            # Dark tile
+            self.dark_surfaces[i] = \
+                pg.transform.grayscale(self.tile_surfaces[i])
+            self.dark_surfaces[i].fill(
                 self.dark_tint, special_flags=pg.BLEND_MULT)
 
     def create_sprites(self):
