@@ -58,10 +58,10 @@ class InGameState(game_interface.State):
             ui_elements.Popup(self.map_renderer, self.logic.last_action,
                               self.interface)
             self.logic.last_action = None
-        self.map_renderer.update()
-        self.ui_group.update()
 
     def render(self, screen: pg.Surface):
+        self.map_renderer.update()
+        self.ui_group.update()
         screen.fill(consts.BACKGROUND_COLOR)
         self.map_renderer.draw(screen)
         self.ui_group.draw(screen)
