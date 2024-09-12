@@ -41,7 +41,8 @@ class EntitySprite(pg.sprite.Sprite):
         if self.entity.hp < 1:
             self.kill()
             return
-        x, y = self.interface.grid_to_screen(self.entity.x, self.entity.y)
+        x, y = self.group.grid_to_screen(self.entity.x, self.entity.y)
+        y -= consts.ENTITY_YOFFSET
         self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
         is_in_fov = self.game_logic.player.fov[self.entity.x, self.entity.y]
         self.update_tooltip()
