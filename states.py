@@ -12,11 +12,12 @@ class InGameState(game_interface.State):
         self.interface = interface
         self.logic = interface.logic
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
-        self.hpbar = ui_elements.HPBar(self.ui_group, self.logic, interface)
-        self.log = ui_elements.MessageLog(self.ui_group, self.logic, interface)
+        font = interface.font
+        self.hpbar = ui_elements.HPBar(self.ui_group, self.logic, font)
+        self.log = ui_elements.MessageLog(self.ui_group, self.logic, font)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
         self.map_renderer = map_renderer.MapRenderer(interface)
-        self.hud = ui_elements.StatsHUD(self.ui_group, self.interface)
+        self.hud = ui_elements.StatsHUD(self.ui_group, self.logic, font)
 
     def handle_event(self, event: pg.Event):
         if event.type == pg.KEYDOWN:
@@ -57,7 +58,7 @@ class InGameState(game_interface.State):
             return
         if isinstance(self.logic.last_action, actions.AttackAction):
             ui_elements.Popup(self.map_renderer, self.logic.last_action,
-                              self.interface)
+                              self.interface.font)
             self.logic.last_action = None
 
     def render(self, screen: pg.Surface):

@@ -65,7 +65,8 @@ class EntitySprite(pg.sprite.Sprite):
         show_tooltip = show_tooltip and self.is_in_fov
         show_tooltip = show_tooltip and self.entity.hp > 0
         if show_tooltip and self.tooltip is None:
-            self.tooltip = ui_elements.EntityTooltip(self)
+            self.tooltip = \
+                ui_elements.EntityTooltip(self, self.group.interface.font)
         elif not show_tooltip and self.tooltip is not None:
             self.tooltip.kill()
             self.tooltip = None

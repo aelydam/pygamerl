@@ -9,7 +9,6 @@ import map_renderer
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from game_logic import GameLogic
-    from game_interface import GameInterface
     import actions
 
 
@@ -56,10 +55,10 @@ class MapHPBar(pg.sprite.Sprite):
 
 class HPBar(pg.sprite.Sprite):
     def __init__(self, group: pg.sprite.Group,
-                 game_logic: GameLogic, interface: GameInterface):
+                 game_logic: GameLogic, font: pg.Font):
         super().__init__(group)
         self.game_logic = game_logic
-        self.font: pg.font.Font = interface.font
+        self.font: pg.font.Font = font
         self.rect = pg.Rect(16, 16, 200, 20)
         self.fill = None
 
@@ -92,7 +91,7 @@ class HPBar(pg.sprite.Sprite):
 class MessageLog(pg.sprite.Sprite):
     def __init__(self, group: pg.sprite.Group,
                  game_logic: GameLogic,
-                 interface: GameInterface):
+                 font: pg.Font):
         super().__init__(group)
         self.rect = pg.Rect(16, 16+24, consts.SCREEN_SHAPE[0]//2, 24*10)
         self.image = pg.Surface(self.rect.size).convert_alpha()
@@ -100,7 +99,7 @@ class MessageLog(pg.sprite.Sprite):
         self.game_logic = game_logic
         self.last_text = None
         self.log_len = 0
-        self.font = interface.font
+        self.font = font
 
     def update(self):
         log_len = len(self.game_logic.message_log)
@@ -119,20 +118,18 @@ class MessageLog(pg.sprite.Sprite):
 class Popup(pg.sprite.Sprite):
     def __init__(self, group: map_renderer.MapRenderer,
                  action: actions.AttackAction,
-                 interface: GameInterface):
+                 font: pg.Font):
         self._layer = map_renderer.UI_LAYER
         super().__init__(group)
         self.action = action
         self.group = group
         self.counter = 0
-        self.interface = interface
         self.x, self.y = self.action.target.x, self.action.target.y
         text = str(self.action.damage)
         if text == '0':
             text = 'MISS'
         self.image: pg.Surface = \
-            self.interface.font.render(text, False, consts.POPUP_TEXT_COLOR,
-                                       None)
+            font.render(text, False, consts.POPUP_TEXT_COLOR, None)
 
     def update(self):
         if self.counter > consts.TILE_SIZE:
@@ -179,7 +176,7 @@ class Minimap(pg.sprite.Sprite):
 
 
 class EntityTooltip(pg.sprite.Sprite):
-    def __init__(self, parent: map_renderer.EntitySprite):
+    def __init__(self, parent: map_renderer.EntitySprite, font: pg.Font):
         self._layer = map_renderer.UI_LAYER
         super().__init__(parent.group)
         self.parent = parent
@@ -187,8 +184,7 @@ class EntityTooltip(pg.sprite.Sprite):
         self.entity = parent.entity
         text = self.entity.name
         self.image: pg.Surface = \
-            self.group.interface.font.render(text, False,
-                                             consts.TOOLTIP_TEXT_COLOR, None)
+            font.render(text, False, consts.TOOLTIP_TEXT_COLOR, None)
         self.rect = self.image.get_rect(topleft=parent.hpbar.rect.bottomleft)
 
     def update(self):
@@ -200,19 +196,21 @@ class EntityTooltip(pg.sprite.Sprite):
 
 
 class StatsHUD(pg.sprite.Sprite):
-    def __init__(self, group: pg.sprite.Group, interface: GameInterface):
+    def __init__(self, group: pg.sprite.Group,
+                 logic: GameLogic,
+                 font: pg.Font):
         super().__init__(group)
         self.group = group
-        self.interface = interface
+        self.logic = logic
+        self.font = font
         self.text = ''
 
     def update(self):
-        turns = self.interface.logic.turn_count
-        player = self.interface.logic.player
-        font = self.interface.font
-        explored = self.interface.logic.map.explored
-        walkable = self.interface.logic.map.walkable
-        explored_ratio = 100 * np.sum(explored & walkable) / np.sum(walkable)
+        turns = self.logic.turn_count
+        player = self.logic.player
+        explored = self.logic.map.explored
+        walkable = self.logic.map.walkable
+        explored_ratio = 100 * np.sum(explored & walkable) // np.sum(walkable)
 
         text = f'Turns: {turns:.0f}  Steps: {player.steps:.0f}  ' + \
             f'Explored: {explored_ratio:.0f}%  ' + \
@@ -220,6 +218,6 @@ class StatsHUD(pg.sprite.Sprite):
             f'Kills: {player.kills:.0f}'
         if self.text == text:
             return
-        self.image = font.render(text, False, "#FFFFFF")
+        self.image = self.font.render(text, False, "#FFFFFF")
 
         self.rect = self.image.get_rect(topleft=(16, 0))
