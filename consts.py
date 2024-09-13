@@ -48,6 +48,8 @@ POPUP_TEXT_COLOR = "#FFFFFF"
 TOOLTIP_TEXT_COLOR = "#FFFFFF"
 GAMEOVER_TEXT_COLOR = "#FFFFFF"
 
+CURSOR_DEFAULT_COLOR = "#FFFFFF"
+CURSOR_IMPOSSIBLE_COLOR = "#FF0000"
 
 TILE_DTYPE = np.dtype([
     ('obstacle', bool), ('opaque', bool), ('color', '3B'), ('sprite', '2B')

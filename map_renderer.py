@@ -11,8 +11,9 @@ if TYPE_CHECKING:
 
 
 TILE_LAYER = 0
-ENTITY_LAYER = 1
-UI_LAYER = 2
+TILE_UI_LAYER = 1
+ENTITY_LAYER = 2
+UI_LAYER = 3
 
 
 class EntitySprite(pg.sprite.Sprite):
@@ -148,6 +149,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
                 TileSprite(self, x, y)
         for e in self.logic.entities:
             EntitySprite(self, e)
+        self.cursor_sprite = ui_elements.MapCursor(self)
 
     def grid_to_screen(self, i: int, j: int) -> tuple[int, int]:
         pi, pj = self.logic.player.x, self.logic.player.y

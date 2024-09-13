@@ -221,3 +221,40 @@ class StatsHUD(pg.sprite.Sprite):
         self.image = self.font.render(text, False, "#FFFFFF")
 
         self.rect = self.image.get_rect(topleft=(16, 0))
+
+
+class MapCursor(pg.sprite.Sprite):
+    def __init__(self, group: map_renderer.MapRenderer):
+        self._layer = map_renderer.TILE_UI_LAYER
+        super().__init__(group)
+        self.group = group
+        self.default_image = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE)) \
+            .convert_alpha()
+        self.default_image.fill("#FFFFFF40")
+        pg.draw.rect(
+            self.default_image, "#FFFFFF",
+            self.default_image.get_rect(topleft=(0, 0)), 2)
+        self.image: pg.Surface = self.default_image
+        self.blank_image = self.default_image.copy()
+        self.blank_image.fill("#00000000")
+        self.red_image = self.default_image.copy()
+        self.red_image.fill(
+            consts.CURSOR_IMPOSSIBLE_COLOR, special_flags=pg.BLEND_MULT)
+        self.default_image.fill(
+            consts.CURSOR_DEFAULT_COLOR, special_flags=pg.BLEND_MULT)
+
+    def update(self, *args, **kwargs) -> None:
+        mouse_x, mouse_y = pg.mouse.get_pos()
+        grid_x, grid_y = self.group.screen_to_grid(mouse_x, mouse_y)
+        x, y = self.group.grid_to_screen(grid_x, grid_y)
+        self.rect = self.image.get_rect(topleft=(x, y))
+        map_ = self.group.logic.map
+        in_bounds = map_.is_in_bounds(grid_x, grid_y)
+        is_explored = in_bounds and map_.explored[grid_x, grid_y]
+        is_walkable = in_bounds and map_.walkable[grid_x, grid_y]
+        if not is_explored:
+            self.image = self.blank_image
+        elif not is_walkable:
+            self.image = self.red_image
+        else:
+            self.image = self.default_image
