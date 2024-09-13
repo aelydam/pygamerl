@@ -185,7 +185,7 @@ class EntityTooltip(pg.sprite.Sprite):
         self.parent = parent
         self.group = parent.group
         self.entity = parent.entity
-        text = self.entity.__class__.__name__
+        text = self.entity.name
         self.image: pg.Surface = \
             self.group.interface.font.render(text, False,
                                              consts.TOOLTIP_TEXT_COLOR, None)
