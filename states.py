@@ -38,18 +38,7 @@ class InGameState(game_interface.State):
             if x == player.x and y == player.y:
                 self.logic.input_action = actions.WaitAction()
                 return
-            dx, dy = x - player.x, y - player.y
-            dist = (dx ** 2 + dy ** 2) ** 0.5
-            if dist <= 1.5:
-                self.logic.input_action = \
-                    actions.BumpAction(dx, dy, player)
-                return
-            path = self.logic.map.astar_path((player.x, player.y), (x, y))
-            if len(path) < 2:
-                return
-            dx = path[1][0] - path[0][0]
-            dy = path[1][1] - path[0][1]
-            self.logic.input_action = actions.BumpAction(dx, dy, player)
+            self.logic.input_action = actions.BumpAction.to((x, y), player)
 
     def update(self):
         self.logic.update()

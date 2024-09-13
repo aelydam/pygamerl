@@ -41,6 +41,25 @@ class MoveAction(Action):
         self.actor.steps += (self.dx**2 + self.dy**2)**0.5
         return self
 
+    @classmethod
+    def random(cls, actor: entities.Entity) -> MoveAction:
+        dx, dy = random.randint(-1, 1), random.randint(-1, 1)
+        return cls(dx, dy, actor)
+
+    @classmethod
+    def to(cls, target: tuple[int, int],
+           actor: entities.Entity) -> MoveAction | None:
+        dx, dy = target[0] - actor.x, target[1] - actor.y
+        dist = (dx ** 2 + dy ** 2) ** 0.5
+        if dist <= 1.5:
+            return cls(dx, dy, actor)
+        path = actor.map.astar_path((actor.x, actor.y), target)
+        if len(path) < 2:
+            return None
+        dx = path[1][0] - path[0][0]
+        dy = path[1][1] - path[0][1]
+        return cls(dx, dy, actor)
+
 
 class AttackAction(Action):
     def __init__(self, target: entities.Entity, actor: entities.Entity):
@@ -81,10 +100,7 @@ class AttackAction(Action):
         return self
 
 
-class BumpAction(Action):
-    def __init__(self, dx: int, dy: int, actor: entities.Entity):
-        self.dx, self.dy, self.actor = dx, dy, actor
-
+class BumpAction(MoveAction):
     def get_entity(self) -> entities.Entity | None:
         new_x = self.actor.x + self.dx
         new_y = self.actor.y + self.dy
@@ -94,20 +110,15 @@ class BumpAction(Action):
         return None
 
     def can(self) -> bool:
-        move = MoveAction(self.dx, self.dy, self.actor)
-        if move.can():
+        if super().can():
             return True
-        entity = self.get_entity()
-        return entity is not None
+        return self.get_entity() is not None
 
     def perform(self) -> Action | None:
         if not self.can():
             return None
-        move = MoveAction(self.dx, self.dy, self.actor)
-        if move.can():
-            return move.perform()
         entity = self.get_entity()
-        if entity is None:
-            return None
-        attack = AttackAction(entity, self.actor)
-        return attack.perform()
+        if entity is not None:
+            return AttackAction(entity, self.actor).perform()
+        else:
+            return super().perform()

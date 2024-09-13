@@ -1,5 +1,4 @@
 from __future__ import annotations
-import random
 import tcod
 
 import actions
@@ -56,20 +55,16 @@ class Enemy(Entity):
     def next_action(self) -> actions.Action:
         player = self.map.logic.player
         px, py = player.x, player.y
-        dist = ((px-self.x)**2 + (py-self.y)**2)**0.5
+        dist = ((px - self.x) ** 2 + (py - self.y) ** 2) ** 0.5
         # Move if player dead or not in FOV
         if player.hp < 1 or not self.fov[px, py]:
-            dx, dy = random.randint(-1, 1), random.randint(-1, 1)
-            return actions.MoveAction(dx, dy, self)
+            return actions.MoveAction.random(self)
         # Attack player if in reach
         if dist < 1.5:
             return actions.AttackAction(player, self)
         # Move towards player
-        path = self.map.astar_path(
-            (self.x, self.y), (player.x, player.y))
-        # Wait if path not found
-        if len(path) < 2:
+        move_to = actions.MoveAction.to((player.x, player.y), self)
+        if move_to is None:
             return actions.WaitAction()
-        dx = path[1][0] - path[0][0]
-        dy = path[1][1] - path[0][1]
-        return actions.MoveAction(dx, dy, self)
+        else:
+            return move_to
