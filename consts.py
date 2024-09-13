@@ -1,6 +1,9 @@
 import pygame as pg
 import numpy as np
+import pathlib
 
+
+GAME_PATH = pathlib.Path(__file__).parent
 
 SCREEN_SHAPE = (1280, 720)
 FPS = 60
