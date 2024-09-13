@@ -55,8 +55,7 @@ def random_walk(map_: maps.Map,
             # Choose a random direction
             dx, dy = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])
             # If next step is within map bounds
-            if x + dx > 0 and x + dx < consts.MAP_SHAPE[0] - 1 and \
-                    y + dy > 0 and y + dy < consts.MAP_SHAPE[1] - 1:
+            if map_.is_in_bounds(x + dx, y + dy):
                 # Walk
                 x += dx
                 y += dy

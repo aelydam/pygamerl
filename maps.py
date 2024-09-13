@@ -37,8 +37,12 @@ class Map:
     def transparent(self):
         return ~self.opaque
 
+    def is_in_bounds(self, x: int, y: int) -> bool:
+        return (x >= 0) and (x < self.shape[0]) and \
+            (y >= 0) and (y < self.shape[1])
+
     def is_walkable(self, x: int, y: int) -> bool:
-        if not self.walkable[x, y]:
+        if not self.is_in_bounds(x, y) or not self.walkable[x, y]:
             return False
         for e in self.entities:
             if e.x == x and e.y == y:

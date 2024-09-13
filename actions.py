@@ -1,7 +1,6 @@
 from __future__ import annotations
 import random
 
-import consts
 import entities
 
 
@@ -27,8 +26,7 @@ class MoveAction(Action):
             return False
         new_x = self.actor.x + self.dx
         new_y = self.actor.y + self.dy
-        if new_x < 0 or new_y < 0 or new_x >= consts.MAP_SHAPE[0] or \
-                new_y >= consts.MAP_SHAPE[1]:
+        if not self.actor.map.is_in_bounds(new_x, new_y):
             return False
         return self.actor.map.is_walkable(new_x, new_y)
 
