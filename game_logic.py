@@ -11,13 +11,11 @@ import procgen
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import actions
-    import game_interface
     from entities import Entity
 
 
 class GameLogic:
-    def __init__(self, interface: game_interface.GameInterface):
-        self.interface = interface
+    def __init__(self) -> None:
         self.input_action: actions.Action | None
         self.message_log: list[str]
         self.last_action: actions.Action | None

@@ -25,7 +25,7 @@ class GameInterface:
         self.screen = pg.display.set_mode(consts.SCREEN_SHAPE)
         self.clock = pg.time.Clock()
         self.font = pg.font.Font(consts.FONTNAME, consts.FONTSIZE)
-        self.logic = game_logic.GameLogic(self)
+        self.logic = game_logic.GameLogic()
         self.state_stack: list[State] = []
 
     def push(self, state: State):
