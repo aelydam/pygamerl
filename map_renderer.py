@@ -117,7 +117,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.tile_surfaces: dict[int, pg.Surface] = {}
         self.dark_surfaces: dict[int, pg.Surface] = {}
         self.dark_tint = consts.UNEXPLORED_TINT
-        self.tilesheet = pg.image.load('32rogues/tiles.png').convert_alpha()
+        self.tilesheet = pg.image.load('tiles-dcss/brick_gray_0.png').convert_alpha()
         self.create_surfaces()
         self.create_sprites()
 

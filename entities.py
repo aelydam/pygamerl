@@ -36,7 +36,7 @@ class Entity:
 
 class Player(Entity):
     def __init__(self, map_: maps.Map, x: int, y: int):
-        super().__init__(map_, x, y, '32rogues/rogues.png', 1, 1)
+        super().__init__(map_, x, y, 'tiles-dcss/human_male.png', 0, 0)
         self.max_hp = 40
         self.hp = 40
         self.name = 'Player'
@@ -49,7 +49,7 @@ class Player(Entity):
 
 class Enemy(Entity):
     def __init__(self, map_: maps.Map, x: int, y: int):
-        super().__init__(map_, x, y, '32rogues/monsters.png', 0, 0)
+        super().__init__(map_, x, y, 'tiles-dcss/skeleton_humanoid_small_new.png', 0, 0)
         self.name = 'Enemy'
 
     def next_action(self) -> actions.Action:

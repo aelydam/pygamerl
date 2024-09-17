@@ -54,8 +54,8 @@ Clicking on an explored floor tile will take the first step towards it.
 ## Credits
 
 **Tileset**:
-[32rogues](https://sethbb.itch.io/32rogues),
-Seth Boyles
+[Dungeon Crawl Stone Soup 32x32 Tiles](https://opengameart.org/content/dungeon-crawl-32x32-tiles),
+bt [multiple artists](tiles-dcss/README.txt), licensed under CC0
 
 **Font**:
 [IBM VGA 9x8](https://int10h.org/oldschool-pc-fonts/fontlist/font?ibm_vga_9x8),

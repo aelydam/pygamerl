@@ -15,11 +15,6 @@ def add_walls(map_: maps.Map):
     walls = (funcs.moore(map_.tiles == consts.TILE_FLOOR) > 0) & \
         (map_.tiles == consts.TILE_VOID)
     map_.tiles[walls] = consts.TILE_WALL
-    # Find wall tiles that are above floor tiles
-    cond = (map_.tiles[:, 1:] == consts.TILE_FLOOR) & \
-        (map_.tiles[:, :-1] == consts.TILE_WALL)
-    map_.tiles[:, :-1] = \
-        np.where(cond, consts.TILE_WALL2, map_.tiles[:, :-1])
     return map_
 
 
