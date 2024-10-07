@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import random
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 import consts
@@ -8,7 +10,6 @@ import entities
 import maps
 import procgen
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import actions
     from entities import Entity
@@ -86,6 +87,7 @@ class GameLogic:
             action = entity.next_action()
         if action is not None:
             self.last_action = action.perform()
+            entity.update_fov()
         self.input_action = None
         self.next_entity()
         return not in_fov
