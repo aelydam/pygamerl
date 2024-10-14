@@ -1,7 +1,11 @@
+attrs==24.2.0
+cattrs==24.1.2
 cffi==1.17.1
-numpy==2.1.1
+numpy==2.1.2
 pycparser==2.22
 pygame-ce==2.5.1
 scipy==1.14.1
+sentinel-value==1.0.0
 tcod==16.2.3
+tcod-ecs==5.2.3
 typing_extensions==4.12.2
