@@ -1,10 +1,13 @@
 import pygame as pg
 
-import game_interface
-import ui_elements
-import map_renderer
-import consts
 import actions
+import comp
+import consts
+import entities
+import game_interface
+import map_renderer
+import maps
+import ui_elements
 
 
 class InGameState(game_interface.State):
@@ -24,7 +27,7 @@ class InGameState(game_interface.State):
             if event.key in consts.MOVE_KEYS.keys():
                 dx, dy = consts.MOVE_KEYS[event.key]
                 self.logic.input_action = \
-                    actions.BumpAction(dx, dy, self.logic.player)
+                    actions.BumpAction(self.logic.player, (dx, dy))
             elif event.key in consts.WAIT_KEYS:
                 self.logic.input_action = actions.WaitAction()
         elif event.type == pg.MOUSEBUTTONUP:
@@ -32,17 +35,18 @@ class InGameState(game_interface.State):
                 return
             x, y = self.map_renderer.screen_to_grid(event.pos[0],
                                                     event.pos[1])
-            if not self.logic.map.explored[x, y]:
+            if not maps.is_explored(self.logic.map, (x, y)):
                 return
             player = self.logic.player
-            if x == player.x and y == player.y:
+            px, py = player.components[comp.Position].xy
+            if x == px and y == py:
                 self.logic.input_action = actions.WaitAction()
                 return
-            self.logic.input_action = actions.BumpAction.to((x, y), player)
+            self.logic.input_action = actions.BumpAction.to(player, (x, y))
 
     def update(self):
         self.logic.update()
-        if self.logic.player.hp < 1:
+        if not entities.is_alive(self.logic.player):
             self.interface.push(GameOverState(self))
             return
         if isinstance(self.logic.last_action, actions.AttackAction):

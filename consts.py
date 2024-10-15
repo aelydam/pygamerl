@@ -1,7 +1,7 @@
-import pygame as pg
-import numpy as np
 import pathlib
 
+import numpy as np
+import pygame as pg
 
 GAME_PATH = pathlib.Path(__file__).parent
 
@@ -66,3 +66,4 @@ TILE_ARRAY = np.asarray([
 TILE_VOID = list(TILES.keys()).index('void')
 TILE_FLOOR = list(TILES.keys()).index('floor')
 TILE_WALL = list(TILES.keys()).index('wall')
+

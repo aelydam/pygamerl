@@ -1,70 +1,87 @@
 from __future__ import annotations
+
 import tcod
+import tcod.ecs as ecs
 
 import actions
-import maps
+import comp
 import consts
 
 
-class Entity:
-    def __init__(self, map_: maps.Map,
-                 x: int, y: int,
-                 sprite: str, row: int, col: int):
-        self.map = map_
-        self.x, self.y = x, y
-        self.dx, self.dy = 0, 0
-        self.sprite, self.row, self.col = sprite, row, col
-        self.max_hp = 10
-        self.hp = 10
-        self.tohit = 4
-        self.damage = 6
-        self.ac = 12
-        self.fov_radius = consts.FOV_RADIUS
-        self.kills = 0
-        self.hits = 0
-        self.misses = 0
-        self.steps = 0
-        self.name = ''
-        self.update_fov()
-
-    def update_fov(self):
-        transparency = self.map.transparent
-        self.fov = tcod.map.compute_fov(
-            transparency, (self.x, self.y), self.fov_radius,
-            algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST)
+def dist(origin: ecs.Entity | comp.Position | tuple[int, int],
+         target: ecs.Entity | comp.Position | tuple[int, int]) -> float:
+    if isinstance(origin, ecs.Entity):
+        origin = origin.components[comp.Position]
+    if isinstance(target, ecs.Entity):
+        target = target.components[comp.Position]
+    if isinstance(origin, comp.Position):
+        if isinstance(target, comp.Position) and origin.depth != target.depth:
+            return 255
+        origin = origin.xy
+    if isinstance(target, comp.Position):
+        target = target.xy
+    return sum([(origin[i] - target[i])**2 for i in range(2)])**0.5
 
 
-class Player(Entity):
-    def __init__(self, map_: maps.Map, x: int, y: int):
-        super().__init__(map_, x, y, 'tiles-dcss/human_male.png', 0, 0)
-        self.max_hp = 40
-        self.hp = 40
-        self.name = 'Player'
-
-    def update_fov(self):
-        super().update_fov()
-        # Set visible tiles as explored
-        self.map.explored |= self.fov
-
-
-class Enemy(Entity):
-    def __init__(self, map_: maps.Map, x: int, y: int):
-        super().__init__(map_, x, y, 'tiles-dcss/skeleton_humanoid_small_new.png', 0, 0)
-        self.name = 'Enemy'
-
-    def next_action(self) -> actions.Action:
-        player = self.map.logic.player
-        px, py = player.x, player.y
-        dist = ((px - self.x) ** 2 + (py - self.y) ** 2) ** 0.5
-        # Move if player dead or not in FOV
-        if player.hp < 1 or not self.fov[px, py]:
-            return actions.MoveAction.random(self)
-        # Attack player if in reach
-        if dist < 1.5:
-            return actions.AttackAction(player, self)
-        # Move towards player
-        move_to = actions.MoveAction.to((player.x, player.y), self)
-        if move_to is None:
-            return actions.WaitAction()
+def update_fov(actor: ecs.Entity):
+    if comp.Map not in actor.relation_tag or comp.Position not in actor.components or comp.FOVRadius not in actor.components:
+        return
+    map_entity = actor.relation_tag[comp.Map]
+    grid = map_entity.components[comp.Tiles]
+    transparency = ~consts.TILE_ARRAY["opaque"][grid]
+    xy = actor.components[comp.Position].xy
+    radius = actor.components[comp.FOVRadius]
+    fov = tcod.map.compute_fov(transparency, xy, radius, algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST)
+    actor.components[comp.FOV] = fov
+    if comp.Player in actor.tags:
+        if comp.Explored not in map_entity.components:
+            map_entity.components[comp.Explored] = fov.copy()
         else:
-            return move_to
+            map_entity.components[comp.Explored] |= fov
+
+
+def is_in_fov(actor: ecs.Entity, pos: comp.Position | ecs.Entity | tuple[int, int]) -> bool:
+    if not is_alive(actor):
+        return False
+    apos = actor.components[comp.Position]
+    if isinstance(pos, ecs.Entity):
+        if actor == pos:
+            return True
+        pos = pos.components[comp.Position]
+    if isinstance(pos, comp.Position):
+        if apos.depth != pos.depth:
+            return False
+        pos = pos.xy
+    d = dist(apos, pos)
+    if d <= 1.5:
+        return True
+    if comp.FOVRadius not in actor.components:
+        return False
+    radius = actor.components[comp.FOVRadius]
+    if d > radius:
+        return False
+    if comp.FOV not in actor.components:
+        return False
+    return actor.components[comp.FOV][pos]
+
+
+def is_alive(actor: ecs.Entity) -> bool:
+    return actor.components.get(comp.HP, 0) > 0
+
+
+def enemy_action(actor: ecs.Entity) -> actions.Action:
+    player = actor.registry[comp.Player]
+    # Move if player dead or not in FOV
+    if not is_alive(player) or not is_in_fov(actor, player):
+        return actions.MoveAction.random(actor)
+
+    player_pos = player.components[comp.Position]
+    # Attack player if in reach
+    if dist(actor, player_pos) < 1.5:
+        return actions.AttackAction(actor, player)
+    # Move towards player
+    move_to = actions.MoveAction.to(actor, player_pos.xy)
+    if move_to is None:
+        return actions.WaitAction()
+    else:
+        return move_to

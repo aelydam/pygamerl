@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import random
+from collections import deque
 from typing import TYPE_CHECKING
 
 import numpy as np
+import tcod.ecs as ecs
 
+import comp
 import consts
 import entities
 import maps
@@ -12,88 +15,126 @@ import procgen
 
 if TYPE_CHECKING:
     import actions
-    from entities import Entity
 
 
 class GameLogic:
     def __init__(self) -> None:
         self.input_action: actions.Action | None
-        self.message_log: list[str]
         self.last_action: actions.Action | None
-        self.map: maps.Map
         self.turn_count = 0
         self.frame_count = 0
         self.new_game()
 
+    @property
+    def map(self) -> ecs.Entity:
+        return self.reg[comp.Player].relation_tag[comp.Map]
+
+    @property
+    def message_log(self) -> list[str]:
+        return self.reg[None].components[comp.MessageLog]
+
+    @property
+    def player(self) -> ecs.Entity:
+        return self.reg[comp.Player]
+
     def new_game(self) -> None:
+        self.reg = ecs.Registry()
+
         self.current_turn = -1
         self.input_action = None
-        self.message_log = []
+        self.reg[None].components[comp.MessageLog] = []
+        self.reg[None].components[comp.InitiativeTracker] = deque([])
+
         self.last_action = None
         self.turn_count = 0
         self.frame_count = 0
-        self.map = maps.Map(consts.MAP_SHAPE, self)
-        procgen.generate(self.map)
+        maps.get_map(self.reg, 0)
         self.init_player()
         self.next_turn()
 
     def init_player(self):
-        x, y = np.where(self.map.walkable)
+        map_entity = maps.get_map(self.reg, 0)
+        grid = map_entity.components[comp.Tiles]
+        walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+        x, y = np.where(walkable)
         i = random.randint(0, len(x) - 1)
-        self.player = entities.Player(self.map, x[i], y[i])
-        self.entities.append(self.player)
+        self.player.clear()
+        self.player.components[comp.Name] = "Player"
+        self.player.components[comp.Position] = comp.Position((x[i], y[i]), 0)
+        self.player.components[comp.Sprite] = comp.Sprite("tiles-dcss/human_male", (0, 0))
+        self.player.components[comp.MaxHP] = 16
+        self.player.components[comp.HP] = 16
+        self.player.components[comp.FOVRadius] = 8
+        self.player.components[comp.Initiative] = 1
+        self.player.tags |= {comp.Player, comp.Obstacle}
+        self.player.relation_tag[comp.Map] = map_entity
+        entities.update_fov(self.player)
 
     def log(self, text: str):
         self.message_log.append(text)
 
     @property
-    def entities(self) -> list[Entity]:
-        return self.map.entities
+    def initiative(self) -> deque[ecs.Entity]:
+        return self.reg[None].components[comp.InitiativeTracker]
 
     @property
-    def current_entity(self) -> Entity:
-        return self.entities[self.current_turn]
+    def current_entity(self) -> ecs.Entity:
+        return self.initiative[0]
 
     def next_turn(self):
         self.turn_count += 1
         self.current_turn = 0
+        self.initiative.clear()
+        query = self.reg.Q.all_of(
+            components=[comp.Position, comp.Initiative],
+            relations=[(comp.Map, self.map)]
+        )
+        for e in query:
+            e.components[comp.Initiative] += 1
+            if e.components[comp.Initiative] > 0:
+                self.initiative.append(e)
 
     def next_entity(self):
-        self.current_turn += 1
-        if self.current_turn >= len(self.entities):
-            self.current_turn = 0
+        self.initiative.popleft()
+        if len(self.initiative) < 1:
             self.next_turn()
-        self.current_entity.update_fov()
+            return False
+        entities.update_fov(self.current_entity)
+        return True
 
     def update_entity(self) -> bool:
+        if len(self.initiative) < 1:
+            self.next_turn()
+            return False
         entity = self.current_entity
-        in_fov = self.player.fov[self.current_entity.x, self.current_entity.y]
+        in_fov = entities.is_in_fov(entity, self.player)
         action = None
         if entity is None:
-            self.next_entity()
-            return True
-        if entity.hp < 1:
-            self.entities.remove(entity)
-            self.next_entity()
-            return True
-        if isinstance(entity, entities.Player):
+            return self.next_entity()
+        if not entities.is_alive(entity):
+            return self.next_entity()
+        if comp.Player in entity.tags:
             if self.input_action is not None and self.input_action.can():
                 action = self.input_action
             else:
                 return False  # Waiting for player input
-        elif isinstance(entity, entities.Enemy):
-            if in_fov and (self.frame_count + self.current_turn) % 5 != 0:
-                return False
-            action = entity.next_action()
+        else:
+            action = entities.enemy_action(entity)
         if action is not None:
-            self.last_action = action.perform()
-            entity.update_fov()
+            result = action.perform()
+            self.last_action = result
+            entities.update_fov(entity)
+            if result is not None:
+                if result.message != "":
+                    self.log(result.message)
+                if comp.Initiative in entity.components:
+                    entity.components[comp.Initiative] -= result.cost
         self.input_action = None
         self.next_entity()
         return not in_fov
 
     def update(self):
         self.frame_count += 1
-        for e in self.entities:
+        for _ in range(100):
             if not self.update_entity():
                 break

@@ -1,15 +1,19 @@
 from __future__ import annotations
-import pygame as pg
-import numpy as np
 
+from typing import TYPE_CHECKING
+
+import numpy as np
+import pygame as pg
+
+import comp
 import consts
 import entities
 import map_renderer
+import maps
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from game_logic import GameLogic
     import actions
+    from game_logic import GameLogic
 
 
 class MapHPBar(pg.sprite.Sprite):
@@ -20,16 +24,20 @@ class MapHPBar(pg.sprite.Sprite):
         self.parent = parent
         self.fill = None
         self.is_in_fov = None
-        self.rect: pg.Rect
+        self.rect: pg.Rect = pg.Rect(0, -4, consts.TILE_SIZE, 4)
+        self.image = pg.Surface(self.rect.size).convert_alpha()
 
     def update(self):
         x, y = self.parent.rect.x, self.parent.rect.bottom
         w, h = self.parent.rect.width, 4
         self.rect = pg.Rect(x, y, w, h)
         entity = self.parent.entity
-        if entity.hp < 1:
+        if entities.is_alive(entity):
             self.kill()
-        fill = int(self.rect.width * entity.hp / entity.max_hp)
+            return
+        hp = entity.components.get(comp.HP)
+        max_hp = entity.components.get(comp.MaxHP)
+        fill = int(self.rect.width * hp / max_hp)
         is_in_fov = self.parent.is_in_fov
         if fill == self.fill and self.is_in_fov == is_in_fov:
             return
@@ -40,7 +48,6 @@ class MapHPBar(pg.sprite.Sprite):
         elif fill < self.fill:
             self.fill -= 1
         self.parent.is_in_fov = is_in_fov
-        self.image = pg.Surface(self.rect.size).convert_alpha()
         if not is_in_fov:
             self.image.fill("#00000000")
             return
@@ -64,7 +71,9 @@ class HPBar(pg.sprite.Sprite):
 
     def update(self):
         player = self.game_logic.player
-        fill = int(self.rect.width * player.hp / player.max_hp)
+        hp = player.components.get(comp.HP)
+        max_hp = player.components.get(comp.MaxHP)
+        fill = int(self.rect.width * hp / max_hp)
         if fill == self.fill:
             return
         if self.fill is None:
@@ -81,7 +90,7 @@ class HPBar(pg.sprite.Sprite):
         self.image.fill(consts.HPBAR_BG_COLOR)
         pg.draw.rect(self.image, color,
                      pg.Rect(0, 0, self.fill, self.rect.height))
-        surf = self.font.render(f"{player.hp}/{player.max_hp}", False,
+        surf = self.font.render(f"{hp}/{max_hp}", False,
                                 consts.HPBAR_TEXT_COLOR)
         self.image.blit(surf,
                         surf.get_rect(center=(self.rect.width//2,
@@ -124,7 +133,7 @@ class Popup(pg.sprite.Sprite):
         self.action = action
         self.group = group
         self.counter = 0
-        self.x, self.y = self.action.target.x, self.action.target.y
+        self.x, self.y = self.action.xy
         text = str(self.action.damage)
         if text == '0':
             text = 'MISS'
@@ -137,7 +146,7 @@ class Popup(pg.sprite.Sprite):
             return
         x, y = self.group.grid_to_screen(self.x, self.y)
         x += consts.TILE_SIZE // 2
-        y -= self.counter // 2
+        y -= self.counter
         self.rect = self.image.get_rect(center=(x, y))
         self.counter += 1
 
@@ -154,22 +163,33 @@ class Minimap(pg.sprite.Sprite):
 
     def update(self):
         player = self.game_logic.player
-        walkable = self.game_logic.map.walkable
-        explored = self.game_logic.map.explored
-        shape = self.game_logic.map.shape
-        fov = player.fov
+        map_ = self.game_logic.map
+        grid = map_.components[comp.Tiles]
+        walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+        explored = map_.components[comp.Explored]
+        shape = grid.shape
+        if comp.FOV in player.components:
+            fov = player.components[comp.FOV]
+        else:
+            fov = np.full(shape, False)
         grid = np.ones((shape[0], shape[1], 3))
         for k in range(3):
             grid[:, :, k] += 120 * explored * walkable
             grid[:, :, k] += 120 * explored * walkable * fov
             grid[:, :, k] += 40 * explored * (~walkable)
             grid[:, :, k] += 40 * explored * (~walkable) * fov
-        for e in self.game_logic.entities:
-            if fov[e.x, e.y]:
-                if isinstance(e, entities.Player):
-                    grid[e.x, e.y, :] = [0, 0, 255]
+        #
+        query = map_.registry.Q.all_of(
+            components=[comp.Position, comp.HP],
+            relations=[(comp.Map, map_)]
+        )
+        for e in query:
+            ex, ey = e.components[comp.Position].xy
+            if fov[ex, ey]:
+                if comp.Player in e.tags:
+                    grid[ex, ey, :] = [0, 0, 255]
                 else:
-                    grid[e.x, e.y, :] = [255, 0, 0]
+                    grid[ex, ey, :] = [255, 0, 0]
         self.image = pg.surfarray.make_surface(grid.astype(np.uint8))
         self.image.set_colorkey((1, 1, 1))
         self.image = pg.transform.scale_by(self.image, self.scale)
@@ -182,7 +202,7 @@ class EntityTooltip(pg.sprite.Sprite):
         self.parent = parent
         self.group = parent.group
         self.entity = parent.entity
-        text = self.entity.name
+        text = self.entity.components[comp.Name]
         self.image: pg.Surface = \
             font.render(text, False, consts.TOOLTIP_TEXT_COLOR, None)
         self.rect = self.image.get_rect(topleft=parent.hpbar.rect.bottomleft)
@@ -206,16 +226,16 @@ class StatsHUD(pg.sprite.Sprite):
         self.text = ''
 
     def update(self):
-        turns = self.logic.turn_count
-        player = self.logic.player
-        explored = self.logic.map.explored
-        walkable = self.logic.map.walkable
-        explored_ratio = 100 * np.sum(explored & walkable) // np.sum(walkable)
-
-        text = f'Turns: {turns:.0f}  Steps: {player.steps:.0f}  ' + \
-            f'Explored: {explored_ratio:.0f}%  ' + \
-            f'Hits: {player.hits:.0f}  Misses: {player.misses:.0f}  ' + \
-            f'Kills: {player.kills:.0f}'
+        text = "Placeholder"
+        # turns = self.logic.turn_count
+        # player = self.logic.player
+        # explored = self.logic.map.explored
+        # walkable = self.logic.map.walkable
+        # explored_ratio = 100 * np.sum(explored & walkable) // np.sum(walkable)
+        # text = f'Turns: {turns:.0f}  Steps: {player.steps:.0f}  ' + \
+        #     f'Explored: {explored_ratio:.0f}%  ' + \
+        #     f'Hits: {player.hits:.0f}  Misses: {player.misses:.0f}  ' + \
+        #     f'Kills: {player.kills:.0f}'
         if self.text == text:
             return
         self.image = self.font.render(text, False, "#FFFFFF")
@@ -249,9 +269,9 @@ class MapCursor(pg.sprite.Sprite):
         x, y = self.group.grid_to_screen(grid_x, grid_y)
         self.rect = self.image.get_rect(topleft=(x, y))
         map_ = self.group.logic.map
-        in_bounds = map_.is_in_bounds(grid_x, grid_y)
-        is_explored = in_bounds and map_.explored[grid_x, grid_y]
-        is_walkable = in_bounds and map_.walkable[grid_x, grid_y]
+        in_bounds = maps.is_in_bounds(map_, (grid_x, grid_y))
+        is_explored = in_bounds and maps.is_explored(map_, (grid_x, grid_y))
+        is_walkable = in_bounds and maps.is_walkable(map_, (grid_x, grid_y))
         if not is_explored:
             self.image = self.blank_image
         elif not is_walkable:
