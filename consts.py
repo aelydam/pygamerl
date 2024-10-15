@@ -32,7 +32,7 @@ N_ENEMIES = 10
 ENEMY_RADIUS = 12
 FOV_RADIUS = 6
 
-FONTNAME = "fonts/AcPlus_IBM_VGA_9x8.ttf"
+FONTNAME = "AcPlus_IBM_VGA_9x8"
 FONTSIZE = 16
 
 BACKGROUND_COLOR = "#000000"
@@ -52,12 +52,18 @@ CURSOR_DEFAULT_COLOR = "#FFFFFF"
 CURSOR_IMPOSSIBLE_COLOR = "#FF0000"
 
 TILE_DTYPE = np.dtype(
-    [("obstacle", bool), ("opaque", bool), ("color", "3B"), ("sprite", "2B")]
+    [
+        ("obstacle", bool),
+        ("opaque", bool),
+        ("color", "3B"),
+        ("sprite", "2B"),
+        ("sheet", "U24"),
+    ]
 )
-TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int]]] = {
-    "void": (True, False, (0, 0, 0), (0, 0)),
-    "floor": (False, False, (40, 40, 40), (0, 0)),
-    "wall": (True, True, (90, 88, 117), (1, 1)),
+TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int], str]] = {
+    "void": (True, False, (0, 0, 0), (0, 0), ""),
+    "floor": (False, False, (40, 40, 40), (0, 0), ""),
+    "wall": (True, True, (90, 88, 117), (0, 0), "brick_gray_0"),
 }
 TILE_ARRAY = np.asarray(
     [np.array(tile, dtype=TILE_DTYPE) for tile in TILES.values()], dtype=TILE_DTYPE

@@ -1,6 +1,7 @@
 import pygame as pg
 
 import actions
+import assets
 import comp
 import consts
 import entities
@@ -79,7 +80,7 @@ class GameOverState(game_interface.State):
     def __init__(self, parent: InGameState):
         self.parent = parent
         self.interface = parent.interface
-        font = pg.Font(consts.FONTNAME, consts.FONTSIZE * 3)
+        font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
         self.text_surface = font.render(
             "GAME OVER", False, consts.GAMEOVER_TEXT_COLOR, None
         )

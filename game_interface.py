@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pygame as pg
 
+import assets
 import consts
 import game_logic
 
@@ -25,7 +26,7 @@ class GameInterface:
         pg.init()
         self.screen = pg.display.set_mode(consts.SCREEN_SHAPE)
         self.clock = pg.time.Clock()
-        self.font = pg.font.Font(consts.FONTNAME, consts.FONTSIZE)
+        self.font = assets.font(consts.FONTNAME, consts.FONTSIZE)
         self.logic = game_logic.GameLogic()
         self.state_stack: list[State] = []
 

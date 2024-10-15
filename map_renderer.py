@@ -6,6 +6,7 @@ import numpy as np
 import pygame as pg
 import tcod.ecs as ecs
 
+import assets
 import comp
 import consts
 import entities
@@ -31,15 +32,7 @@ class EntitySprite(pg.sprite.Sprite):
         self.is_in_fov: bool | None = None
         self.flip: bool | None = None
         spr = entity.components[comp.Sprite]
-        tilesheet = pg.image.load(spr.sheet + ".png").convert_alpha()
-        self.tile = tilesheet.subsurface(
-            pg.Rect(
-                spr.tile[0] * consts.TILE_SIZE,
-                spr.tile[1] * consts.TILE_SIZE,
-                consts.TILE_SIZE,
-                consts.TILE_SIZE,
-            )
-        )
+        self.tile = assets.tile(spr.sheet, spr.tile)
         self.flip_tile = pg.transform.flip(self.tile, True, False)
         self.image = self.tile
         self.hpbar: ui_elements.MapHPBar | None = None
@@ -143,7 +136,6 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.tile_surfaces: dict[int, pg.Surface] = {}
         self.dark_surfaces: dict[int, pg.Surface] = {}
         self.dark_tint = consts.UNEXPLORED_TINT
-        self.tilesheet = pg.image.load("tiles-dcss/brick_gray_0.png").convert_alpha()
         self.tile_sprites: dict[tuple[int, int], TileSprite] = {}
         self.entity_sprites: dict[ecs.Entity, EntitySprite] = {}
         self.create_surfaces()
@@ -156,18 +148,12 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.void_surface.fill(consts.BACKGROUND_COLOR)
         for i, tile in enumerate(consts.TILE_ARRAY):
             color = tile[2]
-            sprite = tile[3]
+            sprite = tuple(tile[3])
+            sheet = tile[4]
             self.tile_surfaces[i] = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
             self.tile_surfaces[i].fill(color)
-            if sprite[0] > 0 and sprite[1] > 0:
-                src = self.tilesheet.subsurface(
-                    (
-                        consts.TILE_SIZE * (sprite[0] - 1),
-                        consts.TILE_SIZE * (sprite[1] - 1),
-                        consts.TILE_SIZE,
-                        consts.TILE_SIZE,
-                    )
-                )
+            if sheet != "":
+                src = assets.tile(sheet, sprite)
                 self.tile_surfaces[i].blit(src, (0, 0))
             # Dark tile
             self.dark_surfaces[i] = pg.transform.grayscale(self.tile_surfaces[i])

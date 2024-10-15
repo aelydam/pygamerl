@@ -64,7 +64,7 @@ class GameLogic:
         player.clear()
         player.components[comp.Name] = "Player"
         player.components[comp.Position] = comp.Position((x[i], y[i]), 0)
-        player.components[comp.Sprite] = comp.Sprite("tiles-dcss/human_male", (0, 0))
+        player.components[comp.Sprite] = comp.Sprite("human_male", (0, 0))
         player.components[comp.MaxHP] = 48
         player.components[comp.HP] = 48
         player.components[comp.AttackBonus] = 4
