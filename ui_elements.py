@@ -98,17 +98,18 @@ class MessageLog(pg.sprite.Sprite):
         self.font = font
 
     def update(self):
-        log_len = len(self.game_logic.message_log)
+        log = self.game_logic.message_log
+        log_len = len(log)
         if log_len < 1:
             return
-        last_text = self.game_logic.message_log[-1]
+        last_text = log[-1]
         if last_text == self.last_text and log_len == self.log_len:
             return
         self.image.fill("#00000000")
-        for i in range(1, min(11, log_len + 1)):
-            text = self.game_logic.message_log[-i]
-            surf = self.font.render(text, False, consts.LOG_TEXT_COLOR, None)
-            self.image.blit(surf, (0, (i - 1) * 20))
+        text = "\n".join(log[-min(11, log_len + 1) : -1])
+        self.image = self.font.render(
+            text, False, consts.LOG_TEXT_COLOR, None
+        ).convert_alpha()
 
 
 class Popup(pg.sprite.Sprite):
