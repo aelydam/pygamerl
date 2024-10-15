@@ -42,23 +42,30 @@ class EntitySprite(pg.sprite.Sprite):
         )
         self.flip_tile = pg.transform.flip(self.tile, True, False)
         self.image = self.tile
-        self.hpbar = ui_elements.MapHPBar(group, self)
-        self.tooltip: ui_elements.EntityTooltip | None = None
+        self.hpbar: ui_elements.MapHPBar | None = None
+        self.tooltip: ui_elements.MapHPBar | None = None
+        self.blank_surface = pg.Surface((1, 1)).convert_alpha()
+        self.blank_surface.fill("#00000000")
+        self.rect: pg.Rect
 
     def update(self) -> None:
         if not entities.is_alive(self.entity):
             self.kill()
+            self.group.entity_sprites.pop(self.entity)
             return
         pos = self.entity.components[comp.Position]
         x, y = self.group.grid_to_screen(*pos.xy)
         y -= consts.ENTITY_YOFFSET
-        self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
-        is_in_fov = entities.is_in_fov(self.group.logic.player, pos)
-        self.update_tooltip()
+        rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
+        is_in_fov = self.group.fov[pos.xy]
         dx, dy = self.entity.components.get(comp.Direction, (0, 0))
         flip = (dx > 0) or (dx >= 0 and dy > 0)
-        if is_in_fov == self.is_in_fov and flip == self.flip:
+        self.update_tooltip()
+        if is_in_fov == self.is_in_fov and flip == self.flip and rect == self.rect:
             return
+        if is_in_fov and self.hpbar is None and comp.HP in self.entity.components:
+            self.hpbar = ui_elements.MapHPBar(self.group, self)
+        self.rect = rect
         self.is_in_fov = is_in_fov
         self.flip = flip
         if is_in_fov:
@@ -67,10 +74,14 @@ class EntitySprite(pg.sprite.Sprite):
             else:
                 self.image = self.tile
         else:
-            self.image = pg.Surface((1, 1)).convert_alpha()
-            self.image.fill("#00000000")
+            self.image = self.blank_surface
 
     def update_tooltip(self):
+        if self.rect is None or not self.is_in_fov or not self.alive():
+            if self.tooltip is not None:
+                self.tooltip.kill()
+                self.tooltip = None
+            return
         x, y = pg.mouse.get_pos()
         pressed = pg.key.get_pressed()
         self.hovered = self.rect.collidepoint(x, y)
@@ -94,25 +105,26 @@ class TileSprite(pg.sprite.Sprite):
         self.is_in_fov = False
         self.tile_id: int | None = None
         self.image = group.void_surface
+        x, y = self.group.grid_to_screen(self.x, self.y)
+        self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
 
     def update(self) -> None:
         x, y = self.group.grid_to_screen(self.x, self.y)
-        map_ = self.group.logic.map
-        tiles = map_.components[comp.Tiles]
-        player = self.group.logic.player
-        self.rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
-        tile_id = int(tiles[self.x, self.y])
-        is_explored = maps.is_explored(map_, (self.x, self.y))
-        is_in_fov = entities.is_in_fov(player, (self.x, self.y))
+        rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
+        tile_id = int(self.group.tiles[self.x, self.y])
+        is_explored = self.group.explored[self.x, self.y]
+        is_in_fov = self.group.fov[self.x, self.y]
         if (
             is_explored == self.is_explored
             and is_in_fov == self.is_in_fov
             and tile_id == self.tile_id
+            and rect == self.rect
         ):
             return
         self.tile_id = tile_id
         self.is_explored = is_explored
         self.is_in_fov = is_in_fov
+        self.rect = rect
         if not is_explored:
             self.group.void_surface
         elif not is_in_fov:
@@ -191,4 +203,9 @@ class MapRenderer(pg.sprite.LayeredUpdates):
 
     def update(self, *args, **kwargs):
         self.create_entity_sprites()
+        player = self.logic.player
+        map_ = self.logic.map
+        self.tiles = map_.components[comp.Tiles]
+        self.fov = player.components[comp.FOV]
+        self.explored = map_.components[comp.Explored]
         super().update(*args, **kwargs)

@@ -58,19 +58,18 @@ class GameLogic:
         walkable = ~consts.TILE_ARRAY["obstacle"][grid]
         x, y = np.where(walkable)
         i = random.randint(0, len(x) - 1)
-        self.player.clear()
-        self.player.components[comp.Name] = "Player"
-        self.player.components[comp.Position] = comp.Position((x[i], y[i]), 0)
-        self.player.components[comp.Sprite] = comp.Sprite(
-            "tiles-dcss/human_male", (0, 0)
-        )
-        self.player.components[comp.MaxHP] = 16
-        self.player.components[comp.HP] = 16
-        self.player.components[comp.FOVRadius] = 8
-        self.player.components[comp.Initiative] = 1
-        self.player.tags |= {comp.Player, comp.Obstacle}
-        self.player.relation_tag[comp.Map] = map_entity
-        entities.update_fov(self.player)
+        player = self.player
+        player.clear()
+        player.components[comp.Name] = "Player"
+        player.components[comp.Position] = comp.Position((x[i], y[i]), 0)
+        player.components[comp.Sprite] = comp.Sprite("tiles-dcss/human_male", (0, 0))
+        player.components[comp.MaxHP] = 16
+        player.components[comp.HP] = 16
+        player.components[comp.FOVRadius] = 8
+        player.components[comp.Initiative] = 1
+        player.tags |= {comp.Player, comp.Obstacle}
+        player.relation_tag[comp.Map] = map_entity
+        entities.update_fov(player)
 
     def log(self, text: str):
         self.message_log.append(text)
@@ -85,8 +84,8 @@ class GameLogic:
 
     def next_turn(self):
         self.turn_count += 1
-        self.current_turn = 0
-        self.initiative.clear()
+        initiative = self.initiative
+        initiative.clear()
         query = self.reg.Q.all_of(
             components=[comp.Position, comp.Initiative],
             relations=[(comp.Map, self.map)],
@@ -94,11 +93,12 @@ class GameLogic:
         for e in query:
             e.components[comp.Initiative] += 1
             if e.components[comp.Initiative] > 0:
-                self.initiative.append(e)
+                initiative.append(e)
 
     def next_entity(self):
-        self.initiative.popleft()
-        if len(self.initiative) < 1:
+        initiative = self.initiative
+        initiative.popleft()
+        if len(initiative) < 1:
             self.next_turn()
             return False
         entities.update_fov(self.current_entity)

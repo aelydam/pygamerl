@@ -10,6 +10,7 @@ import consts
 import entities
 import map_renderer
 import maps
+from game_interface import GameInterface
 
 if TYPE_CHECKING:
     import actions
@@ -33,8 +34,9 @@ class MapHPBar(pg.sprite.Sprite):
         w, h = self.parent.rect.width, 4
         self.rect = pg.Rect(x, y, w, h)
         entity = self.parent.entity
-        if entities.is_alive(entity):
+        if not self.parent.alive():
             self.kill()
+            self.parent.hpbar = None
             return
         hp = entity.components.get(comp.HP)
         max_hp = entity.components.get(comp.MaxHP)
@@ -42,12 +44,7 @@ class MapHPBar(pg.sprite.Sprite):
         is_in_fov = self.parent.is_in_fov
         if fill == self.fill and self.is_in_fov == is_in_fov:
             return
-        if self.fill is None:
-            self.fill = fill
-        elif fill > self.fill:
-            self.fill += 1
-        elif fill < self.fill:
-            self.fill -= 1
+        self.fill = fill
         self.parent.is_in_fov = is_in_fov
         if not is_in_fov:
             self.image.fill("#00000000")
@@ -67,6 +64,7 @@ class HPBar(pg.sprite.Sprite):
         self.font: pg.font.Font = font
         self.rect = pg.Rect(16, 16, 200, 20)
         self.fill = None
+        self.image = pg.Surface(self.rect.size).convert_alpha()
 
     def update(self):
         player = self.game_logic.player
@@ -75,17 +73,11 @@ class HPBar(pg.sprite.Sprite):
         fill = int(self.rect.width * hp / max_hp)
         if fill == self.fill:
             return
-        if self.fill is None:
-            self.fill = fill
-        if fill > self.fill:
-            self.fill += 1
-        elif fill < self.fill:
-            self.fill -= 1
+        self.fill = fill
         if self.fill >= self.rect.width // 2:
             color = consts.HPBAR_GOOD_COLOR
         else:
             color = consts.HPBAR_BAD_COLOR
-        self.image = pg.Surface(self.rect.size)
         self.image.fill(consts.HPBAR_BG_COLOR)
         pg.draw.rect(self.image, color, pg.Rect(0, 0, self.fill, self.rect.height))
         surf = self.font.render(f"{hp}/{max_hp}", False, consts.HPBAR_TEXT_COLOR)
@@ -97,7 +89,7 @@ class HPBar(pg.sprite.Sprite):
 class MessageLog(pg.sprite.Sprite):
     def __init__(self, group: pg.sprite.Group, game_logic: GameLogic, font: pg.Font):
         super().__init__(group)
-        self.rect = pg.Rect(16, 16 + 24, consts.SCREEN_SHAPE[0] // 2, 24 * 10)
+        self.rect = pg.Rect(16, 16 + 24, consts.SCREEN_SHAPE[0] * 3 // 4, 24 * 10)
         self.image = pg.Surface(self.rect.size).convert_alpha()
         self.image.fill("#00000000")
         self.game_logic = game_logic
@@ -202,34 +194,26 @@ class EntityTooltip(pg.sprite.Sprite):
         self.image: pg.Surface = font.render(
             text, False, consts.TOOLTIP_TEXT_COLOR, None
         )
-        self.rect = self.image.get_rect(topleft=parent.hpbar.rect.bottomleft)
+        self.rect = self.image.get_rect(topleft=parent.rect.bottomleft)
 
     def update(self):
         if self.parent is None or not self.parent.alive():
             return self.kill()
-        self.rect = self.image.get_rect(topleft=self.parent.hpbar.rect.bottomleft)
+        self.rect = self.image.get_rect(topleft=self.parent.rect.bottomleft)
         super().update()
 
 
 class StatsHUD(pg.sprite.Sprite):
-    def __init__(self, group: pg.sprite.Group, logic: GameLogic, font: pg.Font):
+    def __init__(self, group: pg.sprite.Group, interface: GameInterface):
         super().__init__(group)
         self.group = group
-        self.logic = logic
-        self.font = font
+        self.interface = interface
+        self.logic = interface.logic
+        self.font = interface.font
         self.text = ""
 
     def update(self):
-        text = "Placeholder"
-        # turns = self.logic.turn_count
-        # player = self.logic.player
-        # explored = self.logic.map.explored
-        # walkable = self.logic.map.walkable
-        # explored_ratio = 100 * np.sum(explored & walkable) // np.sum(walkable)
-        # text = f'Turns: {turns:.0f}  Steps: {player.steps:.0f}  ' + \
-        #     f'Explored: {explored_ratio:.0f}%  ' + \
-        #     f'Hits: {player.hits:.0f}  Misses: {player.misses:.0f}  ' + \
-        #     f'Kills: {player.kills:.0f}'
+        text = f"FPS {self.interface.clock.get_fps():0.0f}"
         if self.text == text:
             return
         self.image = self.font.render(text, False, "#FFFFFF")
@@ -245,7 +229,7 @@ class MapCursor(pg.sprite.Sprite):
         self.default_image = pg.Surface(
             (consts.TILE_SIZE, consts.TILE_SIZE)
         ).convert_alpha()
-        self.default_image.fill("#FFFFFF40")
+        self.default_image.fill("#80808040")
         pg.draw.rect(
             self.default_image,
             "#FFFFFF",

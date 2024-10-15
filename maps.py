@@ -74,14 +74,15 @@ def is_walkable(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) ->
 def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 2) -> NDArray[np.int8]:
     grid = map_entity.components[comp.Tiles]
     cost = 1 - consts.TILE_ARRAY["obstacle"][grid]
-    query = map_entity.registry.Q.all_of(
-        components=[comp.Position],
-        tags=[comp.Obstacle],
-        relations=[(comp.Map, map_entity)],
-    )
-    for e in query:
-        xy = e.components[comp.Position].xy
-        cost[xy] += entity_cost
+    if entity_cost != 0:
+        query = map_entity.registry.Q.all_of(
+            components=[comp.Position],
+            tags=[comp.Obstacle],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            xy = e.components[comp.Position].xy
+            cost[xy] += entity_cost
     return cost.astype(np.int8)
 
 
