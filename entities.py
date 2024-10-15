@@ -75,6 +75,26 @@ def is_in_fov(
     return actor.components[comp.FOV][pos]
 
 
+def enemies_in_fov(actor: ecs.Entity) -> set[ecs.Entity]:
+    map_ = actor.relation_tag[comp.Map]
+    if comp.Player not in actor.tags:
+        query = actor.registry.Q.all_of(
+            components=[comp.Position, comp.HP],
+            tags=[comp.Player],
+            relations=[(comp.Map, map_)],
+        )
+    else:
+        query = actor.registry.Q.all_of(
+            components=[comp.Position, comp.HP],
+            relations=[(comp.Map, map_)],
+        ).none_of(tags=[comp.Player])
+    return {e for e in query if is_in_fov(actor, e)}
+
+
+def has_enemy_in_fov(actor: ecs.Entity) -> bool:
+    return len(enemies_in_fov(actor)) > 0
+
+
 def is_alive(actor: ecs.Entity) -> bool:
     return actor.components.get(comp.HP, 0) > 0
 

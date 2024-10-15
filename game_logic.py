@@ -120,6 +120,8 @@ class GameLogic:
         if comp.Player in entity.tags:
             if self.continuous_action is not None and self.continuous_action.can():
                 action = self.continuous_action
+                if entities.has_enemy_in_fov(entity):
+                    self.continuous_action = None
             elif self.input_action is not None and self.input_action.can():
                 self.continuous_action = None
                 action = self.input_action
