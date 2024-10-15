@@ -54,8 +54,8 @@ Clicking on an explored floor tile will take the first step towards it.
 ## Credits
 
 **Tileset**:
-[Dungeon Crawl Stone Soup 32x32 Tiles](https://opengameart.org/content/dungeon-crawl-32x32-tiles),
-bt [multiple artists](tiles-dcss/README.txt), licensed under CC0
+[DawnLike 16x16 Universal Rogue-like Tileset](https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181),
+by DragonDePlatino, using DawnBringer palette, licensed under CC-BY 4.0
 
 **Font**:
 [IBM VGA 9x8](https://int10h.org/oldschool-pc-fonts/fontlist/font?ibm_vga_9x8),

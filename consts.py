@@ -5,10 +5,10 @@ import pygame as pg
 
 GAME_PATH = pathlib.Path(__file__).parent
 
-SCREEN_SHAPE = (1280, 720)
+SCREEN_SHAPE = (640, 480)
 FPS = 60
 
-TILE_SIZE = 32
+TILE_SIZE = 16
 ENTITY_YOFFSET = TILE_SIZE // 4
 
 MOVE_KEYS = {
@@ -32,8 +32,8 @@ N_ENEMIES = 10
 ENEMY_RADIUS = 12
 FOV_RADIUS = 6
 
-FONTNAME = "AcPlus_IBM_VGA_9x8"
-FONTSIZE = 16
+FONTNAME = "Ac437_IBM_BIOS"
+FONTSIZE = 8
 
 BACKGROUND_COLOR = "#000000"
 UNEXPLORED_TINT = "#808080"
@@ -62,8 +62,8 @@ TILE_DTYPE = np.dtype(
 )
 TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int], str]] = {
     "void": (True, False, (0, 0, 0), (0, 0), ""),
-    "floor": (False, False, (40, 40, 40), (0, 0), ""),
-    "wall": (True, True, (90, 88, 117), (0, 0), "brick_gray_0"),
+    "floor": (False, False, (40, 40, 40), (1, 7), "Objects/Floor"),
+    "wall": (True, True, (90, 88, 117), (1, 3), "Objects/Wall"),
 }
 TILE_ARRAY = np.asarray(
     [np.array(tile, dtype=TILE_DTYPE) for tile in TILES.values()], dtype=TILE_DTYPE

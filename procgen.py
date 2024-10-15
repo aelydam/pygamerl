@@ -39,7 +39,7 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
             components={
                 comp.Position: comp.Position((x, y), depth),
                 comp.Name: "Skeleton",
-                comp.Sprite: comp.Sprite("skeleton_humanoid_small_new", (0, 0)),
+                comp.Sprite: comp.Sprite("Characters/Undead0", (0, 2)),
                 comp.MaxHP: 6,
                 comp.HP: 6,
                 comp.Initiative: 0,

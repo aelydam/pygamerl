@@ -24,7 +24,7 @@ class State:
 class GameInterface:
     def __init__(self) -> None:
         pg.init()
-        self.screen = pg.display.set_mode(consts.SCREEN_SHAPE)
+        self.screen = pg.display.set_mode(consts.SCREEN_SHAPE, pg.SCALED)
         self.clock = pg.time.Clock()
         self.font = assets.font(consts.FONTNAME, consts.FONTSIZE)
         self.logic = game_logic.GameLogic()

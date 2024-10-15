@@ -131,7 +131,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         super().__init__()
         self.interface = interface
         self.logic = interface.logic
-        self.shape = pg.display.get_window_size()
+        self.shape = pg.display.get_surface().size
         self.tile_sprite_map: dict[tuple[int, int], TileSprite] = {}
         self.tile_surfaces: dict[int, pg.Surface] = {}
         self.dark_surfaces: dict[int, pg.Surface] = {}

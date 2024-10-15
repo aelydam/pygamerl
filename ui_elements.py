@@ -26,7 +26,7 @@ class MapHPBar(pg.sprite.Sprite):
         self.parent = parent
         self.fill = None
         self.is_in_fov = None
-        self.rect: pg.Rect = pg.Rect(0, -4, consts.TILE_SIZE, 4)
+        self.rect: pg.Rect = pg.Rect(0, -4, consts.TILE_SIZE, consts.FONTSIZE // 4)
         self.image = pg.Surface(self.rect.size).convert_alpha()
 
     def update(self):
@@ -57,7 +57,7 @@ class HPBar(pg.sprite.Sprite):
         super().__init__(group)
         self.game_logic = game_logic
         self.font: pg.font.Font = font
-        self.rect = pg.Rect(16, 16, 200, 20)
+        self.rect = pg.Rect(16, 16, 200, consts.FONTSIZE + 4)
         self.fill = None
         self.image = pg.Surface(self.rect.size).convert_alpha()
 
@@ -139,7 +139,7 @@ class Minimap(pg.sprite.Sprite):
     def __init__(self, group: pg.sprite.Group, game_logic: GameLogic):
         super().__init__(group)
         self.game_logic = game_logic
-        self.scale = 4
+        self.scale = consts.FONTSIZE // 4
         w = consts.MAP_SHAPE[0] * self.scale
         h = consts.MAP_SHAPE[1] * self.scale
         x, y = consts.SCREEN_SHAPE[0] - w - 16, 16
