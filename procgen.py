@@ -13,10 +13,11 @@ import funcs
 import maps
 
 
-def add_walls(grid: NDArray[np.int8]):
+def get_walls(grid: NDArray[np.bool_], condition: NDArray[np.bool_] | None = None):
     # Find tiles that are void but are neighbors to a floor
-    walls = (funcs.moore(grid == consts.TILE_FLOOR) > 0) & (grid == consts.TILE_VOID)
-    grid[walls] = consts.TILE_WALL
+    walls = (funcs.moore(grid) > 0) & (~grid)
+    if condition is not None:
+        walls &= condition
     return walls
 
 
@@ -54,23 +55,27 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
         available[dist2 <= radius**2] = False
 
 
-def random_walk(grid: NDArray[np.int8], walkers: int = 5, steps: int = 500):
+def random_walk(condition: NDArray[np.bool_], walkers: int = 5, steps: int = 500):
     # Random walk algorithm
     # Repeat for each walker
+    grid = np.full(condition.shape, False)
     for walkers in range(walkers):
         x, y = (consts.MAP_SHAPE[0] // 2, consts.MAP_SHAPE[1] // 2)
-        grid[x, y] = consts.TILE_FLOOR
+        grid[x, y] = True
         # Walk each step
         for step in range(steps):
             # Choose a random direction
             dx, dy = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])
             # If next step is within map bounds
-            if maps.is_in_bounds(grid, (x + dx * 2, y + dy * 2)):
+            if (
+                maps.is_in_bounds(grid, (x + dx * 2, y + dy * 2))
+                and condition[x + dx, y + dy]
+            ):
                 # Walk
                 x += dx
                 y += dy
                 # Set as floor
-                grid[x, y] = consts.TILE_FLOOR
+                grid[x, y] = True
             else:
                 break
     return grid
@@ -92,12 +97,17 @@ def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
 
 
 def generate(map_entity: ecs.Entity):
+    # Generate map
     grid = np.zeros(consts.MAP_SHAPE, np.int8)
-    random_walk(grid)
-    add_walls(grid)
+    floor = random_walk(grid == 0)
+    walls = get_walls(floor)
+    # Set tiles
+    grid[floor] = consts.TILE_FLOOR
+    grid[walls] = consts.TILE_WALL
+    # Post processing
+    update_bitmasks(grid)
+    # Save generated map
     map_entity.components[comp.Tiles] = grid
     map_entity.components[comp.Explored] = np.full(grid.shape, False)
-
-    update_bitmasks(grid)
-
+    # SPawn enemies
     spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
