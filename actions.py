@@ -4,6 +4,7 @@ import random
 from dataclasses import dataclass, field
 
 import numpy as np
+import tcod
 import tcod.ecs as ecs
 
 import comp
@@ -90,6 +91,44 @@ class MoveToAction(Action):
         if action is not None:
             return action.perform()
         return None
+
+
+@dataclass
+class ExploreAction(Action):
+    actor: ecs.Entity
+    cost: int = field(init=False, default=1)
+
+    def can(self) -> bool:
+        if (
+            comp.Position not in self.actor.components
+            or comp.Map not in self.actor.relation_tag
+        ):
+            return False
+        map_entity = self.actor.relation_tag[comp.Map]
+        explored = map_entity.components[comp.Explored]
+        tiles = map_entity.components[comp.Tiles]
+        walkable = ~consts.TILE_ARRAY["obstacle"][tiles]
+        explorable = walkable | (funcs.moore(walkable) > 0)
+        return bool(np.sum(explorable & ~explored) > 0)
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        map_entity = self.actor.relation_tag[comp.Map]
+        explored = map_entity.components[comp.Explored]
+        cost = maps.cost_matrix(map_entity)
+        cost[~explored] = 1
+        dijkstra = tcod.path.maxarray(cost.shape, dtype=np.int32)
+        dijkstra[~explored] = 0
+        tcod.path.dijkstra2d(dijkstra, cost, 2, 3, out=dijkstra)
+        pos = self.actor.components[comp.Position].xy
+        cost[pos] = 1
+        path = tcod.path.hillclimb2d(dijkstra, pos, True, True).tolist()
+        if len(path) < 2:
+            return None
+        dx, dy = path[1][0] - path[0][0], path[1][1] - path[0][1]
+        action = MoveAction(self.actor, (dx, dy)).perform()
+        return action
 
 
 @dataclass

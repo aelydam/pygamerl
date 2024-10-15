@@ -34,7 +34,12 @@ class InGameState(game_interface.State):
             elif event.key in consts.WAIT_KEYS:
                 self.logic.input_action = actions.WaitAction()
             elif event.key == pg.K_x:
-                self.logic.continuous_action = actions.MagicMap(self.logic.player)
+                if event.mod & pg.KMOD_SHIFT:
+                    self.logic.continuous_action = actions.MagicMap(self.logic.player)
+                else:
+                    self.logic.continuous_action = actions.ExploreAction(
+                        self.logic.player
+                    )
         elif event.type == pg.MOUSEBUTTONUP:
             if event.button != 1:
                 return
