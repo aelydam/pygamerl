@@ -3,10 +3,13 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 
+import numpy as np
 import tcod.ecs as ecs
 
 import comp
+import consts
 import entities
+import funcs
 import maps
 
 
@@ -158,3 +161,26 @@ class BumpAction(MoveAction):
             return AttackAction(self.actor, entity).perform()
         else:
             return super().perform()
+
+
+@dataclass
+class MagicMap(Action):
+    actor: ecs.Entity
+
+    def can(self) -> bool:
+        map_ = self.actor.relation_tag[comp.Map]
+        tiles = map_.components[comp.Tiles]
+        explored = map_.components[comp.Explored]
+        walkable = ~consts.TILE_ARRAY["obstacle"][tiles]
+        explorable = walkable | (funcs.moore(walkable) > 0)
+        remaining = np.sum(explorable & ~explored)
+        return bool(remaining > 0)
+
+    def perform(self) -> Action | None:
+        map_ = self.actor.relation_tag[comp.Map]
+        tiles = map_.components[comp.Tiles]
+        explored = map_.components[comp.Explored]
+        walkable = ~consts.TILE_ARRAY["obstacle"][tiles]
+        explorable = walkable | (funcs.moore(walkable) > 0)
+        map_.components[comp.Explored] |= explorable & (funcs.moore(explored) > 0)
+        return self
