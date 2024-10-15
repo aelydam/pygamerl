@@ -33,22 +33,17 @@ class MapHPBar(pg.sprite.Sprite):
         x, y = self.parent.rect.x, self.parent.rect.bottom
         w, h = self.parent.rect.width, 4
         self.rect = pg.Rect(x, y, w, h)
-        entity = self.parent.entity
-        if not self.parent.alive():
+        if not self.parent.alive() or not self.parent.is_in_fov:
             self.kill()
             self.parent.hpbar = None
             return
+        entity = self.parent.entity
         hp = entity.components.get(comp.HP)
         max_hp = entity.components.get(comp.MaxHP)
         fill = int(self.rect.width * hp / max_hp)
-        is_in_fov = self.parent.is_in_fov
-        if fill == self.fill and self.is_in_fov == is_in_fov:
+        if fill == self.fill:
             return
         self.fill = fill
-        self.parent.is_in_fov = is_in_fov
-        if not is_in_fov:
-            self.image.fill("#00000000")
-            return
         self.image.fill(consts.HPBAR_BG_COLOR)
         if self.fill >= self.rect.width // 2:
             color = consts.HPBAR_GOOD_COLOR
@@ -105,7 +100,6 @@ class MessageLog(pg.sprite.Sprite):
         last_text = log[-1]
         if last_text == self.last_text and log_len == self.log_len:
             return
-        self.image.fill("#00000000")
         text = "\n".join(log[-min(11, log_len + 1) : -1])
         self.image = self.font.render(
             text, False, consts.LOG_TEXT_COLOR, None
@@ -253,8 +247,8 @@ class MapCursor(pg.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=(x, y))
         map_ = self.group.logic.map
         in_bounds = maps.is_in_bounds(map_, (grid_x, grid_y))
-        is_explored = in_bounds and maps.is_explored(map_, (grid_x, grid_y))
-        is_walkable = in_bounds and maps.is_walkable(map_, (grid_x, grid_y))
+        is_explored = in_bounds and self.group.explored[grid_x, grid_y]
+        is_walkable = is_explored and maps.is_walkable(map_, (grid_x, grid_y))
         if not is_explored:
             self.image = self.blank_image
         elif not is_walkable:

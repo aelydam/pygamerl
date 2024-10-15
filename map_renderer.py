@@ -149,6 +149,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.create_surfaces()
         self.create_tile_sprites()
         self.create_entity_sprites()
+        self.cursor_sprite = ui_elements.MapCursor(self)
 
     def create_surfaces(self) -> None:
         self.void_surface = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
@@ -187,7 +188,6 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         for e in query:
             if e not in self.entity_sprites:
                 self.entity_sprites[e] = EntitySprite(self, e)
-        self.cursor_sprite = ui_elements.MapCursor(self)
 
     def grid_to_screen(self, i: int, j: int) -> tuple[int, int]:
         pi, pj = self.logic.player.components[comp.Position].xy
@@ -208,4 +208,5 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.tiles = map_.components[comp.Tiles]
         self.fov = player.components[comp.FOV]
         self.explored = map_.components[comp.Explored]
+        self.walkable = ~consts.TILE_ARRAY["obstacle"][self.tiles]
         super().update(*args, **kwargs)
