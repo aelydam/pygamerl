@@ -120,7 +120,7 @@ class GameLogic:
         if comp.Player in entity.tags:
             if self.continuous_action is not None and self.continuous_action.can():
                 action = self.continuous_action
-                if entities.has_enemy_in_fov(entity):
+                if entities.has_enemy_in_fov(entity) and action.cost > 0:
                     self.continuous_action = None
             elif self.input_action is not None and self.input_action.can():
                 self.continuous_action = None
@@ -140,7 +140,8 @@ class GameLogic:
                 if comp.Initiative in entity.components:
                     entity.components[comp.Initiative] -= result.cost
         self.input_action = None
-        self.next_entity()
+        if entity.components.get(comp.Initiative, 0) < 1:
+            self.next_entity()
         return not in_fov
 
     def update(self):

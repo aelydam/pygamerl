@@ -34,6 +34,9 @@ class MoveAction(Action):
     actor: ecs.Entity
     direction: tuple[int, int]
 
+    def __post_init__(self, *args, **kwargs):
+        self.cost = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
+
     def can(self) -> bool:
         dist = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
         if dist > 1.5:
@@ -76,6 +79,7 @@ class MoveAction(Action):
 class MoveToAction(Action):
     actor: ecs.Entity
     target: tuple[int, int]
+    cost: int = field(init=False, default=1)
 
     def can(self) -> bool:
         action = MoveAction.to(self.actor, self.target)
@@ -92,6 +96,7 @@ class MoveToAction(Action):
 class AttackAction(Action):
     actor: ecs.Entity
     target: ecs.Entity
+    cost: int = field(init=False, default=1)
     damage: int = field(init=False, default=0)
     xy: tuple[int, int] = field(init=False, default=(0, 0))
 
