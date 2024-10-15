@@ -76,10 +76,28 @@ def random_walk(grid: NDArray[np.int8], walkers: int = 5, steps: int = 500):
     return grid
 
 
+def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
+    bm = funcs.bitmask(grid)
+    for tile_name, tile_id in consts.TILE_ID.items():
+        tile_name = consts.TILE_NAMES[tile_id]
+        if tile_name[-1] in "1234567890":
+            continue
+        for j in range(16):
+            new_name = f"{tile_name}{j}"
+            if new_name in consts.TILE_NAMES:
+                np.sum((grid == tile_id) & (bm == j))
+                new_id = consts.TILE_ID[new_name]
+                grid[(grid == tile_id) & (bm == j)] = new_id
+    return grid
+
+
 def generate(map_entity: ecs.Entity):
     grid = np.zeros(consts.MAP_SHAPE, np.int8)
     random_walk(grid)
     add_walls(grid)
     map_entity.components[comp.Tiles] = grid
     map_entity.components[comp.Explored] = np.full(grid.shape, False)
+
+    update_bitmasks(grid)
+
     spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)

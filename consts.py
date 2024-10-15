@@ -64,10 +64,33 @@ TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int], str]] 
     "void": (True, False, (0, 0, 0), (0, 0), ""),
     "floor": (False, False, (40, 40, 40), (1, 7), "Objects/Floor"),
     "wall": (True, True, (90, 88, 117), (1, 3), "Objects/Wall"),
+    "wall12": (True, True, (90, 88, 117), (0, 9), "Objects/Wall"),
+    "wall6": (True, True, (90, 88, 117), (1, 9), "Objects/Wall"),
+    "wall10": (True, True, (90, 88, 117), (2, 9), "Objects/Wall"),
+    "wall14": (True, True, (90, 88, 117), (4, 9), "Objects/Wall"),
+    "wall8": (True, True, (90, 88, 117), (0, 10), "Objects/Wall"),
+    "wall9": (True, True, (90, 88, 117), (0, 10), "Objects/Wall"),
+    "wall1": (True, True, (90, 88, 117), (1, 10), "Objects/Wall"),
+    "wall0": (True, True, (90, 88, 117), (1, 10), "Objects/Wall"),
+    "wall13": (True, True, (90, 88, 117), (3, 10), "Objects/Wall"),
+    "wall15": (True, True, (90, 88, 117), (4, 10), "Objects/Wall"),
+    "wall11": (True, True, (90, 88, 117), (5, 10), "Objects/Wall"),
+    "wall4": (True, True, (90, 88, 117), (0, 11), "Objects/Wall"),
+    "wall5": (True, True, (90, 88, 117), (0, 11), "Objects/Wall"),
+    "wall2": (True, True, (90, 88, 117), (2, 11), "Objects/Wall"),
+    "wall3": (True, True, (90, 88, 117), (2, 11), "Objects/Wall"),
+    "wall7": (True, True, (90, 88, 117), (4, 11), "Objects/Wall"),
 }
+# Dawnlike wall bitmask:
+#  12 |  6  | 10  |    | 14 |
+# 8/9 | 0/1 |     | 13 | 15 | 11
+# 4/5 |     | 2/3 |    |  7 |
+
 TILE_ARRAY = np.asarray(
     [np.array(tile, dtype=TILE_DTYPE) for tile in TILES.values()], dtype=TILE_DTYPE
 )
 TILE_VOID = list(TILES.keys()).index("void")
 TILE_FLOOR = list(TILES.keys()).index("floor")
 TILE_WALL = list(TILES.keys()).index("wall")
+TILE_NAMES = list(TILES.keys())
+TILE_ID = {s: i for i, s in enumerate(TILES.keys())}

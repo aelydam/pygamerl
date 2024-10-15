@@ -10,6 +10,7 @@ import assets
 import comp
 import consts
 import entities
+import funcs
 import maps
 import ui_elements
 
