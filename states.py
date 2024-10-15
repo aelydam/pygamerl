@@ -26,9 +26,11 @@ class InGameState(game_interface.State):
         if event.type == pg.KEYDOWN:
             if event.key in consts.MOVE_KEYS.keys():
                 dx, dy = consts.MOVE_KEYS[event.key]
-                self.logic.input_action = actions.BumpAction(
-                    self.logic.player, (dx, dy)
-                )
+                action = actions.BumpAction(self.logic.player, (dx, dy))
+                if event.mod & pg.KMOD_SHIFT:
+                    self.logic.continuous_action = action
+                else:
+                    self.logic.input_action = action
             elif event.key in consts.WAIT_KEYS:
                 self.logic.input_action = actions.WaitAction()
         elif event.type == pg.MOUSEBUTTONUP:

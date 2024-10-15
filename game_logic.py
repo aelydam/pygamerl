@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 class GameLogic:
     def __init__(self) -> None:
+        self.continuous_action: actions.Action | None
         self.input_action: actions.Action | None
         self.last_action: actions.Action | None
         self.turn_count = 0
@@ -42,6 +43,7 @@ class GameLogic:
 
         self.current_turn = -1
         self.input_action = None
+        self.continuous_action = None
         self.reg[None].components[comp.MessageLog] = []
         self.reg[None].components[comp.InitiativeTracker] = deque([])
 
@@ -116,9 +118,13 @@ class GameLogic:
         if not entities.is_alive(entity):
             return self.next_entity()
         if comp.Player in entity.tags:
-            if self.input_action is not None and self.input_action.can():
+            if self.continuous_action is not None and self.continuous_action.can():
+                action = self.continuous_action
+            elif self.input_action is not None and self.input_action.can():
+                self.continuous_action = None
                 action = self.input_action
             else:
+                self.continuous_action = None
                 return False  # Waiting for player input
         else:
             action = entities.enemy_action(entity)
