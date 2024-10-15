@@ -65,8 +65,11 @@ class GameLogic:
         player.components[comp.Name] = "Player"
         player.components[comp.Position] = comp.Position((x[i], y[i]), 0)
         player.components[comp.Sprite] = comp.Sprite("tiles-dcss/human_male", (0, 0))
-        player.components[comp.MaxHP] = 16
-        player.components[comp.HP] = 16
+        player.components[comp.MaxHP] = 48
+        player.components[comp.HP] = 48
+        player.components[comp.AttackBonus] = 4
+        player.components[comp.ArmorClass] = 14
+        player.components[comp.DamageDice] = 6
         player.components[comp.FOVRadius] = 8
         player.components[comp.Initiative] = 1
         player.tags |= {comp.Player, comp.Obstacle}
