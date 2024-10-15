@@ -70,6 +70,22 @@ class MoveAction(Action):
 
 
 @dataclass
+class MoveToAction(Action):
+    actor: ecs.Entity
+    target: tuple[int, int]
+
+    def can(self) -> bool:
+        action = MoveAction.to(self.actor, self.target)
+        return action is not None and action.can()
+
+    def perform(self) -> Action | None:
+        action = MoveAction.to(self.actor, self.target)
+        if action is not None:
+            return action.perform()
+        return None
+
+
+@dataclass
 class AttackAction(Action):
     actor: ecs.Entity
     target: ecs.Entity

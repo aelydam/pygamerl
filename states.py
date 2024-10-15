@@ -44,7 +44,10 @@ class InGameState(game_interface.State):
             if x == px and y == py:
                 self.logic.input_action = actions.WaitAction()
                 return
-            self.logic.input_action = actions.BumpAction.to(player, (x, y))
+            if (x - px) ** 2 + (y - py) ** 2 <= 2:
+                self.logic.input_action = actions.BumpAction.to(player, (x, y))
+            else:
+                self.logic.continuous_action = actions.MoveToAction(player, (x, y))
 
     def update(self):
         self.logic.update()
