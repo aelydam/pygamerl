@@ -45,7 +45,9 @@ class Position:
 
 # See https://python-tcod.readthedocs.io/en/latest/tutorial/part-02.html#ecs-components
 @ecs.callbacks.register_component_changed(component=Position)
-def on_position_changed(entity: ecs.Entity, old: Position | None, new: Position | None) -> None:
+def on_position_changed(
+    entity: ecs.Entity, old: Position | None, new: Position | None
+) -> None:
     """Mirror position components as a tag."""
     if old == new:  # New position is equivalent to its previous value
         return  # Ignore and return

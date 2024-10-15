@@ -26,15 +26,15 @@ class InGameState(game_interface.State):
         if event.type == pg.KEYDOWN:
             if event.key in consts.MOVE_KEYS.keys():
                 dx, dy = consts.MOVE_KEYS[event.key]
-                self.logic.input_action = \
-                    actions.BumpAction(self.logic.player, (dx, dy))
+                self.logic.input_action = actions.BumpAction(
+                    self.logic.player, (dx, dy)
+                )
             elif event.key in consts.WAIT_KEYS:
                 self.logic.input_action = actions.WaitAction()
         elif event.type == pg.MOUSEBUTTONUP:
             if event.button != 1:
                 return
-            x, y = self.map_renderer.screen_to_grid(event.pos[0],
-                                                    event.pos[1])
+            x, y = self.map_renderer.screen_to_grid(event.pos[0], event.pos[1])
             if not maps.is_explored(self.logic.map, (x, y)):
                 return
             player = self.logic.player
@@ -50,8 +50,9 @@ class InGameState(game_interface.State):
             self.interface.push(GameOverState(self))
             return
         if isinstance(self.logic.last_action, actions.AttackAction):
-            ui_elements.Popup(self.map_renderer, self.logic.last_action,
-                              self.interface.font)
+            ui_elements.Popup(
+                self.map_renderer, self.logic.last_action, self.interface.font
+            )
             self.logic.last_action = None
 
     def render(self, screen: pg.Surface):
@@ -67,8 +68,9 @@ class GameOverState(game_interface.State):
         self.parent = parent
         self.interface = parent.interface
         font = pg.Font(consts.FONTNAME, consts.FONTSIZE * 3)
-        self.text_surface = \
-            font.render("GAME OVER", False, consts.GAMEOVER_TEXT_COLOR, None)
+        self.text_surface = font.render(
+            "GAME OVER", False, consts.GAMEOVER_TEXT_COLOR, None
+        )
         self.text_surface = pg.transform.scale_by(self.text_surface, 3)
 
     def render(self, screen: pg.Surface):

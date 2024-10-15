@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import random
@@ -16,8 +15,7 @@ import maps
 
 def add_walls(grid: NDArray[np.int8]):
     # Find tiles that are void but are neighbors to a floor
-    walls = (funcs.moore(grid == consts.TILE_FLOOR) > 0) & \
-        (grid == consts.TILE_VOID)
+    walls = (funcs.moore(grid == consts.TILE_FLOOR) > 0) & (grid == consts.TILE_VOID)
     grid[walls] = consts.TILE_WALL
     return walls
 
@@ -41,23 +39,24 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
             components={
                 comp.Position: comp.Position((x, y), depth),
                 comp.Name: "Skeleton",
-                comp.Sprite: comp.Sprite("tiles-dcss/skeleton_humanoid_small_new", (0, 0)),
+                comp.Sprite: comp.Sprite(
+                    "tiles-dcss/skeleton_humanoid_small_new", (0, 0)
+                ),
                 comp.MaxHP: 6,
                 comp.HP: 6,
                 comp.Initiative: 0,
                 comp.FOVRadius: 6,
             },
-            tags= [comp.Obstacle]
+            tags=[comp.Obstacle],
         )
         enemy.relation_tag[comp.Map] = map_entity
         counter += 1
         # Make all points within radius unavailable
         dist2 = (xgrid - x) ** 2 + (ygrid - y) ** 2
-        available[dist2 <= radius ** 2] = False
+        available[dist2 <= radius**2] = False
 
 
-def random_walk(grid: NDArray[np.int8],
-                walkers: int = 5, steps: int = 500):
+def random_walk(grid: NDArray[np.int8], walkers: int = 5, steps: int = 500):
     # Random walk algorithm
     # Repeat for each walker
     for walkers in range(walkers):
@@ -86,4 +85,3 @@ def generate(map_entity: ecs.Entity):
     map_entity.components[comp.Tiles] = grid
     map_entity.components[comp.Explored] = np.full(grid.shape, False)
     spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
-

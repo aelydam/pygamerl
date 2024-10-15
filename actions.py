@@ -32,10 +32,13 @@ class MoveAction(Action):
     direction: tuple[int, int]
 
     def can(self) -> bool:
-        dist = sum([self.direction[i]**2 for i in range(2)])**0.5
+        dist = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
         if dist > 1.5:
             return False
-        if comp.Position not in self.actor.components or comp.Map not in self.actor.relation_tag:
+        if (
+            comp.Position not in self.actor.components
+            or comp.Map not in self.actor.relation_tag
+        ):
             return False
         map_entity = self.actor.relation_tag[comp.Map]
         new_pos = self.actor.components[comp.Position] + self.direction
@@ -48,7 +51,7 @@ class MoveAction(Action):
             return None
         self.actor.components[comp.Position] += self.direction
         self.actor.components[comp.Direction] = self.direction
-        self.cost = sum([self.direction[i]**2 for i in range(2)])**0.5
+        self.cost = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
         return self
 
     @classmethod
@@ -70,8 +73,8 @@ class MoveAction(Action):
 class AttackAction(Action):
     actor: ecs.Entity
     target: ecs.Entity
-    damage: int = field(init = False, default=0)
-    xy: tuple[int, int] = field(init = False, default=(0,0))
+    damage: int = field(init=False, default=0)
+    xy: tuple[int, int] = field(init=False, default=(0, 0))
 
     def can(self) -> bool:
         if self.actor == self.target:
@@ -94,7 +97,9 @@ class AttackAction(Action):
         if roll >= self.target.components.get(comp.ArmorClass, 12):
             dice = self.actor.components.get(comp.DamageDice, 4)
             self.damage = random.randint(1, dice)
-            self.target.components[comp.HP] = max(0, self.target.components[comp.HP] - self.damage)
+            self.target.components[comp.HP] = max(
+                0, self.target.components[comp.HP] - self.damage
+            )
             text += f"{self.damage} points of damage!"
         else:
             self.damage = 0
@@ -117,9 +122,7 @@ class BumpAction(MoveAction):
         map_entity = self.actor.relation_tag[comp.Map]
         new_pos = self.actor.components[comp.Position] + self.direction
         query = self.actor.registry.Q.all_of(
-            [comp.Position, comp.HP],
-            tags=[new_pos],
-            relations=[(comp.Map, map_entity)]
+            [comp.Position, comp.HP], tags=[new_pos], relations=[(comp.Map, map_entity)]
         )
         for e in query:
             if e != self.actor:

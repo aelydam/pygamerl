@@ -61,7 +61,9 @@ class GameLogic:
         self.player.clear()
         self.player.components[comp.Name] = "Player"
         self.player.components[comp.Position] = comp.Position((x[i], y[i]), 0)
-        self.player.components[comp.Sprite] = comp.Sprite("tiles-dcss/human_male", (0, 0))
+        self.player.components[comp.Sprite] = comp.Sprite(
+            "tiles-dcss/human_male", (0, 0)
+        )
         self.player.components[comp.MaxHP] = 16
         self.player.components[comp.HP] = 16
         self.player.components[comp.FOVRadius] = 8
@@ -87,7 +89,7 @@ class GameLogic:
         self.initiative.clear()
         query = self.reg.Q.all_of(
             components=[comp.Position, comp.Initiative],
-            relations=[(comp.Map, self.map)]
+            relations=[(comp.Map, self.map)],
         )
         for e in query:
             e.components[comp.Initiative] += 1

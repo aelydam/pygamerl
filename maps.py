@@ -24,13 +24,19 @@ def get_map(reg: ecs.Registry, depth: int) -> ecs.Entity:
     return map_entity
 
 
-def is_in_bounds(map_: NDArray | ecs.Entity, pos: comp.Position | tuple[int, int]) -> bool:
+def is_in_bounds(
+    map_: NDArray | ecs.Entity, pos: comp.Position | tuple[int, int]
+) -> bool:
     if isinstance(map_, ecs.Entity):
         map_ = map_.components[comp.Tiles]
     if isinstance(pos, comp.Position):
         pos = pos.xy
-    return (pos[0] >= 0) and (pos[0] < map_.shape[0]) and \
-        (pos[1] >= 0) and (pos[1] < map_.shape[1])
+    return (
+        (pos[0] >= 0)
+        and (pos[0] < map_.shape[0])
+        and (pos[1] >= 0)
+        and (pos[1] < map_.shape[1])
+    )
 
 
 def is_explored(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) -> bool:
@@ -58,7 +64,7 @@ def is_walkable(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) ->
     query = map_entity.registry.Q.all_of(
         components=[comp.Position],
         tags=[comp.Obstacle, pos],
-        relations=[(comp.Map, map_entity)]
+        relations=[(comp.Map, map_entity)],
     )
     for e in query:
         return False
@@ -71,7 +77,7 @@ def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 2) -> NDArray[np.int8
     query = map_entity.registry.Q.all_of(
         components=[comp.Position],
         tags=[comp.Obstacle],
-        relations=[(comp.Map, map_entity)]
+        relations=[(comp.Map, map_entity)],
     )
     for e in query:
         xy = e.components[comp.Position].xy
@@ -81,9 +87,10 @@ def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 2) -> NDArray[np.int8
 
 def astar_path(
     actor: ecs.Entity,
-    target: tuple[int,int] | comp.Position | ecs.Entity,
+    target: tuple[int, int] | comp.Position | ecs.Entity,
     entity_cost: int = 2,
-    cardinal: int = 5, diagonal: int = 7
+    cardinal: int = 5,
+    diagonal: int = 7,
 ) -> list[tuple[int, int]]:
     map_entity = actor.relation_tag[comp.Map]
     origin = actor.components[comp.Position].xy

@@ -8,8 +8,10 @@ import comp
 import consts
 
 
-def dist(origin: ecs.Entity | comp.Position | tuple[int, int],
-         target: ecs.Entity | comp.Position | tuple[int, int]) -> float:
+def dist(
+    origin: ecs.Entity | comp.Position | tuple[int, int],
+    target: ecs.Entity | comp.Position | tuple[int, int],
+) -> float:
     if isinstance(origin, ecs.Entity):
         origin = origin.components[comp.Position]
     if isinstance(target, ecs.Entity):
@@ -20,18 +22,24 @@ def dist(origin: ecs.Entity | comp.Position | tuple[int, int],
         origin = origin.xy
     if isinstance(target, comp.Position):
         target = target.xy
-    return sum([(origin[i] - target[i])**2 for i in range(2)])**0.5
+    return sum([(origin[i] - target[i]) ** 2 for i in range(2)]) ** 0.5
 
 
 def update_fov(actor: ecs.Entity):
-    if comp.Map not in actor.relation_tag or comp.Position not in actor.components or comp.FOVRadius not in actor.components:
+    if (
+        comp.Map not in actor.relation_tag
+        or comp.Position not in actor.components
+        or comp.FOVRadius not in actor.components
+    ):
         return
     map_entity = actor.relation_tag[comp.Map]
     grid = map_entity.components[comp.Tiles]
     transparency = ~consts.TILE_ARRAY["opaque"][grid]
     xy = actor.components[comp.Position].xy
     radius = actor.components[comp.FOVRadius]
-    fov = tcod.map.compute_fov(transparency, xy, radius, algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST)
+    fov = tcod.map.compute_fov(
+        transparency, xy, radius, algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST
+    )
     actor.components[comp.FOV] = fov
     if comp.Player in actor.tags:
         if comp.Explored not in map_entity.components:
@@ -40,7 +48,9 @@ def update_fov(actor: ecs.Entity):
             map_entity.components[comp.Explored] |= fov
 
 
-def is_in_fov(actor: ecs.Entity, pos: comp.Position | ecs.Entity | tuple[int, int]) -> bool:
+def is_in_fov(
+    actor: ecs.Entity, pos: comp.Position | ecs.Entity | tuple[int, int]
+) -> bool:
     if not is_alive(actor):
         return False
     apos = actor.components[comp.Position]
