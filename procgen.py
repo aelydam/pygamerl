@@ -3,12 +3,13 @@ from __future__ import annotations
 import random
 
 import numpy as np
+import scipy.spatial  # type: ignore
+import tcod
 import tcod.ecs as ecs
 from numpy.typing import NDArray
 
 import comp
 import consts
-import entities
 import funcs
 import maps
 
@@ -55,6 +56,144 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
         available[dist2 <= radius**2] = False
 
 
+def rect_room(
+    shape: tuple[int, int], x: int, y: int, w: int, h: int
+) -> NDArray[np.bool_]:
+    grid_x, grid_y = np.indices(shape)
+    return (grid_x >= x) & (grid_y >= y) & (grid_x < x + w) & (grid_y < y + h)
+
+
+def random_room_size(
+    seed: np.random.RandomState,
+    min_size: int = consts.MIN_ROOM_SIZE,
+    max_size: int = consts.MAX_ROOM_SIZE,
+) -> tuple[int, int]:
+    w = (seed.randint(min_size, max_size) + seed.randint(min_size, max_size)) // 2
+    med_size = (min_size + max_size) / 2
+    if w == med_size:
+        h = (seed.randint(min_size, max_size) + seed.randint(min_size, max_size)) // 2
+    elif w < med_size:
+        h = (seed.randint(w, max_size) + seed.randint(w, max_size)) // 2
+    else:
+        h = (seed.randint(min_size, w) + seed.randint(min_size, w)) // 2
+    return w, h
+
+
+def random_rect_room(
+    occupied: NDArray[np.bool_],
+    seed: np.random.RandomState,
+    min_size: int = consts.MIN_ROOM_SIZE,
+    max_size: int = consts.MAX_ROOM_SIZE,
+    max_iter: int = 20,
+) -> NDArray[np.bool_] | None:
+    shape = occupied.shape
+    for _ in range(max_iter):
+        w, h = random_room_size(seed, min_size, max_size)
+        x = seed.randint(1, shape[0] - 2 - w)
+        y = seed.randint(1, shape[1] - 2 - h)
+        room = rect_room(shape, x, y, w, h)
+        exterior = funcs.moore(room) > 0
+        if np.sum(exterior & occupied) < 1:
+            return room
+    return None
+
+
+def area_centroid(area: NDArray[np.bool_]) -> tuple[int, int]:
+    return tuple(np.astype(np.median(np.argwhere(area), axis=0), int))
+
+
+def corridor(
+    walkable: NDArray[np.bool_],
+    origin: tuple[int, int],
+    target: tuple[int, int],
+    noise: int = 0,
+    seed: np.random.RandomState | None = None,
+):
+    grid = np.full(walkable.shape, False)
+    cost = 6 - walkable
+    wmoore = funcs.moore(walkable)
+    bm = funcs.bitmask(1 * walkable)
+    corridor = walkable & (wmoore == 2) & np.isin(bm, (6, 9, 0))
+    rooms = walkable & (funcs.moore(wmoore >= 8) > 0) & ~corridor
+    wall = ~walkable & (funcs.moore(rooms) > 0)
+    cost[wall] += 15
+    cost[~walkable & (wmoore == 1)] += 10
+    cost[rooms & (wmoore == 3)] += 10
+    cost[walkable & ~rooms & (funcs.moore(rooms) > 0) & ~corridor] += 10
+    # cost[walkable & (wmoore == 2)] -= 3
+    cost[~walkable & (funcs.moore(wall) > 0)] -= 2
+    cost[walkable & corridor] = 1
+    cost[walkable & (cost < 1)] = 1
+    if seed is not None and noise > 0:
+        cost += seed.randint(0, noise, walkable.shape) * ~walkable
+    cost[origin[0], origin[1]] = 1
+    cost[target[0], target[1]] = 1
+    graph = tcod.path.SimpleGraph(cost=cost.astype(np.int8), cardinal=1, diagonal=0)
+    pathfinder = tcod.path.Pathfinder(graph)
+    pathfinder.add_root(origin)
+    path = pathfinder.path_to(target)
+    for point in path:
+        grid[point[0], point[1]] = 1
+    return grid
+
+
+def delaunay_corridors(
+    walkable: NDArray[np.bool_],
+    points: list[tuple[int, int]],
+    seed: np.random.RandomState,
+    noise: int = 0,
+    nomst_prob: float = 0.10,
+):
+    distmat = scipy.spatial.distance.cdist(points, points, metric="minkowski")
+    mst = scipy.sparse.csgraph.minimum_spanning_tree(distmat).toarray().astype(int)
+    grid = walkable.copy()
+    for i, j in zip(*np.where(mst != 0)):
+        grid |= corridor(grid, points[i], points[j], noise=noise, seed=seed)
+    if nomst_prob > 0:
+        delaunay = scipy.spatial.Delaunay(points).simplices.tolist()
+        connected = (mst + mst.T) != 0
+        for a, b, c in delaunay:
+            if not connected[a, b] and seed.random() <= nomst_prob:
+                grid |= corridor(grid, points[a], points[b], noise, seed)
+                connected[a, b] = True
+                connected[b, a] = True
+            if not connected[a, c] and seed.random() <= nomst_prob:
+                grid |= corridor(grid, points[a], points[c], noise, seed)
+                connected[a, c] = True
+                connected[c, a] = True
+            if not connected[b, c] and seed.random() <= nomst_prob:
+                grid |= corridor(grid, points[b], points[c], noise, seed)
+                connected[b, c] = True
+                connected[c, b] = True
+    return grid & ~walkable
+
+
+def disjoint_areas(grid: NDArray[np.bool_]) -> list[NDArray[np.bool_]]:
+    areas, n_areas = scipy.ndimage.label(grid)
+    return [
+        grid & (areas == i) for i in range(n_areas + 1) if np.sum(grid[areas == i]) > 0
+    ]
+
+
+def random_rooms(
+    condition: NDArray[np.bool_],
+    seed: np.random.RandomState,
+    max_rooms: int = consts.NUM_ROOMS,
+    max_iter: int = 100,
+) -> NDArray:
+    room_grid: NDArray[np.bool_] = np.full(condition.shape, False)
+    n_rooms = 0
+    for _ in range(max_iter):
+        if n_rooms > max_rooms:
+            break
+        room = random_rect_room(room_grid | ~condition, seed, max_iter=4)
+        if room is None:
+            continue
+        room_grid |= room
+        n_rooms += 1
+    return room_grid
+
+
 def random_walk(condition: NDArray[np.bool_], walkers: int = 5, steps: int = 500):
     # Random walk algorithm
     # Repeat for each walker
@@ -99,7 +238,16 @@ def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
 def generate(map_entity: ecs.Entity):
     # Generate map
     grid = np.zeros(consts.MAP_SHAPE, np.int8)
-    floor = random_walk(grid == 0)
+    seed = np.random.RandomState()
+    map_entity.components[np.random.RandomState] = seed
+    # Create random rooms
+    room_grid = random_rooms(grid == 0, seed)
+    # Create corridors
+    room_list = disjoint_areas(room_grid)
+    room_centers = [area_centroid(room) for room in room_list]
+    corridors = delaunay_corridors(room_grid, room_centers, seed)
+    floor = room_grid | corridors
+    # Add walls
     walls = get_walls(floor)
     # Set tiles
     grid[floor] = consts.TILE_FLOOR
