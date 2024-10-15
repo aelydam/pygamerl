@@ -32,7 +32,7 @@ class InGameState(game_interface.State):
                 else:
                     self.logic.input_action = action
             elif event.key in consts.WAIT_KEYS:
-                self.logic.input_action = actions.WaitAction()
+                self.logic.input_action = actions.WaitAction(self.logic.player)
             elif event.key == pg.K_x:
                 if event.mod & pg.KMOD_SHIFT:
                     self.logic.continuous_action = actions.MagicMap(self.logic.player)
@@ -49,7 +49,7 @@ class InGameState(game_interface.State):
             player = self.logic.player
             px, py = player.components[comp.Position].xy
             if x == px and y == py:
-                self.logic.input_action = actions.WaitAction()
+                self.logic.input_action = actions.WaitAction(player)
                 return
             if (x - px) ** 2 + (y - py) ** 2 <= 2:
                 self.logic.input_action = actions.BumpAction.to(player, (x, y))

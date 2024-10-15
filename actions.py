@@ -26,8 +26,14 @@ class Action:
         return self
 
 
+@dataclass
 class WaitAction(Action):
-    pass
+    actor: ecs.Entity | None = None
+
+    def perform(self) -> Action | None:
+        if self.actor is not None and comp.Initiative in self.actor.components:
+            self.cost = self.actor.components[comp.Initiative]
+        return super().perform()
 
 
 @dataclass

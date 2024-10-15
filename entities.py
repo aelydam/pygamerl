@@ -112,6 +112,6 @@ def enemy_action(actor: ecs.Entity) -> actions.Action:
     # Move towards player
     move_to = actions.MoveAction.to(actor, player_pos.xy)
     if move_to is None:
-        return actions.WaitAction()
+        return actions.WaitAction(actor)
     else:
         return move_to
