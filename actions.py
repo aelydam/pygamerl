@@ -232,5 +232,10 @@ class MagicMap(Action):
         explored = map_.components[comp.Explored]
         walkable = ~consts.TILE_ARRAY["obstacle"][tiles]
         explorable = walkable | (funcs.moore(walkable) > 0)
-        map_.components[comp.Explored] |= explorable & (funcs.moore(explored) > 0)
+        remaining = np.sum(explorable & ~explored)
+        if remaining < 1:
+            return None
+        rand = np.random.random(explorable.shape)
+        reveal = explorable & (funcs.moore(explored, False) > 0) & (rand < 0.2)
+        map_.components[comp.Explored] |= reveal
         return self
