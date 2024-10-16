@@ -102,15 +102,11 @@ def area_centroid(area: NDArray[np.bool_]) -> tuple[int, int]:
     return tuple(np.astype(np.median(np.argwhere(area), axis=0), int))
 
 
-def corridor(
+def corridor_cost_matrix(
     walkable: NDArray[np.bool_],
-    origin: tuple[int, int],
-    target: tuple[int, int],
     seed: np.random.RandomState | None = None,
     noise: int = 0,
-    max_size: int = 0,
-):
-    grid = np.full(walkable.shape, False)
+) -> NDArray[np.int32]:
     cost = 6 - walkable
     wmoore = funcs.moore(walkable)
     bm = funcs.bitmask(1 * walkable)
@@ -129,33 +125,57 @@ def corridor(
     if seed is not None and noise > 0:
         noise_grid = seed.randint(-noise, noise + 1, walkable.shape)
         cost += noise_grid * ~walkable
-    cost[origin[0], origin[1]] = 1
-    cost[target[0], target[1]] = 1
-    graph = tcod.path.SimpleGraph(cost=cost.astype(np.int8), cardinal=1, diagonal=0)
-    pathfinder = tcod.path.Pathfinder(graph)
-    pathfinder.add_root(origin)
-    path = pathfinder.path_to(target)
+    return cost
+
+
+def corridor(
+    walkable: NDArray[np.bool_],
+    area1: NDArray[np.bool_],
+    area2: NDArray[np.bool_],
+    seed: np.random.RandomState | None = None,
+    noise: int = 0,
+    max_size: int = 0,
+) -> NDArray[np.bool_]:
+    grid = np.full(walkable.shape, False)
+    cost = corridor_cost_matrix(walkable | area1 | area2, seed, noise)
+    cost[area1] = 1
+    cost[area2] = 1
+    if np.sum(area1) >= np.sum(area2):
+        origin = area_centroid(area2)
+        target = area1 & (funcs.moore(area1) >= 8)
+        if np.sum(target) < 1:
+            target = area1
+    else:
+        origin = area_centroid(area1)
+        target = area2 & (funcs.moore(area2) >= 8)
+        if np.sum(target) < 1:
+            target = area2
+    dijkstra = tcod.path.maxarray(grid.shape, dtype=np.int32)
+    dijkstra[target] = 0
+    tcod.path.dijkstra2d(dijkstra, cost, 1, 0, out=dijkstra)
+    path = tcod.path.hillclimb2d(dijkstra, origin, True, False)
     for point in path:
-        grid[point[0], point[1]] = 1
-    if max_size > 0 and np.sum(grid & ~walkable) > max_size:
+        grid[point[0], point[1]] = True
+    if max_size > 0 and np.sum(grid & ~walkable & ~area1 & ~area2) > max_size:
         return np.full(grid.shape, False)
-    return grid & ~walkable
+    return grid & ~walkable & ~area1 & ~area2
 
 
 def delaunay_corridors(
     walkable: NDArray[np.bool_],
-    points: list[tuple[int, int]],
+    areas: list[NDArray[np.bool_]],
     seed: np.random.RandomState,
     noise: int = 0,
     nomst_prob: float = 0.10,
     max_size: int = 0,
 ):
+    points = [area_centroid(area) for area in areas]
     distmat = scipy.spatial.distance.cdist(points, points, metric="minkowski")
     mst = scipy.sparse.csgraph.minimum_spanning_tree(distmat).toarray().astype(int)
     grid = walkable.copy()
     connected = np.full(mst.shape, False)
     for i, j in zip(*np.where(mst != 0)):
-        path = corridor(grid, points[i], points[j], seed, noise, max_size)
+        path = corridor(grid, areas[i], areas[j], seed, noise, max_size)
         if max_size < 1 or np.sum(path & ~grid) <= max_size:
             grid |= path
             connected[i, j] = True
@@ -164,19 +184,19 @@ def delaunay_corridors(
         delaunay = scipy.spatial.Delaunay(points).simplices.tolist()
         for a, b, c in delaunay:
             if not connected[a, b] and seed.random() <= nomst_prob:
-                path = corridor(grid, points[a], points[b], seed, noise, max_size)
+                path = corridor(grid, areas[a], areas[b], seed, noise, max_size)
                 if max_size < 1 or np.sum(path & ~grid) <= max_size:
                     grid |= path
                     connected[a, b] = True
                     connected[b, a] = True
             if not connected[a, c] and seed.random() <= nomst_prob:
-                path = corridor(grid, points[a], points[c], seed, noise, max_size)
+                path = corridor(grid, areas[a], areas[c], seed, noise, max_size)
                 if max_size < 1 or np.sum(path & ~grid) <= max_size:
                     grid |= path
                     connected[a, c] = True
                     connected[c, a] = True
             if not connected[b, c] and seed.random() <= nomst_prob:
-                path = corridor(grid, points[b], points[c], seed, noise, max_size)
+                path = corridor(grid, areas[b], areas[c], seed, noise, max_size)
                 if max_size < 1 or np.sum(path & ~grid) <= max_size:
                     grid |= path
                     connected[b, c] = True
@@ -288,10 +308,9 @@ def generate(map_entity: ecs.Entity):
     room_grid = random_rooms(grid == 0, seed)
     # Create corridors
     room_list = disjoint_areas(room_grid)
-    room_centers = [area_centroid(room) for room in room_list]
     corridors = delaunay_corridors(
         room_grid,
-        room_centers,
+        room_list,
         seed,
         max_size=consts.MAX_ROOM_SIZE + consts.MIN_ROOM_SIZE,
     )
@@ -299,13 +318,13 @@ def generate(map_entity: ecs.Entity):
     cave_grid = prune(cellular_automata(~room_grid & ~corridors, seed))
     #
     cave_list = disjoint_areas(cave_grid)
-    cave_centers = [area_centroid(cave) for cave in cave_list]
     new_corridors = delaunay_corridors(
-        room_grid | cave_grid | corridors, cave_centers + room_centers, seed, noise=6
+        room_grid | cave_grid | corridors, cave_list + room_list, seed, noise=6
     )
+    corridors[new_corridors & (funcs.moore(room_grid) > 0)] = True
+    new_corridors[corridors] = False
     #
     floor = room_grid | cave_grid | corridors | new_corridors
-    corridors[new_corridors & (funcs.moore(room_grid) > 0)] = True
     # Add walls
     walls = get_walls(room_grid | corridors, ~floor)
     cave_walls = get_walls(cave_grid | new_corridors, ~floor & ~walls)
