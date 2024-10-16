@@ -126,6 +126,10 @@ def corridor_cost_matrix(
     if seed is not None and noise > 0:
         noise_grid = seed.randint(-noise, noise + 1, walkable.shape)
         cost += noise_grid * ~walkable
+    cost[:, 0] = 0
+    cost[0, :] = 0
+    cost[:, -1] = 0
+    cost[-1:,] = 0
     return cost
 
 
@@ -436,7 +440,7 @@ def generate(map_entity: ecs.Entity):
     map_entity.components[comp.Tiles] = grid
     map_entity.components[comp.Explored] = np.full(grid.shape, False)
     # Add doors
-    add_doors(map_entity, corridors)
+    add_doors(map_entity, corridors & (funcs.moore(room_grid, diagonals=False) > 0))
     # Stairs
     add_downstairs(map_entity, room_grid)
     # Spawn enemies
