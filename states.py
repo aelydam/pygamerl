@@ -32,6 +32,8 @@ class InGameState(game_interface.State):
                     self.logic.continuous_action = action
                 else:
                     self.logic.input_action = action
+            elif event.key == pg.K_RETURN:
+                self.logic.input_action = actions.Interact(self.logic.player)
             elif event.key in consts.WAIT_KEYS:
                 self.logic.input_action = actions.WaitAction(self.logic.player)
             elif event.key == pg.K_x:

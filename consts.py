@@ -25,7 +25,7 @@ MOVE_KEYS = {
     pg.K_z: (-1, 1),
     pg.K_c: (1, 1),
 }
-WAIT_KEYS = (pg.K_RETURN, pg.K_SPACE, pg.K_PERIOD)
+WAIT_KEYS = (pg.K_SPACE, pg.K_PERIOD)
 
 MAP_SHAPE = (64, 48)
 N_ENEMIES = 10

@@ -229,6 +229,52 @@ class BumpAction(MoveAction):
 
 
 @dataclass
+class Interact(Action):
+    actor: ecs.Entity
+
+    def get_entity(self) -> ecs.Entity | None:
+        map_entity = self.actor.relation_tag[comp.Map]
+        pos = self.actor.components[comp.Position]
+        query = self.actor.registry.Q.all_of(
+            [comp.Position, comp.Interaction],
+            tags=[pos],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            if e != self.actor:
+                return e
+        if comp.Direction in self.actor.components:
+            newpos = pos + self.actor.components[comp.Direction]
+            query = self.actor.registry.Q.all_of(
+                [comp.Position, comp.Interaction],
+                tags=[newpos],
+                relations=[(comp.Map, map_entity)],
+            )
+            for e in query:
+                if e != self.actor:
+                    return e
+
+        return None
+
+    def get_action(self) -> Interaction | None:
+        entity = self.get_entity()
+        if entity is not None:
+            action_class = entity.components[comp.Interaction]
+            return action_class(self.actor, entity, bump=False)
+        return None
+
+    def can(self) -> bool:
+        action = self.get_action()
+        return action is not None and action.can()
+
+    def perform(self) -> Action | None:
+        action = self.get_action()
+        if action is not None:
+            return action.perform()
+        return None
+
+
+@dataclass
 class MagicMap(Action):
     actor: ecs.Entity
 
@@ -290,4 +336,5 @@ class ToggleDoor(Interaction):
         aname = self.actor.components.get(comp.Name)
         if aname is not None:
             self.message = f"{aname} {verb} a door"
+        self.cost = 1
         return self
