@@ -73,6 +73,13 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
         available[dist2 <= radius**2] = False
 
 
+def respawn(map_entity: ecs.Entity):
+    seed = map_entity.components[np.random.RandomState]
+    roll = seed.randint(1, consts.RESPAWN_RATE + 1)
+    if roll <= 1:
+        spawn_enemies(map_entity, consts.ENEMY_RADIUS, 1)
+
+
 def rect_room(
     shape: tuple[int, int], x: int, y: int, w: int, h: int
 ) -> NDArray[np.bool_]:

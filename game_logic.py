@@ -87,6 +87,7 @@ class GameLogic:
         self.turn_count += 1
         initiative = self.initiative
         initiative.clear()
+        procgen.respawn(self.map)
         query = self.reg.Q.all_of(
             components=[comp.Position, comp.Initiative],
             relations=[(comp.Map, self.map)],
