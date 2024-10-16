@@ -164,14 +164,16 @@ class Minimap(pg.sprite.Sprite):
             grid[:, :, k] += 40 * explored * (~walkable) * fov
         #
         query = map_.registry.Q.all_of(
-            components=[comp.Position, comp.HP], relations=[(comp.Map, map_)]
+            components=[comp.Position], relations=[(comp.Map, map_)]
         )
         for e in query:
             ex, ey = e.components[comp.Position].xy
-            if fov[ex, ey]:
+            if explored[ex, ey]:
                 if comp.Player in e.tags:
                     grid[ex, ey, :] = [0, 0, 255]
-                else:
+                elif not comp.HP in e.components:
+                    grid[ex, ey, :] = [255, 255, 0]
+                elif fov[ex, ey]:
                     grid[ex, ey, :] = [255, 0, 0]
         self.image = pg.surfarray.make_surface(grid.astype(np.uint8))
         self.image.set_colorkey((1, 1, 1))
