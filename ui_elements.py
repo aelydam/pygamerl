@@ -218,6 +218,7 @@ class StatsHUD(pg.sprite.Sprite):
         text = " ".join(
             [
                 f"Depth:{depth}",
+                f"Turn:{self.logic.turn_count}",
                 f"FPS:{self.interface.clock.get_fps():0.0f}",
             ]
         )
