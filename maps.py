@@ -86,6 +86,23 @@ def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 2) -> NDArray[np.int8
     return cost.astype(np.int8)
 
 
+def transparency_matrix(
+    map_entity: ecs.Entity, entities: bool = True
+) -> NDArray[np.bool_]:
+    grid = map_entity.components[comp.Tiles]
+    transparency = ~consts.TILE_ARRAY["opaque"][grid]
+    # Find opaque entities
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position],
+        tags=[comp.Opaque],
+        relations=[(comp.Map, map_entity)],
+    )
+    for e in query:
+        xy = e.components[comp.Position].xy
+        transparency[xy] = False
+    return transparency
+
+
 def astar_path(
     actor: ecs.Entity,
     target: tuple[int, int] | comp.Position | ecs.Entity,

@@ -6,6 +6,7 @@ import tcod.ecs as ecs
 import actions
 import comp
 import consts
+import maps
 
 
 def dist(
@@ -33,14 +34,17 @@ def update_fov(actor: ecs.Entity):
     ):
         return
     map_entity = actor.relation_tag[comp.Map]
-    grid = map_entity.components[comp.Tiles]
-    transparency = ~consts.TILE_ARRAY["opaque"][grid]
+    transparency = maps.transparency_matrix(map_entity)
+    # Actor can see its own position
     xy = actor.components[comp.Position].xy
+    transparency[xy] = True
+    # Update player FOV
     radius = actor.components[comp.FOVRadius]
     fov = tcod.map.compute_fov(
         transparency, xy, radius, algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST
     )
     actor.components[comp.FOV] = fov
+    # Set map as explored if this is a player
     if comp.Player in actor.tags:
         if comp.Explored not in map_entity.components:
             map_entity.components[comp.Explored] = fov.copy()
