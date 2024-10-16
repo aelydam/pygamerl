@@ -19,13 +19,18 @@ if TYPE_CHECKING:
 TILE_LAYER = 0
 TILE_UI_LAYER = 1
 ENTITY_LAYER = 2
-UI_LAYER = 3
+ACTOR_LAYER = 3
+UI_LAYER = 4
 
 
 class EntitySprite(pg.sprite.Sprite):
     def __init__(self, group: MapRenderer, entity: ecs.Entity):
-        self._layer = ENTITY_LAYER
-        super().__init__(group)
+        super().__init__()
+        if comp.HP in entity.components:
+            layer = ACTOR_LAYER
+        else:
+            layer = ENTITY_LAYER
+        group.add(self, layer=layer)
         self.group = group
         self.entity = entity
         self.is_in_fov: bool | None = None
@@ -41,13 +46,17 @@ class EntitySprite(pg.sprite.Sprite):
         self.rect: pg.Rect
 
     def update(self) -> None:
-        if not entities.is_alive(self.entity):
+        if (
+            not comp.Position in self.entity.components
+            or not comp.Sprite in self.entity.components
+        ):
             self.kill()
             self.group.entity_sprites.pop(self.entity)
             return
         pos = self.entity.components[comp.Position]
         x, y = self.group.grid_to_screen(*pos.xy)
-        y -= consts.ENTITY_YOFFSET
+        if comp.HP in self.entity.components:
+            y -= consts.ENTITY_YOFFSET
         rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
         is_in_fov = self.group.fov[pos.xy]
         dx, dy = self.entity.components.get(comp.Direction, (0, 0))
@@ -89,8 +98,8 @@ class EntitySprite(pg.sprite.Sprite):
 
 class TileSprite(pg.sprite.Sprite):
     def __init__(self, group: MapRenderer, x: int, y: int):
-        self._layer = TILE_LAYER
-        super().__init__(group)
+        super().__init__()
+        group.add(self, layer=TILE_LAYER)
         self.group = group
         self.x, self.y = x, y
         self.is_explored = False
