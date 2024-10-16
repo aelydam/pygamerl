@@ -121,6 +121,8 @@ class GameLogic:
         if not entities.can_act(entity):
             return self.next_entity()
         if comp.Player in entity.tags:
+            if self.input_action is not None:
+                self.continuous_action = None
             if self.continuous_action is not None and self.continuous_action.can():
                 action = self.continuous_action
                 if entities.has_enemy_in_fov(entity) and action.cost > 0:
