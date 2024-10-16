@@ -365,8 +365,12 @@ def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
     seed = map_entity.components[np.random.RandomState]
     points = []
     if depth < 1:
-        x = seed.randint(8, consts.MAP_SHAPE[0] - 8)
-        y = seed.randint(8, consts.MAP_SHAPE[1] - 8)
+        x = consts.MAX_ROOM_SIZE + seed.randint(
+            1, consts.MAP_SHAPE[0] - consts.MAX_ROOM_SIZE
+        )
+        y = consts.MAX_ROOM_SIZE + seed.randint(
+            1, consts.MAP_SHAPE[1] - consts.MAX_ROOM_SIZE
+        )
         points = [(x, y)]
     else:
         prev_map = maps.get_map(map_entity.registry, depth - 1)
@@ -379,7 +383,8 @@ def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
     rooms = np.full(consts.MAP_SHAPE, False)
     for point in points:
         w, h = random_room_size(seed)
-        x, y = point[0] - w // 2, point[1] - h // 2
+        x = min(max(1, point[0] - w // 2), consts.MAP_SHAPE[0] - 2)
+        y = min(max(1, point[1] - h // 2), consts.MAP_SHAPE[1] - 2)
         rooms |= rect_room(consts.MAP_SHAPE, x, y, w, h)
         map_entity.registry.new_entity(
             components={
