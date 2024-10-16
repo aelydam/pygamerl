@@ -307,6 +307,27 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
         )
 
 
+def add_downstairs(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None):
+    grid = map_entity.components[comp.Tiles]
+    depth = map_entity.components[comp.Depth]
+    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    cond = walkable & (funcs.moore(walkable) >= 8)
+    if condition is not None:
+        cond &= condition
+    all_x, all_y = np.where(cond)
+    seed = map_entity.components[np.random.RandomState]
+    i = seed.randint(0, len(all_x))
+    xy = (all_x[i], all_y[i])
+    stairs = map_entity.registry.new_entity(
+        components={
+            comp.Position: comp.Position(xy, depth),
+            comp.Sprite: comp.Sprite("Objects/Tile", (6, 3)),
+            comp.Interaction: actions.Descend,
+        }
+    )
+    pass
+
+
 def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
     bm = funcs.bitmask(grid)
     for tile_name, tile_id in consts.TILE_ID.items():
@@ -363,5 +384,7 @@ def generate(map_entity: ecs.Entity):
     map_entity.components[comp.Explored] = np.full(grid.shape, False)
     # Add doors
     add_doors(map_entity, corridors)
-    # SPawn enemies
+    # Stairs
+    add_downstairs(map_entity, room_grid)
+    # Spawn enemies
     spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)

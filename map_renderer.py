@@ -52,6 +52,7 @@ class EntitySprite(pg.sprite.Sprite):
         if (
             not comp.Position in self.entity.components
             or not comp.Sprite in self.entity.components
+            or self.entity.components[comp.Position].depth != self.group.depth
         ):
             self.kill()
             self.group.entity_sprites.pop(self.entity)
@@ -119,6 +120,7 @@ class TileSprite(pg.sprite.Sprite):
         group.add(self, layer=TILE_LAYER)
         self.group = group
         self.x, self.y = x, y
+        self.depth = 0
         self.is_explored = False
         self.is_in_fov = False
         self.tile_id: int | None = None
@@ -132,13 +134,18 @@ class TileSprite(pg.sprite.Sprite):
         tile_id = int(self.group.tiles[self.x, self.y])
         is_explored = self.group.explored[self.x, self.y]
         is_in_fov = self.group.fov[self.x, self.y]
+        if self.depth != self.group.depth:
+            is_explored = False
+            self.image = self.group.void_surface
         if (
             is_explored == self.is_explored
             and is_in_fov == self.is_in_fov
             and tile_id == self.tile_id
             and rect == self.rect
+            and self.depth == self.group.depth
         ):
             return
+        self.depth = self.group.depth
         self.tile_id = tile_id
         self.is_explored = is_explored
         self.is_in_fov = is_in_fov
@@ -218,6 +225,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.create_entity_sprites()
         player = self.logic.player
         map_ = self.logic.map
+        self.depth = map_.components[comp.Depth]
         self.tiles = map_.components[comp.Tiles]
         self.fov = player.components[comp.FOV]
         self.explored = map_.components[comp.Explored]

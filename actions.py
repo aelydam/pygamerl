@@ -338,3 +338,19 @@ class ToggleDoor(Interaction):
             self.message = f"{aname} {verb} a door"
         self.cost = 1
         return self
+
+
+class Descend(Interaction):
+    def can(self) -> bool:
+        return not self.bump and super().can()
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        pos = self.target.components[comp.Position]
+        new_depth = pos.depth + 1
+        maps.get_map(self.actor.registry, new_depth)
+        new_pos = comp.Position(pos.xy, new_depth)
+        self.actor.components[comp.Position] = new_pos
+        self.cost = 1
+        return self
