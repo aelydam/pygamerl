@@ -284,6 +284,27 @@ def prune(area: NDArray[np.bool_], min_area: int = 16) -> NDArray[np.bool_]:
     return grid
 
 
+def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None):
+    grid = map_entity.components[comp.Tiles]
+    depth = map_entity.components[comp.Depth]
+    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    bm = funcs.bitmask(walkable)
+    wmoore = funcs.moore(walkable)
+    rooms = walkable & (funcs.moore(wmoore >= 8) > 0)
+    doors = walkable & np.isin(bm, (6, 9)) & (funcs.moore(rooms) > 0)
+    if condition is not None:
+        doors &= condition
+    all_x, all_y = np.where(doors)
+    for x, y in zip(all_x, all_y):
+        door = map_entity.registry.new_entity(
+            components={
+                comp.Position: comp.Position((x, y), depth),
+                comp.Sprite: comp.Sprite("Objects/Door0", (0, 0)),
+            },
+            tags=[comp.Opaque],
+        )
+
+
 def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
     bm = funcs.bitmask(grid)
     for tile_name, tile_id in consts.TILE_ID.items():
@@ -338,5 +359,7 @@ def generate(map_entity: ecs.Entity):
     # Save generated map
     map_entity.components[comp.Tiles] = grid
     map_entity.components[comp.Explored] = np.full(grid.shape, False)
+    # Add doors
+    add_doors(map_entity, corridors)
     # SPawn enemies
     spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
