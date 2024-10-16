@@ -194,7 +194,11 @@ class EntityTooltip(pg.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=parent.rect.bottomleft)
 
     def update(self):
-        if self.parent is None or not self.parent.alive():
+        if (
+            self.parent is None
+            or not self.parent.alive()
+            or not comp.Name in self.entity.components
+        ):
             return self.kill()
         self.rect = self.image.get_rect(topleft=self.parent.rect.bottomleft)
         super().update()

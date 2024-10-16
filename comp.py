@@ -1,15 +1,19 @@
 from collections import deque
 from dataclasses import dataclass
+from typing import Protocol
 
 import numpy as np
 import tcod.ecs as ecs
 from numpy.typing import NDArray
+
+import actions
 
 # Tags
 Map = "Map"
 Player = "Player"
 Obstacle = "Obstacle"
 Opaque = "Opaque"
+HideSprite = "HideSprite"
 
 # Map components
 Depth = ("Depth", int)
@@ -64,3 +68,9 @@ def on_position_changed(
 class Sprite:
     sheet: str
     tile: tuple[int, int]
+
+
+class Interaction(Protocol):
+    def __call__(
+        self, actor: ecs.Entity, target: ecs.Entity, bump: bool = False
+    ) -> actions.Interaction: ...

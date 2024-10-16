@@ -8,6 +8,7 @@ import tcod
 import tcod.ecs as ecs
 from numpy.typing import NDArray
 
+import actions
 import comp
 import consts
 import funcs
@@ -300,8 +301,9 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
             components={
                 comp.Position: comp.Position((x, y), depth),
                 comp.Sprite: comp.Sprite("Objects/Door0", (0, 0)),
+                comp.Interaction: actions.ToggleDoor,
             },
-            tags=[comp.Opaque],
+            tags=[comp.Opaque, comp.Obstacle],
         )
 
 

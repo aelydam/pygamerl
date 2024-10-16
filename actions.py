@@ -191,7 +191,17 @@ class BumpAction(MoveAction):
         map_entity = self.actor.relation_tag[comp.Map]
         new_pos = self.actor.components[comp.Position] + self.direction
         query = self.actor.registry.Q.all_of(
-            [comp.Position, comp.HP], tags=[new_pos], relations=[(comp.Map, map_entity)]
+            [comp.Position, comp.HP],
+            tags=[new_pos],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            if e != self.actor:
+                return e
+        query = self.actor.registry.Q.all_of(
+            [comp.Position, comp.Interaction],
+            tags=[new_pos],
+            relations=[(comp.Map, map_entity)],
         )
         for e in query:
             if e != self.actor:
@@ -208,9 +218,14 @@ class BumpAction(MoveAction):
             return None
         entity = self.get_entity()
         if entity is not None:
-            return AttackAction(self.actor, entity).perform()
-        else:
-            return super().perform()
+            if comp.HP in entity.components:
+                return AttackAction(self.actor, entity).perform()
+            elif comp.Interaction in entity.components:
+                action_class = entity.components[comp.Interaction]
+                action = action_class(self.actor, entity, bump=True)
+                if action.can():
+                    return action.perform()
+        return super().perform()
 
 
 @dataclass
@@ -238,4 +253,41 @@ class MagicMap(Action):
         rand = np.random.random(explorable.shape)
         reveal = explorable & (funcs.moore(explored, False) > 0) & (rand < 0.2)
         map_.components[comp.Explored] |= reveal
+        return self
+
+
+@dataclass
+class Interaction(Action):
+    actor: ecs.Entity
+    target: ecs.Entity
+    bump: bool = False
+
+    def can(self) -> bool:
+        return entities.dist(self.target, self.actor) < 1.5
+
+
+class ToggleDoor(Interaction):
+    def can(self) -> bool:
+        if self.bump and (comp.Obstacle not in self.target.tags):
+            return False
+        return super().can()
+
+    def perform(self) -> Action | None:
+        if comp.Obstacle in self.target.tags:
+            verb = "opens"
+            self.target.tags -= {comp.Obstacle, comp.Opaque}
+            self.target.tags.discard(comp.Obstacle)
+            if comp.Opaque in self.target.tags:
+                self.target.tags.discard(comp.Opaque)
+            self.target.tags |= {comp.HideSprite}
+        else:
+            verb = "closes"
+            self.target.tags |= {comp.Obstacle, comp.Opaque}
+            if comp.HideSprite in self.target.tags:
+                self.target.tags.discard(comp.HideSprite)
+        entities.update_fov(self.actor)
+        self.cost = 1
+        aname = self.actor.components.get(comp.Name)
+        if aname is not None:
+            self.message = f"{aname} {verb} a door"
         return self

@@ -58,7 +58,7 @@ class EntitySprite(pg.sprite.Sprite):
         if comp.HP in self.entity.components:
             y -= consts.ENTITY_YOFFSET
         rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
-        is_in_fov = self.group.fov[pos.xy]
+        is_in_fov = self.group.fov[pos.xy] and not comp.HideSprite in self.entity.tags
         dx, dy = self.entity.components.get(comp.Direction, (0, 0))
         flip = (dx > 0) or (dx >= 0 and dy > 0)
         self.update_tooltip()
@@ -89,6 +89,7 @@ class EntitySprite(pg.sprite.Sprite):
         show_tooltip = self.hovered or pressed[pg.K_RALT] or pressed[pg.K_LALT]
         show_tooltip = show_tooltip and self.is_in_fov
         show_tooltip = show_tooltip and entities.is_alive(self.entity)
+        show_tooltip = show_tooltip and comp.Name in self.entity.components
         if show_tooltip and self.tooltip is None:
             self.tooltip = ui_elements.EntityTooltip(self, self.group.interface.font)
         elif not show_tooltip and self.tooltip is not None:
@@ -163,8 +164,6 @@ class MapRenderer(pg.sprite.LayeredUpdates):
             ).convert_alpha()
             self.tile_surfaces[i].fill(color)
             if sheet != "":
-                if consts.TILE_NAMES[i] == "cavefloor":
-                    print(sheet, sprite)
                 src = assets.tile(sheet, (int(sprite[0]), int(sprite[1])))
                 self.tile_surfaces[i].blit(src, (0, 0))
             # Dark tile
