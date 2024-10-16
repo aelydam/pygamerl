@@ -35,8 +35,11 @@ class EntitySprite(pg.sprite.Sprite):
         self.entity = entity
         self.is_in_fov: bool | None = None
         self.flip: bool | None = None
+        self.visible: bool | None = None
         spr = entity.components[comp.Sprite]
         self.tile = assets.tile(spr.sheet, spr.tile)
+        self.dark_tile = pg.transform.grayscale(self.tile)
+        self.dark_tile.fill(consts.UNEXPLORED_TINT, special_flags=pg.BLEND_MULT)
         self.flip_tile = pg.transform.flip(self.tile, True, False)
         self.image = self.tile
         self.hpbar: ui_elements.MapHPBar | None = None
@@ -58,19 +61,32 @@ class EntitySprite(pg.sprite.Sprite):
         if comp.HP in self.entity.components:
             y -= consts.ENTITY_YOFFSET
         rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
-        is_in_fov = self.group.fov[pos.xy] and not comp.HideSprite in self.entity.tags
+        is_in_fov = self.group.fov[pos.xy]
+        visible = (
+            self.group.explored[pos.xy]
+            and (is_in_fov or comp.HP not in self.entity.components)
+            and not comp.HideSprite in self.entity.tags
+        )
         dx, dy = self.entity.components.get(comp.Direction, (0, 0))
         flip = (dx > 0) or (dx >= 0 and dy > 0)
         self.update_tooltip()
-        if is_in_fov == self.is_in_fov and flip == self.flip and rect == self.rect:
+        if (
+            is_in_fov == self.is_in_fov
+            and flip == self.flip
+            and rect == self.rect
+            and visible == self.visible
+        ):
             return
         if is_in_fov and self.hpbar is None and comp.HP in self.entity.components:
             self.hpbar = ui_elements.MapHPBar(self.group, self)
         self.rect = rect
         self.is_in_fov = is_in_fov
         self.flip = flip
-        if is_in_fov:
-            if flip:
+        self.visible = visible
+        if visible:
+            if not is_in_fov:
+                self.image = self.dark_tile
+            elif flip:
                 self.image = self.flip_tile
             else:
                 self.image = self.tile
