@@ -334,7 +334,11 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
         )
 
 
-def add_downstairs(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None):
+def add_downstairs(
+    map_entity: ecs.Entity,
+    condition: NDArray[np.bool_] | None = None,
+    max_count: int = 2,
+):
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
     walkable = ~consts.TILE_ARRAY["obstacle"][grid]
@@ -343,16 +347,17 @@ def add_downstairs(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None =
         cond &= condition
     all_x, all_y = np.where(cond)
     seed = map_entity.components[np.random.RandomState]
-    i = seed.randint(0, len(all_x))
-    xy = (all_x[i], all_y[i])
-    stairs = map_entity.registry.new_entity(
-        components={
-            comp.Position: comp.Position(xy, depth),
-            comp.Sprite: comp.Sprite("Objects/Tile", (6, 3)),
-            comp.Interaction: actions.Descend,
-        },
-        tags=[comp.Downstairs],
-    )
+    all_i = {seed.randint(0, len(all_x)) for _ in range(max_count)}
+    for i in all_i:
+        xy = all_x[i], all_y[i]
+        map_entity.registry.new_entity(
+            components={
+                comp.Position: comp.Position(xy, depth),
+                comp.Sprite: comp.Sprite("Objects/Tile", (6, 3)),
+                comp.Interaction: actions.Descend,
+            },
+            tags=[comp.Downstairs],
+        )
 
 
 def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
