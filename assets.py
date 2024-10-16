@@ -16,8 +16,8 @@ def tile(name: str, pos: tuple[int, int]) -> pg.Surface:
     sheet = image(name)
     return sheet.subsurface(
         (
-            pos[0] * consts.TILE_SIZE,
-            pos[1] * consts.TILE_SIZE,
+            int(pos[0]) * consts.TILE_SIZE,
+            int(pos[1]) * consts.TILE_SIZE,
             consts.TILE_SIZE,
             consts.TILE_SIZE,
         )

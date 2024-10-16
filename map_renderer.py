@@ -10,8 +10,6 @@ import assets
 import comp
 import consts
 import entities
-import funcs
-import maps
 import ui_elements
 
 if TYPE_CHECKING:
@@ -151,10 +149,14 @@ class MapRenderer(pg.sprite.LayeredUpdates):
             color = tile[2]
             sprite = tuple(tile[3])
             sheet = tile[4]
-            self.tile_surfaces[i] = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
+            self.tile_surfaces[i] = pg.Surface(
+                (consts.TILE_SIZE, consts.TILE_SIZE)
+            ).convert_alpha()
             self.tile_surfaces[i].fill(color)
             if sheet != "":
-                src = assets.tile(sheet, sprite)
+                if consts.TILE_NAMES[i] == "cavefloor":
+                    print(sheet, sprite)
+                src = assets.tile(sheet, (int(sprite[0]), int(sprite[1])))
                 self.tile_surfaces[i].blit(src, (0, 0))
             # Dark tile
             self.dark_surfaces[i] = pg.transform.grayscale(self.tile_surfaces[i])
