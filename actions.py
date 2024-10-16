@@ -133,7 +133,7 @@ class ExploreAction(Action):
         if len(path) < 2:
             return None
         dx, dy = path[1][0] - path[0][0], path[1][1] - path[0][1]
-        action = MoveAction(self.actor, (dx, dy)).perform()
+        action = BumpAction(self.actor, (dx, dy)).perform()
         return action
 
 
