@@ -214,7 +214,13 @@ class StatsHUD(pg.sprite.Sprite):
         self.text = ""
 
     def update(self):
-        text = f"FPS {self.interface.clock.get_fps():0.0f}"
+        depth = self.logic.map.components[comp.Depth]
+        text = " ".join(
+            [
+                f"Depth:{depth}",
+                f"FPS:{self.interface.clock.get_fps():0.0f}",
+            ]
+        )
         if self.text == text:
             return
         self.image = self.font.render(text, False, "#FFFFFF")
