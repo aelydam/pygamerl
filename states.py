@@ -135,6 +135,13 @@ class MapState(game_interface.State):
         self.map = ui_elements.Minimap(
             self.ui_group, self.logic, scale, follow_player=False
         )
+        self.hud = ui_elements.StatsHUD(
+            self.ui_group,
+            self.interface,
+            {
+                "Depth": lambda: self.map.depth,
+            },
+        )
 
     def update(self):
         super().update()
