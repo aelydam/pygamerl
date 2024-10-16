@@ -118,7 +118,7 @@ class GameLogic:
         action = None
         if entity is None:
             return self.next_entity()
-        if not entities.is_alive(entity):
+        if not entities.can_act(entity):
             return self.next_entity()
         if comp.Player in entity.tags:
             if self.continuous_action is not None and self.continuous_action.can():
@@ -143,7 +143,7 @@ class GameLogic:
                 if comp.Initiative in entity.components:
                     entity.components[comp.Initiative] -= result.cost
         self.input_action = None
-        if entity.components.get(comp.Initiative, 0) < 1:
+        if not entities.can_act(entity):
             self.next_entity()
         return not in_fov
 

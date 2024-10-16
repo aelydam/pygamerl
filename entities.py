@@ -55,7 +55,7 @@ def update_fov(actor: ecs.Entity):
 def is_in_fov(
     actor: ecs.Entity, pos: comp.Position | ecs.Entity | tuple[int, int]
 ) -> bool:
-    if not is_alive(actor):
+    if not is_alive(actor) or not comp.Position in actor.components:
         return False
     apos = actor.components[comp.Position]
     if isinstance(pos, ecs.Entity):
@@ -100,7 +100,17 @@ def has_enemy_in_fov(actor: ecs.Entity) -> bool:
 
 
 def is_alive(actor: ecs.Entity) -> bool:
-    return actor.components.get(comp.HP, 0) > 0
+    if comp.MaxHP in actor.components:
+        return actor.components.get(comp.HP, 0) > 0
+    return True
+
+
+def can_act(actor: ecs.Entity) -> bool:
+    return (
+        is_alive(actor)
+        and comp.Initiative in actor.components
+        and actor.components[comp.Initiative] > 0
+    )
 
 
 def enemy_action(actor: ecs.Entity) -> actions.Action:
