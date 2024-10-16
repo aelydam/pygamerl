@@ -106,14 +106,15 @@ def corridor(
     walkable: NDArray[np.bool_],
     origin: tuple[int, int],
     target: tuple[int, int],
-    noise: int = 0,
     seed: np.random.RandomState | None = None,
+    noise: int = 0,
+    max_size: int = 0,
 ):
     grid = np.full(walkable.shape, False)
     cost = 6 - walkable
     wmoore = funcs.moore(walkable)
     bm = funcs.bitmask(1 * walkable)
-    corridor = walkable & (wmoore == 2) & np.isin(bm, (6, 9, 0))
+    corridor = walkable & (wmoore == 2) & np.isin(bm, (6, 9))
     rooms = walkable & (funcs.moore(wmoore >= 8) > 0) & ~corridor
     wall = ~walkable & (funcs.moore(rooms) > 0)
     cost[wall] += 15
@@ -121,11 +122,13 @@ def corridor(
     cost[rooms & (wmoore == 3)] += 10
     cost[walkable & ~rooms & (funcs.moore(rooms) > 0) & ~corridor] += 10
     # cost[walkable & (wmoore == 2)] -= 3
-    cost[~walkable & (funcs.moore(wall) > 0)] -= 2
+    if noise == 0:
+        cost[~walkable & (funcs.moore(wall) > 0)] -= 2
     cost[walkable & corridor] = 1
     cost[walkable & (cost < 1)] = 1
     if seed is not None and noise > 0:
-        cost += seed.randint(0, noise, walkable.shape) * ~walkable
+        noise_grid = seed.randint(-noise, noise + 1, walkable.shape)
+        cost += noise_grid * ~walkable
     cost[origin[0], origin[1]] = 1
     cost[target[0], target[1]] = 1
     graph = tcod.path.SimpleGraph(cost=cost.astype(np.int8), cardinal=1, diagonal=0)
@@ -134,7 +137,9 @@ def corridor(
     path = pathfinder.path_to(target)
     for point in path:
         grid[point[0], point[1]] = 1
-    return grid
+    if max_size > 0 and np.sum(grid & ~walkable) > max_size:
+        return np.full(grid.shape, False)
+    return grid & ~walkable
 
 
 def delaunay_corridors(
@@ -143,28 +148,39 @@ def delaunay_corridors(
     seed: np.random.RandomState,
     noise: int = 0,
     nomst_prob: float = 0.10,
+    max_size: int = 0,
 ):
     distmat = scipy.spatial.distance.cdist(points, points, metric="minkowski")
     mst = scipy.sparse.csgraph.minimum_spanning_tree(distmat).toarray().astype(int)
     grid = walkable.copy()
+    connected = np.full(mst.shape, False)
     for i, j in zip(*np.where(mst != 0)):
-        grid |= corridor(grid, points[i], points[j], noise=noise, seed=seed)
+        path = corridor(grid, points[i], points[j], seed, noise, max_size)
+        if max_size < 1 or np.sum(path & ~grid) <= max_size:
+            grid |= path
+            connected[i, j] = True
+            connected[j, i] = True
     if nomst_prob > 0:
         delaunay = scipy.spatial.Delaunay(points).simplices.tolist()
-        connected = (mst + mst.T) != 0
         for a, b, c in delaunay:
             if not connected[a, b] and seed.random() <= nomst_prob:
-                grid |= corridor(grid, points[a], points[b], noise, seed)
-                connected[a, b] = True
-                connected[b, a] = True
+                path = corridor(grid, points[a], points[b], seed, noise, max_size)
+                if max_size < 1 or np.sum(path & ~grid) <= max_size:
+                    grid |= path
+                    connected[a, b] = True
+                    connected[b, a] = True
             if not connected[a, c] and seed.random() <= nomst_prob:
-                grid |= corridor(grid, points[a], points[c], noise, seed)
-                connected[a, c] = True
-                connected[c, a] = True
+                path = corridor(grid, points[a], points[c], seed, noise, max_size)
+                if max_size < 1 or np.sum(path & ~grid) <= max_size:
+                    grid |= path
+                    connected[a, c] = True
+                    connected[c, a] = True
             if not connected[b, c] and seed.random() <= nomst_prob:
-                grid |= corridor(grid, points[b], points[c], noise, seed)
-                connected[b, c] = True
-                connected[c, b] = True
+                path = corridor(grid, points[b], points[c], seed, noise, max_size)
+                if max_size < 1 or np.sum(path & ~grid) <= max_size:
+                    grid |= path
+                    connected[b, c] = True
+                    connected[c, b] = True
     return grid & ~walkable
 
 
@@ -220,6 +236,34 @@ def random_walk(condition: NDArray[np.bool_], walkers: int = 5, steps: int = 500
     return grid
 
 
+def cellular_automata(
+    condition: NDArray[np.bool_],
+    seed: np.random.RandomState,
+    density=0.5,
+    iterations=3,
+) -> NDArray[np.bool_]:
+    grid = funcs.moore(condition) >= 8
+    grid &= seed.random(condition.shape) <= density
+    for _ in range(iterations):
+        neighbors = funcs.moore(grid)
+        grid[neighbors <= 3] = False
+        grid[neighbors > 4] = True
+        grid[0, :] = False
+        grid[:, 0] = False
+        grid[-1, :] = False
+        grid[:, -1] = False
+    return grid
+
+
+def prune(area: NDArray[np.bool_], min_area: int = 16) -> NDArray[np.bool_]:
+    areas, n_areas = scipy.ndimage.label(area)
+    grid = area.copy()
+    for i in range(n_areas + 1):
+        if np.sum(areas == i) < min_area:
+            grid[areas == i] = False
+    return grid
+
+
 def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
     bm = funcs.bitmask(grid)
     for tile_name, tile_id in consts.TILE_ID.items():
@@ -245,13 +289,31 @@ def generate(map_entity: ecs.Entity):
     # Create corridors
     room_list = disjoint_areas(room_grid)
     room_centers = [area_centroid(room) for room in room_list]
-    corridors = delaunay_corridors(room_grid, room_centers, seed)
-    floor = room_grid | corridors
+    corridors = delaunay_corridors(
+        room_grid,
+        room_centers,
+        seed,
+        max_size=consts.MAX_ROOM_SIZE + consts.MIN_ROOM_SIZE,
+    )
+    # Create caves
+    cave_grid = prune(cellular_automata(~room_grid & ~corridors, seed))
+    #
+    cave_list = disjoint_areas(cave_grid)
+    cave_centers = [area_centroid(cave) for cave in cave_list]
+    new_corridors = delaunay_corridors(
+        room_grid | cave_grid | corridors, cave_centers + room_centers, seed, noise=6
+    )
+    #
+    floor = room_grid | cave_grid | corridors | new_corridors
+    corridors[new_corridors & (funcs.moore(room_grid) > 0)] = True
     # Add walls
-    walls = get_walls(floor)
+    walls = get_walls(room_grid | corridors, ~floor)
+    cave_walls = get_walls(cave_grid | new_corridors, ~floor & ~walls)
     # Set tiles
-    grid[floor] = consts.TILE_FLOOR
-    grid[walls] = consts.TILE_WALL
+    grid[cave_walls] = consts.TILE_ID["cavewall"]
+    grid[walls] = consts.TILE_ID["wall"]
+    grid[cave_grid | new_corridors] = consts.TILE_ID["cavefloor"]
+    grid[room_grid | corridors] = consts.TILE_ID["floor"]
     # Post processing
     update_bitmasks(grid)
     # Save generated map

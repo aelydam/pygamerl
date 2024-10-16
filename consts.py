@@ -41,7 +41,7 @@ FONTNAME = "Ac437_IBM_BIOS"
 FONTSIZE = 8
 
 BACKGROUND_COLOR = "#000000"
-UNEXPLORED_TINT = "#808080"
+UNEXPLORED_TINT = "#606060"
 
 HPBAR_BG_COLOR = "#808080"
 HPBAR_GOOD_COLOR = "#00FF00"
@@ -67,8 +67,9 @@ TILE_DTYPE = np.dtype(
 )
 TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int], str]] = {
     "void": (True, False, (0, 0, 0), (0, 0), ""),
-    "floor": (False, False, (40, 40, 40), (1, 7), "Objects/Floor"),
-    "wall": (True, True, (90, 88, 117), (1, 3), "Objects/Wall"),
+    "floor": (False, False, (40, 40, 40), (1, 2 * 3 + 1), "Objects/Floor"),
+    "cavefloor": (False, False, (40, 40, 40), (1, 19), "Objects/Floor"),
+    "wall": (True, True, (90, 88, 117), (1, 10), "Objects/Wall"),
     "wall12": (True, True, (90, 88, 117), (0, 9), "Objects/Wall"),
     "wall6": (True, True, (90, 88, 117), (1, 9), "Objects/Wall"),
     "wall10": (True, True, (90, 88, 117), (2, 9), "Objects/Wall"),
@@ -76,7 +77,6 @@ TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int], str]] 
     "wall8": (True, True, (90, 88, 117), (0, 10), "Objects/Wall"),
     "wall9": (True, True, (90, 88, 117), (0, 10), "Objects/Wall"),
     "wall1": (True, True, (90, 88, 117), (1, 10), "Objects/Wall"),
-    "wall0": (True, True, (90, 88, 117), (1, 10), "Objects/Wall"),
     "wall13": (True, True, (90, 88, 117), (3, 10), "Objects/Wall"),
     "wall15": (True, True, (90, 88, 117), (4, 10), "Objects/Wall"),
     "wall11": (True, True, (90, 88, 117), (5, 10), "Objects/Wall"),
@@ -85,6 +85,22 @@ TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int], str]] 
     "wall2": (True, True, (90, 88, 117), (2, 11), "Objects/Wall"),
     "wall3": (True, True, (90, 88, 117), (2, 11), "Objects/Wall"),
     "wall7": (True, True, (90, 88, 117), (4, 11), "Objects/Wall"),
+    "cavewall": (True, True, (90, 88, 117), (1, 19), "Objects/Wall"),
+    "cavewall12": (True, True, (90, 88, 117), (0, 18), "Objects/Wall"),
+    "cavewall6": (True, True, (90, 88, 117), (1, 18), "Objects/Wall"),
+    "cavewall10": (True, True, (90, 88, 117), (2, 18), "Objects/Wall"),
+    "cavewall14": (True, True, (90, 88, 117), (4, 18), "Objects/Wall"),
+    "cavewall8": (True, True, (90, 88, 117), (0, 19), "Objects/Wall"),
+    "cavewall9": (True, True, (90, 88, 117), (0, 19), "Objects/Wall"),
+    "cavewall1": (True, True, (90, 88, 117), (1, 19), "Objects/Wall"),
+    "cavewall13": (True, True, (90, 88, 117), (3, 19), "Objects/Wall"),
+    "cavewall15": (True, True, (90, 88, 117), (4, 19), "Objects/Wall"),
+    "cavewall11": (True, True, (90, 88, 117), (5, 19), "Objects/Wall"),
+    "cavewall4": (True, True, (90, 88, 117), (0, 20), "Objects/Wall"),
+    "cavewall5": (True, True, (90, 88, 117), (0, 20), "Objects/Wall"),
+    "cavewall2": (True, True, (90, 88, 117), (2, 20), "Objects/Wall"),
+    "cavewall3": (True, True, (90, 88, 117), (2, 20), "Objects/Wall"),
+    "cavewall7": (True, True, (90, 88, 117), (4, 20), "Objects/Wall"),
 }
 # Dawnlike wall bitmask:
 #  12 |  6  | 10  |    | 14 |
