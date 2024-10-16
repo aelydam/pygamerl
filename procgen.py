@@ -31,6 +31,22 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
     counter = 0
     # Initialize available array from walkable points
     available = walkable.copy()
+    # Consider creatures and upstairs already on the map
+    query = (
+        map_entity.registry.Q.all_of(
+            components=[comp.Position, comp.HP],
+            relations=[(comp.Map, map_entity)],
+        ).get_entities()
+        | map_entity.registry.Q.all_of(
+            components=[comp.Position],
+            tags=[comp.Upstairs],
+            relations=[(comp.Map, map_entity)],
+        ).get_entities()
+    )
+    for e in query:
+        x, y = e.components[comp.Position].xy
+        dist2 = (xgrid - x) ** 2 + (ygrid - y) ** 2
+        available[dist2 <= radius**2] = False
     # While there are available spots and still below max_count
     while (counter < max_count or max_count < 1) and np.sum(available) > 0:
         # Pick a random available point
