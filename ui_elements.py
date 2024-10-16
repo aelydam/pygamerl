@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import pygame as pg
@@ -226,23 +226,22 @@ class EntityTooltip(pg.sprite.Sprite):
 
 
 class StatsHUD(pg.sprite.Sprite):
-    def __init__(self, group: pg.sprite.Group, interface: GameInterface):
+    def __init__(
+        self,
+        group: pg.sprite.Group,
+        interface: GameInterface,
+        elements: dict[str, Callable[[], str | int]],
+    ):
         super().__init__(group)
         self.group = group
         self.interface = interface
         self.logic = interface.logic
         self.font = interface.font
+        self.elements = elements
         self.text = ""
 
     def update(self):
-        depth = self.logic.map.components[comp.Depth]
-        text = " ".join(
-            [
-                f"Depth:{depth}",
-                f"Turn:{self.logic.turn_count}",
-                f"FPS:{self.interface.clock.get_fps():0.0f}",
-            ]
-        )
+        text = " ".join([f"{k}:{v()}" for k, v in self.elements.items()])
         if self.text == text:
             return
         self.image = self.font.render(text, False, "#FFFFFF")

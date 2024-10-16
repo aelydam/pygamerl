@@ -21,7 +21,15 @@ class InGameState(game_interface.State):
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, font)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
         self.map_renderer = map_renderer.MapRenderer(interface)
-        self.hud = ui_elements.StatsHUD(self.ui_group, self.interface)
+        self.hud = ui_elements.StatsHUD(
+            self.ui_group,
+            self.interface,
+            {
+                "Depth": lambda: self.map_renderer.depth,
+                "Turn": lambda: self.logic.turn_count,
+                "FPS": lambda: int(self.interface.clock.get_fps()),
+            },
+        )
 
     def handle_event(self, event: pg.Event):
         if event.type == pg.KEYUP:
