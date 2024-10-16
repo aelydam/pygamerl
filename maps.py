@@ -16,9 +16,9 @@ if TYPE_CHECKING:
     import game_logic
 
 
-def get_map(reg: ecs.Registry, depth: int) -> ecs.Entity:
+def get_map(reg: ecs.Registry, depth: int, generate: bool = True) -> ecs.Entity:
     map_entity = reg[(comp.Map, depth)]
-    if comp.Depth not in map_entity.components:
+    if generate and comp.Depth not in map_entity.components:
         map_entity.components[comp.Depth] = depth
         procgen.generate(map_entity)
     return map_entity

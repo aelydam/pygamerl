@@ -24,7 +24,7 @@ class InGameState(game_interface.State):
         self.hud = ui_elements.StatsHUD(self.ui_group, self.interface)
 
     def handle_event(self, event: pg.Event):
-        if event.type == pg.KEYDOWN:
+        if event.type == pg.KEYUP:
             if event.key in consts.MOVE_KEYS.keys():
                 dx, dy = consts.MOVE_KEYS[event.key]
                 action = actions.BumpAction(self.logic.player, (dx, dy))
@@ -36,6 +36,8 @@ class InGameState(game_interface.State):
                 self.logic.input_action = actions.Interact(self.logic.player)
             elif event.key in consts.WAIT_KEYS:
                 self.logic.input_action = actions.WaitAction(self.logic.player)
+            elif event.key == pg.K_m:
+                self.interface.push(MapState(self.interface))
             elif event.key == pg.K_x:
                 if event.mod & pg.KMOD_SHIFT:
                     self.logic.continuous_action = actions.MagicMap(self.logic.player)
@@ -46,6 +48,8 @@ class InGameState(game_interface.State):
         elif event.type == pg.MOUSEBUTTONUP:
             if event.button != 1:
                 return
+            if self.minimap.rect.collidepoint(*event.pos):
+                return self.interface.push(MapState(self.interface))
             x, y = self.map_renderer.screen_to_grid(event.pos[0], event.pos[1])
             if not maps.is_explored(self.logic.map, (x, y)):
                 return
@@ -107,3 +111,39 @@ class GameOverState(game_interface.State):
         self.interface.pop()
         self.interface.pop()
         self.interface.push(InGameState(self.interface))
+
+
+class MapState(game_interface.State):
+    def __init__(self, interface: game_interface.GameInterface):
+        self.interface = interface
+        self.logic = interface.logic
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        scale = min(
+            [
+                (consts.SCREEN_SHAPE[i] - consts.TILE_SIZE) // consts.MAP_SHAPE[i]
+                for i in range(2)
+            ]
+        )
+        self.map = ui_elements.Minimap(
+            self.ui_group, self.logic, scale, follow_player=False
+        )
+
+    def update(self):
+        super().update()
+        self.ui_group.update()
+
+    def render(self, screen: pg.Surface):
+        screen.fill(consts.BACKGROUND_COLOR)
+        self.ui_group.draw(screen)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key in (pg.K_RETURN, pg.K_SPACE, pg.K_ESCAPE, pg.K_m):
+                self.interface.pop()
+            elif event.key == pg.K_PAGEDOWN:
+                self.map.inc_depth(1)
+            elif event.key == pg.K_PAGEUP:
+                self.map.inc_depth(-1)
+        if event.type == pg.MOUSEBUTTONUP:
+            if event.button == 1:
+                self.interface.pop()

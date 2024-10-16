@@ -136,23 +136,44 @@ class Popup(pg.sprite.Sprite):
 
 
 class Minimap(pg.sprite.Sprite):
-    def __init__(self, group: pg.sprite.Group, game_logic: GameLogic):
+    def __init__(
+        self,
+        group: pg.sprite.Group,
+        logic: GameLogic,
+        scale: int = consts.FONTSIZE // 4,
+        follow_player: bool = True,
+    ):
         super().__init__(group)
-        self.game_logic = game_logic
-        self.scale = consts.FONTSIZE // 4
+        self.logic = logic
+        self.depth = logic.map.components[comp.Depth]
+        self.scale = scale
+        self.follow_player = follow_player
         w = consts.MAP_SHAPE[0] * self.scale
         h = consts.MAP_SHAPE[1] * self.scale
         x, y = consts.SCREEN_SHAPE[0] - w - 16, 16
-        self.rect = pg.Rect(x, y, w, h)
+        self.rect: pg.Rect = pg.Rect(x, y, w, h)
+
+    def inc_depth(self, delta: int):
+        depth = self.depth + delta
+        map_ = maps.get_map(self.logic.reg, depth, generate=False)
+        if comp.Tiles in map_.components:
+            self.depth = depth
 
     def update(self):
-        player = self.game_logic.player
-        map_ = self.game_logic.map
+        player = self.logic.player
+        pdepth = player.components[comp.Position].depth
+        if self.follow_player:
+            map_ = player.relation_tag[comp.Map]
+            self.depth = map_.components[comp.Depth]
+        else:
+            map_ = maps.get_map(self.logic.reg, self.depth, generate=False)
+            screen = pg.display.get_surface().size
+            self.rect.center = (screen[0] // 2, screen[1] // 2)
         grid = map_.components[comp.Tiles]
         walkable = ~consts.TILE_ARRAY["obstacle"][grid]
         explored = map_.components[comp.Explored]
         shape = grid.shape
-        if comp.FOV in player.components:
+        if comp.FOV in player.components and self.depth == pdepth:
             fov = player.components[comp.FOV]
         else:
             fov = np.full(shape, False)
