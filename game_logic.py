@@ -56,14 +56,10 @@ class GameLogic:
 
     def init_player(self):
         map_entity = maps.get_map(self.reg, 0)
-        grid = map_entity.components[comp.Tiles]
-        walkable = ~consts.TILE_ARRAY["obstacle"][grid]
-        x, y = np.where(walkable)
-        i = random.randint(0, len(x) - 1)
         player = self.player
         player.clear()
         player.components[comp.Name] = "Player"
-        player.components[comp.Position] = comp.Position((x[i], y[i]), 0)
+        player.components[comp.Position] = procgen.player_spawn(map_entity)
         player.components[comp.Sprite] = comp.Sprite("Characters/Player0", (1, 3))
         player.components[comp.MaxHP] = 48
         player.components[comp.HP] = 48

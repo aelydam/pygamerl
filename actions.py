@@ -354,3 +354,20 @@ class Descend(Interaction):
         self.actor.components[comp.Position] = new_pos
         self.cost = 1
         return self
+
+
+class Ascend(Interaction):
+    def can(self) -> bool:
+        depth = self.target.components[comp.Position].depth
+        return depth > 0 and not self.bump and super().can()
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        pos = self.target.components[comp.Position]
+        new_depth = pos.depth - 1
+        maps.get_map(self.actor.registry, new_depth)
+        new_pos = comp.Position(pos.xy, new_depth)
+        self.actor.components[comp.Position] = new_pos
+        self.cost = 1
+        return self

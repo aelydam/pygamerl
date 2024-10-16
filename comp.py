@@ -14,6 +14,8 @@ Player = "Player"
 Obstacle = "Obstacle"
 Opaque = "Opaque"
 HideSprite = "HideSprite"
+Downstairs = "Downstairs"
+Upstairs = "Upstairs"
 
 # Map components
 Depth = ("Depth", int)

@@ -323,9 +323,41 @@ def add_downstairs(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None =
             comp.Position: comp.Position(xy, depth),
             comp.Sprite: comp.Sprite("Objects/Tile", (6, 3)),
             comp.Interaction: actions.Descend,
-        }
+        },
+        tags=[comp.Downstairs],
     )
-    pass
+
+
+def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
+    depth = map_entity.components[comp.Depth]
+    seed = map_entity.components[np.random.RandomState]
+    points = []
+    if depth < 1:
+        x = seed.randint(8, consts.MAP_SHAPE[0] - 8)
+        y = seed.randint(8, consts.MAP_SHAPE[1] - 8)
+        points = [(x, y)]
+    else:
+        prev_map = maps.get_map(map_entity.registry, depth - 1)
+        query = map_entity.registry.Q.all_of(
+            components=[comp.Position, comp.Interaction],
+            tags=[comp.Downstairs],
+            relations=[(comp.Map, prev_map)],
+        )
+        points = [e.components[comp.Position].xy for e in query]
+    rooms = np.full(consts.MAP_SHAPE, False)
+    for point in points:
+        w, h = random_room_size(seed)
+        x, y = point[0] - w // 2, point[1] - h // 2
+        rooms |= rect_room(consts.MAP_SHAPE, x, y, w, h)
+        map_entity.registry.new_entity(
+            components={
+                comp.Position: comp.Position(point, depth),
+                comp.Sprite: comp.Sprite("Objects/Tile", (4, 3)),
+                comp.Interaction: actions.Ascend,
+            },
+            tags=[comp.Upstairs],
+        )
+    return rooms
 
 
 def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
@@ -343,13 +375,34 @@ def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
     return grid
 
 
+def player_spawn(map_entity: ecs.Entity) -> comp.Position:
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position, comp.Interaction],
+        tags=[comp.Upstairs],
+        relations=[(comp.Map, map_entity)],
+    )
+    for e in query:
+        return e.components[comp.Position]
+    grid = map_entity.components[comp.Tiles]
+    depth = map_entity.components[comp.Depth]
+    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    all_x, all_y = np.where(walkable)
+    seed = map_entity.components[np.random.RandomState]
+    i = seed.randint(0, len(all_x))
+    return comp.Position((all_x[i], all_y[i]), depth)
+
+
 def generate(map_entity: ecs.Entity):
     # Generate map
     grid = np.zeros(consts.MAP_SHAPE, np.int8)
     seed = np.random.RandomState()
     map_entity.components[np.random.RandomState] = seed
+    # Create room for upstairs
+    room_grid = add_upstairs_room(map_entity)
     # Create random rooms
-    room_grid = random_rooms(grid == 0, seed)
+    room_grid = room_grid | random_rooms(
+        ~room_grid, seed, max_rooms=consts.NUM_ROOMS - 1
+    )
     # Create corridors
     room_list = disjoint_areas(room_grid)
     corridors = delaunay_corridors(
