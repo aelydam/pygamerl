@@ -116,26 +116,49 @@ class ExploreAction(Action):
         tiles = map_entity.components[comp.Tiles]
         walkable = ~consts.TILE_ARRAY["obstacle"][tiles]
         explorable = walkable | (funcs.moore(walkable) > 0)
-        return bool(np.sum(explorable & ~explored) > 0)
+        if np.sum(explorable & ~explored) > 0:
+            return True
+        query = self.actor.registry.Q.all_of(
+            components=[comp.Position, comp.Interaction],
+            tags=[comp.Downstairs],
+            relations=[(comp.Map, map_entity)],
+        )
+        for _ in query:
+            return True
+        return False
 
     def perform(self) -> Action | None:
         if not self.can():
             return None
         map_entity = self.actor.relation_tag[comp.Map]
-        explored = map_entity.components[comp.Explored]
+        pos = self.actor.components[comp.Position].xy
         cost = maps.cost_matrix(map_entity)
+        # Remove cost of unexplored tiles
+        explored = map_entity.components[comp.Explored]
         cost[~explored] = 1
         dijkstra = tcod.path.maxarray(cost.shape, dtype=np.int32)
+        # Set unexplored tiles as the objective
         dijkstra[~explored] = 0
+        # Set downstairs as objective
+        query = self.actor.registry.Q.all_of(
+            components=[comp.Position, comp.Interaction],
+            tags=[comp.Downstairs],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            xy = e.components[comp.Position].xy
+            dijkstra[xy] = 0
+            cost[xy] = 0
+            if xy == pos:
+                return Descend(self.actor, e, False).perform()
+        #
         tcod.path.dijkstra2d(dijkstra, cost, 2, 3, out=dijkstra)
-        pos = self.actor.components[comp.Position].xy
         cost[pos] = 1
         path = tcod.path.hillclimb2d(dijkstra, pos, True, True).tolist()
         if len(path) < 2:
             return None
         dx, dy = path[1][0] - path[0][0], path[1][1] - path[0][1]
-        action = BumpAction(self.actor, (dx, dy)).perform()
-        return action
+        return BumpAction(self.actor, (dx, dy)).perform()
 
 
 @dataclass
