@@ -76,7 +76,7 @@ class GameLogic:
         player.components[comp.FOVRadius] = 24
         player.components[comp.Initiative] = 1
         player.components[comp.LightRadius] = 5
-        player.tags |= {comp.Player, comp.Obstacle}
+        player.tags |= {comp.Player, comp.Obstacle, comp.Lit}
         player.relation_tag[comp.Map] = map_entity
         entities.update_fov(player)
 

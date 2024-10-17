@@ -91,9 +91,12 @@ def is_in_fov(
 
 def update_entity_light(entity: ecs.Entity):
     if (
-        not comp.LightRadius in entity.components
-        or not comp.Position in entity.components
+        comp.LightRadius not in entity.components
+        or comp.Position not in entity.components
+        or comp.Lit not in entity.tags
     ):
+        if comp.Lightsource in entity.components:
+            entity.components.pop(comp.Lightsource)
         return
     map_entity = entity.relation_tag[comp.Map]
     grid = map_entity.components[comp.Tiles]

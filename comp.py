@@ -17,6 +17,7 @@ Opaque = "Opaque"
 HideSprite = "HideSprite"
 Downstairs = "Downstairs"
 Upstairs = "Upstairs"
+Lit = "Lit"
 
 # Map components
 Depth = ("Depth", int)

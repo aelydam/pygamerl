@@ -367,7 +367,9 @@ def add_torches(
                 comp.Position: comp.Position((int(x), int(y)), depth),
                 comp.Sprite: comp.Sprite("Objects/Decor0", (0, 8)),
                 comp.LightRadius: 7,
-            }
+                comp.Interaction: actions.ToggleTorch,
+            },
+            tags={comp.Lit},
         )
         dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2
         available[dist2 < radius2] = False

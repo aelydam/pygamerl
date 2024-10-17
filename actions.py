@@ -366,6 +366,19 @@ class ToggleDoor(Interaction):
         return self
 
 
+class ToggleTorch(Interaction):
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        if comp.Lit in self.target.tags:
+            self.target.tags.discard(comp.Lit)
+        else:
+            self.target.tags |= {comp.Lit}
+            entities.update_entity_light(self.target)
+        self.cost = 1
+        return self
+
+
 class Descend(Interaction):
     def can(self) -> bool:
         return not self.bump and super().can()

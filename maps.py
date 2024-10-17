@@ -148,6 +148,7 @@ def astar_path(
 def update_map_light(map_entity: ecs.Entity):
     query = map_entity.registry.Q.all_of(
         components=[comp.LightRadius, comp.Position],
+        tags={comp.Lit},
         relations=[(comp.Map, map_entity)],
     )
     grid = map_entity.components[comp.Tiles]
