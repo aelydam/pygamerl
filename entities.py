@@ -51,7 +51,8 @@ def update_fov(actor: ecs.Entity):
     fov &= light > 0
     for dx in {-1, 0, 1}:
         for dy in {-1, 0, 1}:
-            fov[xy[0] + dx, xy[1] + dy] = True
+            if maps.is_in_bounds(fov, (xy[0] + dx, xy[1] + dy)):
+                fov[xy[0] + dx, xy[1] + dy] = True
     actor.components[comp.FOV] = fov
     # Set map as explored if this is a player
     if comp.Player in actor.tags:

@@ -36,11 +36,12 @@ class EntitySprite(pg.sprite.Sprite):
         self.entity = entity
         self.is_in_fov: bool | None = None
         self.flip: bool | None = None
+        self.light = -1
         self.visible: bool | None = None
         self.spr: comp.Sprite | None = None
         self.hpbar: ui_elements.MapHPBar | None = None
         self.tooltip: ui_elements.MapHPBar | None = None
-        self.tiles: list[pg.Surface] = []
+        self.tiles: list[list[pg.Surface]] = []
         self.blank_surface = pg.Surface((1, 1)).convert_alpha()
         self.blank_surface.fill("#00000000")
         self.rect: pg.Rect
@@ -57,11 +58,21 @@ class EntitySprite(pg.sprite.Sprite):
             max_frames = 2
         else:
             max_frames = 1
-        self.tiles = assets.frames(spr.sheet, spr.tile, max_frames)
-        self.dark_tiles = [pg.transform.grayscale(t) for t in self.tiles]
-        for t in self.dark_tiles:
-            t.fill(consts.UNEXPLORED_TINT, special_flags=pg.BLEND_MULT)
-        self.flip_tiles = [pg.transform.flip(t, True, False) for t in self.tiles]
+        frames = assets.frames(spr.sheet, spr.tile, max_frames)
+        self.tiles = [frames]
+        for j in range(consts.MAX_LIGHT_RADIUS + 1):
+            alpha = int(
+                255 * (1 + consts.MAX_LIGHT_RADIUS - j) / (1 + consts.MAX_LIGHT_RADIUS)
+            )
+            darkframes: list[pg.Surface] = []
+            for k, surf in enumerate(frames):
+                darksurf = surf.copy()
+                darksurf.fill((alpha, alpha, alpha), special_flags=pg.BLEND_MULT)
+                darkframes.append(darksurf)
+            self.tiles.append(darkframes)
+        self.flip_tiles = [
+            [pg.transform.flip(a, True, False) for a in b] for b in self.tiles
+        ]
 
     def update(self) -> None:
         if (
@@ -79,6 +90,7 @@ class EntitySprite(pg.sprite.Sprite):
             y -= consts.ENTITY_YOFFSET
         rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
         is_in_fov = self.group.fov[pos.xy]
+        light = self.group.light[pos.xy]
         visible = (
             self.group.explored[pos.xy]
             and (is_in_fov or comp.HP not in self.entity.components)
@@ -86,7 +98,9 @@ class EntitySprite(pg.sprite.Sprite):
         )
         dx, dy = self.entity.components.get(comp.Direction, (0, 0))
         flip = (dx > 0) or (dx >= 0 and dy > 0)
-        frame = ((self.group.frame_counter + self.frame_offset) // 30) % len(self.tiles)
+        frame = ((self.group.frame_counter + self.frame_offset) // 30) % len(
+            self.tiles[0]
+        )
         self.update_tooltip()
         if (
             is_in_fov == self.is_in_fov
@@ -94,6 +108,7 @@ class EntitySprite(pg.sprite.Sprite):
             and rect == self.rect
             and visible == self.visible
             and frame == self.frame
+            and light == self.light
         ):
             return
         if is_in_fov and self.hpbar is None and comp.HP in self.entity.components:
@@ -103,13 +118,16 @@ class EntitySprite(pg.sprite.Sprite):
         self.flip = flip
         self.visible = visible
         self.frame = frame
+        self.light = light
         if visible:
             if not is_in_fov:
-                self.image = self.dark_tiles[self.frame]
-            elif flip:
-                self.image = self.flip_tiles[self.frame]
+                self.image = self.tiles[-1][0]
             else:
-                self.image = self.tiles[self.frame]
+                id = max(0, len(self.tiles) - light - 1)
+                if flip:
+                    self.image = self.flip_tiles[id][self.frame]
+                else:
+                    self.image = self.tiles[id][self.frame]
         else:
             self.image = self.blank_surface
 
