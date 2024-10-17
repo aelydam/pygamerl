@@ -3,6 +3,8 @@ import pathlib
 import numpy as np
 import pygame as pg
 
+GAME_TITLE = "Pygame Roguelike"
+
 GAME_PATH = pathlib.Path(__file__).parent
 
 SCREEN_SHAPE = (640, 480)

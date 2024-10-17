@@ -166,3 +166,55 @@ class MapState(game_interface.State):
         if event.type == pg.MOUSEBUTTONUP:
             if event.button == 1:
                 self.interface.pop()
+
+
+class TitleState(game_interface.State):
+    def __init__(self, interface: game_interface.GameInterface):
+        super().__init__(interface)
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        self.menu = gui_elements.Menu(
+            self.ui_group,
+            ["New Game", "Quit Game"],
+        )
+        font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
+        self.logo = font.render(consts.GAME_TITLE, False, "#FFFFFF").convert_alpha()
+        self.last_index = -1
+
+    def update(self):
+        super().update()
+        shape = self.interface.screen.size
+        self.menu.rect.center = (shape[0] // 2, shape[1] * 2 // 3)
+        self.ui_group.update()
+
+    def render(self, screen: pg.Surface):
+        screen.fill(consts.BACKGROUND_COLOR)
+        logo_center = (screen.width // 2, screen.height // 3)
+        screen.blit(self.logo, self.logo.get_rect(center=logo_center))
+        self.ui_group.draw(screen)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key == pg.K_RETURN:
+                self.select()
+            elif event.key == pg.K_ESCAPE:
+                self.quit_game()
+            else:
+                self.menu.on_keyup(event.key)
+        elif event.type == pg.MOUSEBUTTONUP:
+            if self.last_index == self.menu.selected_index:
+                self.select()
+            self.last_index = self.menu.selected_index
+
+    def select(self):
+        item = self.menu.items[self.menu.selected_index].lower()
+        match item:
+            case "new game":
+                self.new_game()
+            case "quit game":
+                self.quit_game()
+
+    def new_game(self):
+        self.interface.push(InGameState(self.interface))
+
+    def quit_game(self):
+        self.interface.pop()
