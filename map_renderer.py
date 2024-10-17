@@ -142,6 +142,7 @@ class TileSprite(pg.sprite.Sprite):
         self.depth = 0
         self.is_explored = False
         self.is_in_fov = False
+        self.light = -1
         self.tile_id: int | None = None
         self.image = group.void_surface
         x, y = self.group.grid_to_screen(self.x, self.y)
@@ -153,6 +154,7 @@ class TileSprite(pg.sprite.Sprite):
         tile_id = int(self.group.tiles[self.x, self.y])
         is_explored = self.group.explored[self.x, self.y]
         is_in_fov = self.group.fov[self.x, self.y]
+        light = max(0, min(consts.MAX_LIGHT_RADIUS, self.group.light[self.x, self.y]))
         if self.depth != self.group.depth:
             is_explored = False
             self.image = self.group.void_surface
@@ -162,8 +164,10 @@ class TileSprite(pg.sprite.Sprite):
             and tile_id == self.tile_id
             and rect == self.rect
             and self.depth == self.group.depth
+            and light == self.light
         ):
             return
+        self.light = light
         self.depth = self.group.depth
         self.tile_id = tile_id
         self.is_explored = is_explored
@@ -172,9 +176,10 @@ class TileSprite(pg.sprite.Sprite):
         if not is_explored:
             self.group.void_surface
         elif not is_in_fov:
-            self.image = self.group.dark_surfaces[tile_id]
+            self.image = self.group.tile_surfaces[tile_id][-1]
         else:
-            self.image = self.group.tile_surfaces[tile_id]
+            id = max(0, len(self.group.tile_surfaces[tile_id]) - light - 1)
+            self.image = self.group.tile_surfaces[tile_id][id]
 
 
 class MapRenderer(pg.sprite.LayeredUpdates):
@@ -185,7 +190,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.frame_counter = 0
         self.shape = pg.display.get_surface().size
         self.tile_sprite_map: dict[tuple[int, int], TileSprite] = {}
-        self.tile_surfaces: dict[int, pg.Surface] = {}
+        self.tile_surfaces: dict[int, list[pg.Surface]] = {}
         self.dark_surfaces: dict[int, pg.Surface] = {}
         self.dark_tint = consts.UNEXPLORED_TINT
         self.tile_sprites: dict[tuple[int, int], TileSprite] = {}
@@ -202,16 +207,21 @@ class MapRenderer(pg.sprite.LayeredUpdates):
             color = tile[2]
             sprite = tuple(tile[3])
             sheet = tile[4]
-            self.tile_surfaces[i] = pg.Surface(
-                (consts.TILE_SIZE, consts.TILE_SIZE)
-            ).convert_alpha()
-            self.tile_surfaces[i].fill(color)
+            surf = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE)).convert_alpha()
+            surf.fill(color)
             if sheet != "":
                 src = assets.tile(sheet, (int(sprite[0]), int(sprite[1])))
-                self.tile_surfaces[i].blit(src, (0, 0))
-            # Dark tile
-            self.dark_surfaces[i] = pg.transform.grayscale(self.tile_surfaces[i])
-            self.dark_surfaces[i].fill(self.dark_tint, special_flags=pg.BLEND_MULT)
+                surf.blit(src, (0, 0))
+            self.tile_surfaces[i] = [surf]
+            for j in range(consts.MAX_LIGHT_RADIUS + 1):
+                alpha = int(
+                    255
+                    * (1 + consts.MAX_LIGHT_RADIUS - j)
+                    / (1 + consts.MAX_LIGHT_RADIUS)
+                )
+                darksurf = surf.copy()
+                darksurf.fill((alpha, alpha, alpha), special_flags=pg.BLEND_MULT)
+                self.tile_surfaces[i].append(darksurf)
 
     def create_tile_sprites(self) -> None:
         shape = self.logic.map.components[comp.Tiles].shape
@@ -250,5 +260,6 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.tiles = map_.components[comp.Tiles]
         self.fov = player.components[comp.FOV]
         self.explored = map_.components[comp.Explored]
+        self.light = map_.components[comp.Lightsource]
         self.walkable = ~consts.TILE_ARRAY["obstacle"][self.tiles]
         super().update(*args, **kwargs)

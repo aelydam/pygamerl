@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import tcod
 import tcod.ecs as ecs
 
@@ -34,6 +35,10 @@ def update_fov(actor: ecs.Entity):
     ):
         return
     map_entity = actor.relation_tag[comp.Map]
+    update_entity_light(actor)
+    maps.update_map_light(map_entity)
+    light = map_entity.components[comp.Lightsource]
+    #
     transparency = maps.transparency_matrix(map_entity)
     # Actor can see its own position
     xy = actor.components[comp.Position].xy
@@ -43,6 +48,10 @@ def update_fov(actor: ecs.Entity):
     fov = tcod.map.compute_fov(
         transparency, xy, radius, algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST
     )
+    fov &= light > 0
+    for dx in {-1, 0, 1}:
+        for dy in {-1, 0, 1}:
+            fov[xy[0] + dx, xy[1] + dy] = True
     actor.components[comp.FOV] = fov
     # Set map as explored if this is a player
     if comp.Player in actor.tags:
@@ -77,6 +86,26 @@ def is_in_fov(
     if comp.FOV not in actor.components:
         return False
     return actor.components[comp.FOV][pos]
+
+
+def update_entity_light(entity: ecs.Entity):
+    if (
+        not comp.LightRadius in entity.components
+        or not comp.Position in entity.components
+    ):
+        return
+    map_entity = entity.relation_tag[comp.Map]
+    grid = map_entity.components[comp.Tiles]
+    transparency = ~consts.TILE_ARRAY["opaque"][grid]
+    x, y = entity.components[comp.Position].xy
+    radius = entity.components[comp.LightRadius]
+    fov = tcod.map.compute_fov(transparency, (x, y), radius)
+    grid_x, grid_y = np.indices(grid.shape)
+    dist = ((grid_x - x) ** 2 + (grid_y - y) ** 2) ** 0.5
+    light = np.astype(
+        fov * (1 + radius - dist) / (1 + radius) * consts.MAX_LIGHT_RADIUS, np.int8
+    )
+    entity.components[comp.Lightsource] = light
 
 
 def enemies_in_fov(actor: ecs.Entity) -> set[ecs.Entity]:

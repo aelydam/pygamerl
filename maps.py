@@ -10,6 +10,7 @@ from numpy.typing import NDArray
 
 import comp
 import consts
+import entities
 import procgen
 
 if TYPE_CHECKING:
@@ -71,6 +72,22 @@ def is_walkable(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) ->
     return True
 
 
+def lightlevel(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) -> int:
+    if not is_in_bounds(map_entity, pos):
+        return 0
+    depth = map_entity.components[comp.Depth]
+    if isinstance(pos, comp.Position):
+        if pos.depth != depth:
+            return 0
+        pos = pos.xy
+    else:
+        pos = comp.Position(pos, depth).xy
+    if comp.Lightsource not in map_entity.components:
+        update_map_light(map_entity)
+    light = map_entity.components[comp.Lightsource]
+    return int(light[pos[0], pos[1]])
+
+
 def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 2) -> NDArray[np.int8]:
     grid = map_entity.components[comp.Tiles]
     cost = 1 - consts.TILE_ARRAY["obstacle"][grid]
@@ -126,3 +143,18 @@ def astar_path(
     pathfinder = tcod.path.Pathfinder(graph)
     pathfinder.add_root(origin)
     return pathfinder.path_to(target).tolist()
+
+
+def update_map_light(map_entity: ecs.Entity):
+    query = map_entity.registry.Q.all_of(
+        components=[comp.LightRadius, comp.Position],
+        relations=[(comp.Map, map_entity)],
+    )
+    grid = map_entity.components[comp.Tiles]
+    light = np.zeros(grid.shape, np.int8)
+    for e in query:
+        if comp.Lightsource not in e.components:
+            entities.update_entity_light(e)
+        elight = e.components[comp.Lightsource]
+        light[elight > light] = elight[elight > light]
+    map_entity.components[comp.Lightsource] = light

@@ -62,7 +62,7 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
                 comp.MaxHP: 6,
                 comp.HP: 6,
                 comp.Initiative: 0,
-                comp.FOVRadius: 6,
+                comp.FOVRadius: 24,
             },
             tags=[comp.Obstacle],
         )
@@ -366,6 +366,7 @@ def add_torches(
             components={
                 comp.Position: comp.Position((int(x), int(y)), depth),
                 comp.Sprite: comp.Sprite("Objects/Decor0", (0, 8)),
+                comp.LightRadius: 7,
             }
         )
         dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2

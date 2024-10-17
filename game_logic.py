@@ -73,7 +73,7 @@ class GameLogic:
         player.components[comp.AttackBonus] = 4
         player.components[comp.ArmorClass] = 14
         player.components[comp.DamageDice] = 6
-        player.components[comp.FOVRadius] = 8
+        player.components[comp.FOVRadius] = 24
         player.components[comp.Initiative] = 1
         player.tags |= {comp.Player, comp.Obstacle}
         player.relation_tag[comp.Map] = map_entity
