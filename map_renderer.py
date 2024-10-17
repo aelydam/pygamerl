@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -36,17 +37,31 @@ class EntitySprite(pg.sprite.Sprite):
         self.is_in_fov: bool | None = None
         self.flip: bool | None = None
         self.visible: bool | None = None
-        spr = entity.components[comp.Sprite]
-        self.tile = assets.tile(spr.sheet, spr.tile)
-        self.dark_tile = pg.transform.grayscale(self.tile)
-        self.dark_tile.fill(consts.UNEXPLORED_TINT, special_flags=pg.BLEND_MULT)
-        self.flip_tile = pg.transform.flip(self.tile, True, False)
-        self.image = self.tile
+        self.spr: comp.Sprite | None = None
         self.hpbar: ui_elements.MapHPBar | None = None
         self.tooltip: ui_elements.MapHPBar | None = None
+        self.tiles: list[pg.Surface] = []
         self.blank_surface = pg.Surface((1, 1)).convert_alpha()
         self.blank_surface.fill("#00000000")
         self.rect: pg.Rect
+        self.frame = 0
+        self.frame_offset = random.randint(0, consts.FPS)
+        self.prepare_surfaces()
+
+    def prepare_surfaces(self) -> None:
+        spr = self.entity.components[comp.Sprite]
+        if spr == self.spr and self.tiles is not None and len(self.tiles) > 0:
+            return
+        self.spr = spr
+        if comp.HP in self.entity.components:
+            max_frames = 2
+        else:
+            max_frames = 1
+        self.tiles = assets.frames(spr.sheet, spr.tile, max_frames)
+        self.dark_tiles = [pg.transform.grayscale(t) for t in self.tiles]
+        for t in self.dark_tiles:
+            t.fill(consts.UNEXPLORED_TINT, special_flags=pg.BLEND_MULT)
+        self.flip_tiles = [pg.transform.flip(t, True, False) for t in self.tiles]
 
     def update(self) -> None:
         if (
@@ -57,6 +72,7 @@ class EntitySprite(pg.sprite.Sprite):
             self.kill()
             self.group.entity_sprites.pop(self.entity)
             return
+        self.prepare_surfaces()
         pos = self.entity.components[comp.Position]
         x, y = self.group.grid_to_screen(*pos.xy)
         if comp.HP in self.entity.components:
@@ -70,12 +86,14 @@ class EntitySprite(pg.sprite.Sprite):
         )
         dx, dy = self.entity.components.get(comp.Direction, (0, 0))
         flip = (dx > 0) or (dx >= 0 and dy > 0)
+        frame = ((self.group.frame_counter + self.frame_offset) // 30) % len(self.tiles)
         self.update_tooltip()
         if (
             is_in_fov == self.is_in_fov
             and flip == self.flip
             and rect == self.rect
             and visible == self.visible
+            and frame == self.frame
         ):
             return
         if is_in_fov and self.hpbar is None and comp.HP in self.entity.components:
@@ -84,13 +102,14 @@ class EntitySprite(pg.sprite.Sprite):
         self.is_in_fov = is_in_fov
         self.flip = flip
         self.visible = visible
+        self.frame = frame
         if visible:
             if not is_in_fov:
-                self.image = self.dark_tile
+                self.image = self.dark_tiles[self.frame]
             elif flip:
-                self.image = self.flip_tile
+                self.image = self.flip_tiles[self.frame]
             else:
-                self.image = self.tile
+                self.image = self.tiles[self.frame]
         else:
             self.image = self.blank_surface
 
@@ -163,6 +182,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         super().__init__()
         self.interface = interface
         self.logic = interface.logic
+        self.frame_counter = 0
         self.shape = pg.display.get_surface().size
         self.tile_sprite_map: dict[tuple[int, int], TileSprite] = {}
         self.tile_surfaces: dict[int, pg.Surface] = {}
@@ -223,6 +243,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
 
     def update(self, *args, **kwargs):
         self.create_entity_sprites()
+        self.frame_counter += 1
         player = self.logic.player
         map_ = self.logic.map
         self.depth = map_.components[comp.Depth]

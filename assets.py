@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 
 import pygame as pg
@@ -11,6 +12,11 @@ def image(name: str) -> pg.Surface:
     return pg.image.load(path).convert_alpha()
 
 
+def image_exists(name: str) -> bool:
+    path = consts.GAME_PATH / "images" / f"{name}.png"
+    return os.path.isfile(path)
+
+
 @lru_cache
 def tile(name: str, pos: tuple[int, int]) -> pg.Surface:
     sheet = image(name)
@@ -22,6 +28,19 @@ def tile(name: str, pos: tuple[int, int]) -> pg.Surface:
             consts.TILE_SIZE,
         )
     )
+
+
+@lru_cache
+def frames(name: str, pos: tuple[int, int], max_count: int = 2) -> list[pg.Surface]:
+    res = [tile(name, pos)]
+    if name[-1] == "0":
+        name = name[:-1]
+        res += [
+            tile(name + str(i), pos)
+            for i in range(1, max_count)
+            if image_exists(name + str(i))
+        ]
+    return res
 
 
 @lru_cache
