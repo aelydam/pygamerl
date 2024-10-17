@@ -11,6 +11,7 @@ import comp
 import consts
 import entities
 import funcs
+import game_logic
 import maps
 
 
@@ -299,6 +300,8 @@ class MagicMap(Action):
         rand = np.random.random(explorable.shape)
         reveal = explorable & (funcs.moore(explored, False) > 0) & (rand < 0.2)
         map_.components[comp.Explored] |= reveal
+        if self.can():
+            game_logic.push_action(self.actor.registry, self)
         return self
 
 

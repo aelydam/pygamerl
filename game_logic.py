@@ -17,6 +17,10 @@ if TYPE_CHECKING:
     import actions
 
 
+def push_action(reg: ecs.Registry, action: actions.Action):
+    reg[None].components[comp.ActionQueue].appendleft(action)
+
+
 class GameLogic:
     def __init__(self) -> None:
         self.continuous_action: actions.Action | None

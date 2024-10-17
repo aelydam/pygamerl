@@ -48,7 +48,7 @@ class InGameState(game_interface.State):
                 self.interface.push(MapState(self.interface))
             elif event.key == pg.K_x:
                 if event.mod & pg.KMOD_SHIFT:
-                    self.logic.continuous_action = actions.MagicMap(self.logic.player)
+                    self.logic.input_action = actions.MagicMap(self.logic.player)
                 else:
                     self.logic.continuous_action = actions.ExploreAction(
                         self.logic.player
