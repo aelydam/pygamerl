@@ -142,6 +142,8 @@ class Minimap(pg.sprite.Sprite):
         logic: GameLogic,
         scale: int = consts.FONTSIZE // 4,
         follow_player: bool = True,
+        x: int = -16,
+        y: int = 16,
     ):
         super().__init__(group)
         self.logic = logic
@@ -150,7 +152,11 @@ class Minimap(pg.sprite.Sprite):
         self.follow_player = follow_player
         w = consts.MAP_SHAPE[0] * self.scale
         h = consts.MAP_SHAPE[1] * self.scale
-        x, y = consts.SCREEN_SHAPE[0] - w - 16, 16
+        self.x, self.y = x, y
+        if x < 0:
+            x = consts.SCREEN_SHAPE[0] - w + x
+        if y < 0:
+            y = consts.SCREEN_SHAPE[1] - h + y
         self.rect: pg.Rect = pg.Rect(x, y, w, h)
 
     def inc_depth(self, delta: int):
@@ -168,7 +174,7 @@ class Minimap(pg.sprite.Sprite):
         else:
             map_ = maps.get_map(self.logic.reg, self.depth, generate=False)
             screen = pg.display.get_surface().size
-            self.rect.center = (screen[0] // 2, screen[1] // 2)
+            self.rect.center = ((self.x + screen[0]) // 2, (self.y + screen[1]) // 2)
         grid = map_.components[comp.Tiles]
         walkable = ~consts.TILE_ARRAY["obstacle"][grid]
         explored = map_.components[comp.Explored]

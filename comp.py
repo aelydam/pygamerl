@@ -45,6 +45,7 @@ ActionQueue = ("ActionQueue", deque[actions.Action])
 TurnCount = ("TurnCount", int)
 LastPlayed = ("LastPlayed", datetime.datetime)
 PlayedTime = ("PlayedTime", float)
+MaxDepth = ("MaxDepth", int)
 
 
 @dataclass(frozen=True)

@@ -392,6 +392,8 @@ class Descend(Interaction):
         new_pos = comp.Position(pos.xy, new_depth)
         self.actor.components[comp.Position] = new_pos
         self.cost = 1
+        if new_depth > self.actor.registry[None].components.get(comp.MaxDepth, 0):
+            self.actor.registry[None].components[comp.MaxDepth] = new_depth
         return self
 
 

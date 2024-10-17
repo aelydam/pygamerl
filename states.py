@@ -167,20 +167,30 @@ class MapState(game_interface.State):
         self.interface = interface
         self.logic = interface.logic
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        max_depth = self.logic.reg[None].components.get(comp.MaxDepth, 0)
+        self.menu = gui_elements.Menu(
+            self.ui_group, [f"Level {i}" for i in range(max_depth + 1)], 16
+        )
+        self.menu.rect.x = consts.TILE_SIZE // 2
         scale = min(
-            [
-                (consts.SCREEN_SHAPE[i] - consts.TILE_SIZE) // consts.MAP_SHAPE[i]
-                for i in range(2)
-            ]
+            (consts.SCREEN_SHAPE[0] - consts.TILE_SIZE - self.menu.width)
+            // consts.MAP_SHAPE[0],
+            (consts.SCREEN_SHAPE[1] - consts.TILE_SIZE) // consts.MAP_SHAPE[1],
         )
         self.map = ui_elements.Minimap(
-            self.ui_group, self.logic, scale, follow_player=False
+            self.ui_group,
+            self.logic,
+            scale,
+            follow_player=False,
+            x=self.menu.width + consts.TILE_SIZE // 2,
         )
-        self.box = gui_elements.Textbox(self.ui_group, f"Depth:")
+        self.menu.select(self.map.depth)
+        self.menu.selected_index = self.map.depth
 
     def update(self):
         super().update()
-        self.box.set_text(f"Depth:|{self.map.depth}")
+        y = self.interface.screen.height // 2
+        self.menu.rect.centery = y
         self.ui_group.update()
 
     def render(self, screen: pg.Surface):
@@ -191,12 +201,14 @@ class MapState(game_interface.State):
         if event.type == pg.KEYUP:
             if event.key in (pg.K_RETURN, pg.K_SPACE, pg.K_ESCAPE, pg.K_m):
                 self.interface.pop()
-            elif event.key == pg.K_PAGEDOWN:
-                self.map.inc_depth(1)
-            elif event.key == pg.K_PAGEUP:
-                self.map.inc_depth(-1)
-        if event.type == pg.MOUSEBUTTONUP:
-            if event.button == 1:
+            else:
+                self.menu.on_keyup(event.key)
+                self.map.depth = self.menu.selected_index
+        elif event.type == pg.MOUSEBUTTONUP:
+            if self.menu.rect.collidepoint(*event.pos):
+                self.menu.update()
+                self.map.depth = self.menu.selected_index
+            elif event.button == 1:
                 self.interface.pop()
 
 
