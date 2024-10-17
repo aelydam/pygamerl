@@ -123,7 +123,8 @@ def random_rect_room(
 
 
 def area_centroid(area: NDArray[np.bool_]) -> tuple[int, int]:
-    return tuple(np.astype(np.median(np.argwhere(area), axis=0), int))
+    res = tuple(np.median(np.argwhere(area), axis=0).astype(np.int8))
+    return (int(res[0]), int(res[1]))
 
 
 def corridor_cost_matrix(
@@ -417,6 +418,7 @@ def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
 
 
 def player_spawn(map_entity: ecs.Entity) -> comp.Position:
+    # Spawn at upstairs
     query = map_entity.registry.Q.all_of(
         components=[comp.Position, comp.Interaction],
         tags=[comp.Upstairs],
@@ -424,10 +426,32 @@ def player_spawn(map_entity: ecs.Entity) -> comp.Position:
     )
     for e in query:
         return e.components[comp.Position]
+    #
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
     walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    # Fallback: spawn away from downstairs
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position, comp.Interaction],
+        tags=[comp.Downstairs],
+        relations=[(comp.Map, map_entity)],
+    )
+    dijkstra = tcod.path.maxarray(grid.shape, dtype=np.int32)
+    max_int = dijkstra.max()
+    for e in query:
+        pos = e.components[comp.Position]
+        dijkstra[pos.xy] = 0
     all_x, all_y = np.where(walkable)
+    if np.sum(dijkstra == 0) > 0:
+        cost = maps.cost_matrix(map_entity)
+        tcod.path.dijkstra2d(dijkstra, cost, 2, 3, out=dijkstra)
+        dj_mean = dijkstra[dijkstra < max_int].mean()
+        dj_max = dijkstra[dijkstra < max_int].max()
+        points = (dijkstra >= dj_mean) & (dijkstra <= dj_max)
+        if np.sum(points) > 0:
+            all_x, all_y = np.where(points)
+
+    # Fallback: Pick any random point
     seed = map_entity.components[np.random.RandomState]
     i = seed.randint(0, len(all_x))
     return comp.Position((all_x[i], all_y[i]), depth)
@@ -435,9 +459,66 @@ def player_spawn(map_entity: ecs.Entity) -> comp.Position:
 
 def generate(map_entity: ecs.Entity):
     # Generate map
-    grid = np.zeros(consts.MAP_SHAPE, np.int8)
     seed = np.random.RandomState()
     map_entity.components[np.random.RandomState] = seed
+    depth = map_entity.components[comp.Depth]
+    if depth == 0:
+        grid = generate_forest(map_entity)
+    else:
+        grid = generate_dungeon(map_entity)
+    room_floor = grid == consts.TILE_ID["floor"]
+    map_entity.components[comp.Tiles] = grid
+    map_entity.components[comp.Explored] = np.full(grid.shape, False)
+    # Post processing
+    grid = update_bitmasks(grid)
+    # Save generated map
+    map_entity.components[comp.Tiles] = grid
+    # Add doors
+    add_doors(
+        map_entity, room_floor
+    )  # & (funcs.moore(room_floor, diagonals=False) > 2))
+    # Stairs
+    add_downstairs(map_entity, room_floor, max_count=1 + (depth > 0))
+    # Spawn enemies
+    spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
+
+
+def generate_forest(map_entity: ecs.Entity) -> NDArray[np.int8]:
+    grid = np.zeros(consts.MAP_SHAPE, np.int8)
+    seed = map_entity.components[np.random.RandomState]
+    # Create ruins
+    ruins = random_rect_room(grid != 0, seed, max_iter=100)
+    if ruins is None:
+        ruins = rect_room(grid.shape, 2, 2, 8, 6)
+    walls = ~ruins & (funcs.moore(ruins) > 0)
+    # Create forest
+    grass = prune(cellular_automata(~(ruins | walls), seed, density=0.5))
+    # Combine areas
+    areas = disjoint_areas(grass | ruins)
+    if len(areas) > 2:
+        conn = delaunay_corridors(grass | ruins, areas, seed, 10, 0.9)
+    elif len(areas) == 2:
+        conn = corridor(grass | ruins, areas[0], areas[1], seed, 10)
+    #
+    grass |= conn & ~walls
+    ruins |= conn & walls
+    walls &= ~conn
+    #
+    rand = seed.random(grid.shape)
+    trees = ~(grass | ruins | walls) | (
+        grass & (funcs.moore(grass) >= 8) & (rand < 0.25)
+    )
+    #
+    grid[grass] = consts.TILE_ID["grass"]
+    grid[trees] = consts.TILE_ID["tree"]
+    grid[walls] = consts.TILE_ID["wall"]
+    grid[ruins] = consts.TILE_ID["floor"]
+    return grid
+
+
+def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
+    grid = np.zeros(consts.MAP_SHAPE, np.int8)
+    seed = map_entity.components[np.random.RandomState]
     # Create room for upstairs
     room_grid = add_upstairs_room(map_entity)
     # Create random rooms
@@ -471,14 +552,4 @@ def generate(map_entity: ecs.Entity):
     grid[walls] = consts.TILE_ID["wall"]
     grid[cave_grid | new_corridors] = consts.TILE_ID["cavefloor"]
     grid[room_grid | corridors] = consts.TILE_ID["floor"]
-    # Post processing
-    update_bitmasks(grid)
-    # Save generated map
-    map_entity.components[comp.Tiles] = grid
-    map_entity.components[comp.Explored] = np.full(grid.shape, False)
-    # Add doors
-    add_doors(map_entity, corridors & (funcs.moore(room_grid, diagonals=False) > 0))
-    # Stairs
-    add_downstairs(map_entity, room_grid)
-    # Spawn enemies
-    spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
+    return grid
