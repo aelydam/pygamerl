@@ -40,6 +40,9 @@ class InGameState(game_interface.State):
                     self.logic.continuous_action = action
                 else:
                     self.logic.input_action = action
+            elif event.key == pg.K_ESCAPE:
+                self.logic.input_action = None
+                self.logic.continuous_action = None
             elif event.key == pg.K_RETURN:
                 self.logic.input_action = actions.Interact(self.logic.player)
             elif event.key in consts.WAIT_KEYS:
@@ -54,6 +57,10 @@ class InGameState(game_interface.State):
                         self.logic.player
                     )
         elif event.type == pg.MOUSEBUTTONUP:
+            if event.button == 3:
+                self.logic.input_action = None
+                self.logic.continuous_action = None
+                return
             if event.button != 1:
                 return
             if self.minimap.rect.collidepoint(*event.pos):
