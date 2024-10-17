@@ -335,6 +335,44 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
         )
 
 
+def add_torches(
+    map_entity: ecs.Entity,
+    max_count: int = 30,
+    radius: int = 4,
+    condition: NDArray[np.bool_] | None = None,
+):
+    grid = map_entity.components[comp.Tiles]
+    depth = map_entity.components[comp.Depth]
+    seed = map_entity.components[np.random.RandomState]
+    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    corridor = np.isin(funcs.bitmask(walkable), (6, 9))
+    wall_bm = funcs.bitmask(~walkable)
+    wmoore = funcs.moore(walkable)
+    available = (
+        (wmoore == 3) & ~walkable & (wall_bm == 7) & (funcs.moore(corridor) == 0)
+    )
+    if condition is not None:
+        available &= condition
+    #
+    grid_x, grid_y = np.indices(grid.shape)
+    radius2 = radius**2
+    for _ in range(max_count):
+        if np.sum(available) < 1:
+            break
+        all_x, all_y = np.where(available)
+        i = seed.randint(0, len(all_x))
+        x, y = all_x[i], all_y[i]
+        map_entity.registry.new_entity(
+            components={
+                comp.Position: comp.Position((int(x), int(y)), depth),
+                comp.Sprite: comp.Sprite("Objects/Decor0", (0, 8)),
+            }
+        )
+        dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2
+        available[dist2 < radius2] = False
+    #
+
+
 def add_downstairs(
     map_entity: ecs.Entity,
     condition: NDArray[np.bool_] | None = None,
@@ -462,7 +500,7 @@ def generate(map_entity: ecs.Entity):
     seed = np.random.RandomState()
     map_entity.components[np.random.RandomState] = seed
     depth = map_entity.components[comp.Depth]
-    if depth == 0:
+    if depth < 0:
         grid = generate_forest(map_entity)
     else:
         grid = generate_dungeon(map_entity)
@@ -477,6 +515,8 @@ def generate(map_entity: ecs.Entity):
     add_doors(
         map_entity, room_floor
     )  # & (funcs.moore(room_floor, diagonals=False) > 2))
+    # Add
+    add_torches(map_entity, condition=funcs.moore(room_floor) > 0)
     # Stairs
     add_downstairs(map_entity, room_floor, max_count=1 + (depth > 0))
     # Spawn enemies
