@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import random
 from collections import deque
 from typing import TYPE_CHECKING
@@ -26,7 +27,6 @@ class GameLogic:
         self.continuous_action: actions.Action | None
         self.input_action: actions.Action | None
         self.last_action: actions.Action | None
-        self.turn_count = 0
         self.frame_count = 0
         self.new_game()
 
@@ -44,7 +44,6 @@ class GameLogic:
 
     def new_world(self) -> None:
         self.reg = ecs.Registry()
-        self.turn_count = 0
         self.frame_count = 0
         self.input_action = None
         self.last_action = None
@@ -52,6 +51,9 @@ class GameLogic:
         self.reg[None].components[comp.MessageLog] = []
         self.reg[None].components[comp.InitiativeTracker] = deque([])
         self.reg[None].components[comp.ActionQueue] = deque([])
+        self.reg[None].components[comp.TurnCount] = 0
+        self.reg[None].components[comp.LastPlayed] = datetime.datetime.now()
+        self.reg[None].components[comp.PlayedTime] = 0
         maps.get_map(self.reg, 0)
 
     def new_game(self) -> None:
@@ -81,6 +83,14 @@ class GameLogic:
         self.message_log.append(text)
 
     @property
+    def turn_count(self) -> int:
+        return self.reg[None].components[comp.TurnCount]
+
+    @property
+    def played_time(self) -> float:
+        return self.reg[None].components[comp.PlayedTime]
+
+    @property
     def initiative(self) -> deque[ecs.Entity]:
         return self.reg[None].components[comp.InitiativeTracker]
 
@@ -96,7 +106,7 @@ class GameLogic:
         self.action_queue.appendleft(action)
 
     def next_turn(self):
-        self.turn_count += 1
+        self.reg[None].components[comp.TurnCount] += 1
         initiative = self.initiative
         initiative.clear()
         procgen.respawn(self.map)
@@ -170,8 +180,17 @@ class GameLogic:
             in_fov = False
         return not in_fov
 
-    def update(self):
+    def tick(self):
         self.frame_count += 1
+        last_played = self.reg[None].components[comp.LastPlayed]
+        now = datetime.datetime.now(last_played.tzinfo)
+        elapsed = (now - last_played).total_seconds()
+        if elapsed > 0:
+            self.reg[None].components[comp.PlayedTime] += elapsed
+            self.reg[None].components[comp.LastPlayed] = now
+
+    def update(self):
+        self.tick()
         for _ in range(100):
             if not self.act():
                 break

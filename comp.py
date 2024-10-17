@@ -1,3 +1,4 @@
+import datetime
 from collections import deque
 from dataclasses import dataclass
 from typing import Protocol
@@ -38,6 +39,9 @@ Initiative = ("Initiative", float)
 MessageLog = ("MessageLog", list[str])
 InitiativeTracker = ("InitiativeTracker", deque[ecs.Entity])
 ActionQueue = ("ActionQueue", deque[actions.Action])
+TurnCount = ("TurnCount", int)
+LastPlayed = ("LastPlayed", datetime.datetime)
+PlayedTime = ("PlayedTime", float)
 
 
 @dataclass(frozen=True)
