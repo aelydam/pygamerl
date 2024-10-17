@@ -36,6 +36,13 @@ class GameInterface:
     def pop(self):
         self.state_stack.pop()
 
+    def clear(self):
+        self.state_stack.clear()
+
+    def reset(self, state: State):
+        self.clear()
+        self.push(state)
+
     @property
     def state(self) -> State | None:
         if len(self.state_stack) < 1:
