@@ -37,6 +37,7 @@ Initiative = ("Initiative", float)
 # Global components
 MessageLog = ("MessageLog", list[str])
 InitiativeTracker = ("InitiativeTracker", deque[ecs.Entity])
+ActionQueue = ("ActionQueue", deque[actions.Action])
 
 
 @dataclass(frozen=True)

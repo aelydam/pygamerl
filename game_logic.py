@@ -46,6 +46,7 @@ class GameLogic:
         self.continuous_action = None
         self.reg[None].components[comp.MessageLog] = []
         self.reg[None].components[comp.InitiativeTracker] = deque([])
+        self.reg[None].components[comp.ActionQueue] = deque([])
 
         self.last_action = None
         self.turn_count = 0
@@ -83,6 +84,13 @@ class GameLogic:
     def current_entity(self) -> ecs.Entity:
         return self.initiative[0]
 
+    @property
+    def action_queue(self) -> deque[actions.Action]:
+        return self.reg[None].components[comp.ActionQueue]
+
+    def push_action(self, action: actions.Action):
+        self.action_queue.appendleft(action)
+
     def next_turn(self):
         self.turn_count += 1
         initiative = self.initiative
@@ -113,9 +121,7 @@ class GameLogic:
         entity = self.current_entity
         in_fov = entities.is_in_fov(entity, self.player)
         action = None
-        if entity is None:
-            return self.next_entity()
-        if not entities.can_act(entity):
+        if entity is None or not entities.can_act(entity):
             return self.next_entity()
         if comp.Player in entity.tags:
             if self.input_action is not None:
@@ -133,21 +139,35 @@ class GameLogic:
         else:
             action = entities.enemy_action(entity)
         if action is not None:
-            result = action.perform()
-            self.last_action = result
-            entities.update_fov(entity)
-            if result is not None:
-                if result.message != "":
-                    self.log(result.message)
-                if comp.Initiative in entity.components:
-                    entity.components[comp.Initiative] -= result.cost
+            self.push_action(action)
         self.input_action = None
         if not entities.can_act(entity):
             self.next_entity()
         return not in_fov
 
+    def act(self) -> bool:
+        actions = self.action_queue
+        if len(actions) < 1:
+            return self.update_entity()
+        action = actions.popleft()
+        result = action.perform()
+        self.last_action = result
+        if result is None:
+            return True
+        if result.message != "":
+            self.log(result.message)
+        if hasattr(result, "actor"):
+            actor: ecs.Entity = result.actor  # type: ignore
+            entities.update_fov(actor)
+            if comp.Initiative in actor.components:
+                actor.components[comp.Initiative] -= result.cost
+            in_fov = entities.is_in_fov(self.player, actor)
+        else:
+            in_fov = False
+        return not in_fov
+
     def update(self):
         self.frame_count += 1
         for _ in range(100):
-            if not self.update_entity():
+            if not self.act():
                 break
