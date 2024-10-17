@@ -6,6 +6,7 @@ import comp
 import consts
 import entities
 import game_interface
+import gui_elements
 import map_renderer
 import maps
 import ui_elements
@@ -143,16 +144,11 @@ class MapState(game_interface.State):
         self.map = ui_elements.Minimap(
             self.ui_group, self.logic, scale, follow_player=False
         )
-        self.hud = ui_elements.StatsHUD(
-            self.ui_group,
-            self.interface,
-            {
-                "Depth": lambda: self.map.depth,
-            },
-        )
+        self.box = gui_elements.Textbox(self.ui_group, f"Depth:")
 
     def update(self):
         super().update()
+        self.box.set_text(f"Depth:|{self.map.depth}")
         self.ui_group.update()
 
     def render(self, screen: pg.Surface):
