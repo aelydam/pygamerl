@@ -103,30 +103,62 @@ class GameOverState(game_interface.State):
     def __init__(self, parent: InGameState):
         self.parent = parent
         self.interface = parent.interface
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
         font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
         self.text_surface = font.render(
             "GAME OVER", False, consts.GAMEOVER_TEXT_COLOR, None
         )
-        self.text_surface = pg.transform.scale_by(self.text_surface, 3)
+        self.text_surface = pg.transform.scale_by(self.text_surface, 2)
+        self.menu = gui_elements.Menu(self.ui_group, ["New Game", "Main Menu", "Quit"])
+        self.last_index = -1
+
+    def update(self):
+        w, h = self.interface.screen.size
+        self.menu.rect.center = (w // 2, h * 2 // 3)
+        self.ui_group.update()
 
     def render(self, screen: pg.Surface):
         self.parent.render(screen)
         screen.fill(consts.UNEXPLORED_TINT, special_flags=pg.BLEND_MULT)
-        pos = (screen.width // 2, screen.height // 2)
+        pos = (screen.width // 2, screen.height // 3)
         rect = self.text_surface.get_rect(center=pos)
         screen.blit(self.text_surface, rect)
+        self.ui_group.draw(screen)
 
     def handle_event(self, event: pg.Event):
         if event.type == pg.KEYUP:
-            if event.key in (pg.K_RETURN, pg.K_SPACE, pg.K_ESCAPE):
-                self.pop()
-        if event.type == pg.MOUSEBUTTONUP:
-            self.pop()
+            if event.key == pg.K_ESCAPE:
+                self.main_menu()
+            elif event.key in (pg.K_RETURN, pg.K_SPACE):
+                self.select()
+            else:
+                self.menu.on_keyup(event.key)
+        elif event.type == pg.MOUSEBUTTONUP:
+            if self.last_index == self.menu.selected_index:
+                self.select()
+            self.last_index = self.menu.selected_index
 
-    def pop(self):
+    def select(self):
+        item = self.menu.items[self.menu.selected_index].lower()
+        match item:
+            case "new game":
+                self.new_game()
+            case "main menu":
+                self.main_menu()
+            case "quit":
+                self.interface.clear()
+
+    def main_menu(self):
         self.interface.logic.new_game()
-        self.interface.pop()
-        self.interface.pop()
+        self.interface.reset(TitleState(self.interface))
+
+    def new_game(self):
+        self.interface.logic.new_game()
+        while (
+            not isinstance(self.interface.state, TitleState)
+            and self.interface.state is not None
+        ):
+            self.interface.pop()
         self.interface.push(InGameState(self.interface))
 
 
@@ -214,6 +246,7 @@ class TitleState(game_interface.State):
                 self.quit_game()
 
     def new_game(self):
+        self.interface.logic.new_game()
         self.interface.push(InGameState(self.interface))
 
     def quit_game(self):
