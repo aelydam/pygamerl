@@ -42,20 +42,20 @@ class GameLogic:
     def player(self) -> ecs.Entity:
         return self.reg[comp.Player]
 
-    def new_game(self) -> None:
+    def new_world(self) -> None:
         self.reg = ecs.Registry()
-
-        self.current_turn = -1
+        self.turn_count = 0
+        self.frame_count = 0
         self.input_action = None
+        self.last_action = None
         self.continuous_action = None
         self.reg[None].components[comp.MessageLog] = []
         self.reg[None].components[comp.InitiativeTracker] = deque([])
         self.reg[None].components[comp.ActionQueue] = deque([])
-
-        self.last_action = None
-        self.turn_count = 0
-        self.frame_count = 0
         maps.get_map(self.reg, 0)
+
+    def new_game(self) -> None:
+        self.new_world()
         self.init_player()
         self.next_turn()
 
