@@ -7,6 +7,7 @@ import tcod.ecs as ecs
 import actions
 import comp
 import consts
+import funcs
 import maps
 
 
@@ -103,7 +104,9 @@ def update_entity_light(entity: ecs.Entity):
     transparency = ~consts.TILE_ARRAY["opaque"][grid]
     x, y = entity.components[comp.Position].xy
     radius = entity.components[comp.LightRadius]
-    fov = tcod.map.compute_fov(transparency, (x, y), radius)
+    fov1 = tcod.map.compute_fov(transparency, (x, y), radius, light_walls=False)
+    fov2 = tcod.map.compute_fov(transparency, (x, y), radius, light_walls=True)
+    fov = fov1 | (fov2 & (funcs.moore(fov1 & transparency) > 0))
     grid_x, grid_y = np.indices(grid.shape)
     dist = ((grid_x - x) ** 2 + (grid_y - y) ** 2) ** 0.5
     light = np.astype(
