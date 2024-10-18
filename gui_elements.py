@@ -141,6 +141,7 @@ class Menu(Box):
         self.disabled = False
         self.pressed_index = -1
         self.set_items(items)
+        self.redraw()
 
     def set_items(self, items: list, force: bool = False):
         if not force and items == self.items:
