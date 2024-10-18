@@ -24,6 +24,15 @@ ACTOR_LAYER = 3
 UI_LAYER = 4
 
 
+def light_tint(light_level: int) -> tuple[int, int, int]:
+    i = int(
+        254
+        * (1 + max(0, min(consts.MAX_LIGHT_RADIUS, int(light_level))))
+        / (1 + consts.MAX_LIGHT_RADIUS)
+    )
+    return (i, i, i)
+
+
 class EntitySprite(pg.sprite.Sprite):
     def __init__(self, group: MapRenderer, entity: ecs.Entity):
         super().__init__()
@@ -61,13 +70,11 @@ class EntitySprite(pg.sprite.Sprite):
         frames = assets.frames(spr.sheet, spr.tile, max_frames)
         self.tiles = [frames]
         for j in range(consts.MAX_LIGHT_RADIUS + 1):
-            alpha = int(
-                255 * (1 + consts.MAX_LIGHT_RADIUS - j) / (1 + consts.MAX_LIGHT_RADIUS)
-            )
+            tint = light_tint(consts.MAX_LIGHT_RADIUS - j)
             darkframes: list[pg.Surface] = []
             for k, surf in enumerate(frames):
                 darksurf = surf.copy()
-                darksurf.fill((alpha, alpha, alpha), special_flags=pg.BLEND_MULT)
+                darksurf.fill(tint, special_flags=pg.BLEND_MULT)
                 darkframes.append(darksurf)
             self.tiles.append(darkframes)
         self.flip_tiles = [
@@ -232,13 +239,9 @@ class MapRenderer(pg.sprite.LayeredUpdates):
                 surf.blit(src, (0, 0))
             self.tile_surfaces[i] = [surf]
             for j in range(consts.MAX_LIGHT_RADIUS + 1):
-                alpha = int(
-                    255
-                    * (1 + consts.MAX_LIGHT_RADIUS - j)
-                    / (1 + consts.MAX_LIGHT_RADIUS)
-                )
+                tint = light_tint(consts.MAX_LIGHT_RADIUS - j)
                 darksurf = surf.copy()
-                darksurf.fill((alpha, alpha, alpha), special_flags=pg.BLEND_MULT)
+                darksurf.fill(tint, special_flags=pg.BLEND_MULT)
                 self.tile_surfaces[i].append(darksurf)
 
     def create_tile_sprites(self) -> None:

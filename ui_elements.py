@@ -26,6 +26,7 @@ class MapHPBar(pg.sprite.Sprite):
         self.parent = parent
         self.fill = None
         self.is_in_fov = None
+        self.light = -1
         self.rect: pg.Rect = pg.Rect(0, -4, consts.TILE_SIZE, consts.FONTSIZE // 4)
         self.image = pg.Surface(self.rect.size).convert_alpha()
 
@@ -41,15 +42,19 @@ class MapHPBar(pg.sprite.Sprite):
         hp = entity.components.get(comp.HP)
         max_hp = entity.components.get(comp.MaxHP)
         fill = int(self.rect.width * hp / max_hp)
-        if fill == self.fill:
+        light = self.parent.light
+        if fill == self.fill and light == self.light:
             return
         self.fill = fill
+        self.light = self.parent.light
         self.image.fill(consts.HPBAR_BG_COLOR)
         if self.fill >= self.rect.width // 2:
             color = consts.HPBAR_GOOD_COLOR
         else:
             color = consts.HPBAR_BAD_COLOR
+        tint = map_renderer.light_tint(light)
         pg.draw.rect(self.image, color, pg.Rect(0, 0, self.fill, self.rect.height))
+        self.image.fill(tint, special_flags=pg.BLEND_MULT)
 
 
 class HPBar(pg.sprite.Sprite):
