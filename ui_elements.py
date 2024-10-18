@@ -105,7 +105,7 @@ class MessageLog(pg.sprite.Sprite):
         last_text = log[-1]
         if last_text == self.last_text and log_len == self.log_len:
             return
-        text = "\n".join(log[-min(11, log_len + 1) : -1])
+        text = "\n".join(log[-min(11, log_len + 1) :])
         self.image = self.font.render(
             text, False, consts.LOG_TEXT_COLOR, None
         ).convert_alpha()
