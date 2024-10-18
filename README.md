@@ -18,7 +18,7 @@ so it could be easier for people to navigate it.
 
 ## Requirements
 
-The main requirements are pygame-ce, tcod, numpy and scipy.
+The main requirements are pygame-ce, tcod, numpy, scipy and tcod-ecs.
 If you have python installed and on the system `PATH`,
 running the code below should create a python virtual environment
 and install the requirements in such virtual environment.
@@ -43,7 +43,10 @@ python main.py
 `WASD` and arrow keys for cardinal movement,
 `QEZC` for diagonal movement.
 Bumping into an enemy will attack it.
-Space, Return or `.` to skip a turn.
+Return will interact with doors, torches and stairs.
+Bumping into a closed door will open it.
+Space or `.` will skip a turn.
+`L` will toggle the player torch.
 
 **Mouse**:
 Clicking on an enemy in melee range will attack it.
