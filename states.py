@@ -45,14 +45,18 @@ class InGameState(game_interface.State):
             elif event.key == pg.K_ESCAPE:
                 self.logic.input_action = None
                 self.logic.continuous_action = None
+                self.interface.push(GameMenuState(self))
             elif event.key == pg.K_RETURN:
                 self.logic.input_action = actions.Interact(self.logic.player)
+                self.logic.continuous_action = None
             elif event.key == pg.K_l:
                 self.logic.input_action = actions.ToggleTorch(
                     self.logic.player, self.logic.player
                 )
+                self.logic.continuous_action = None
             elif event.key in consts.WAIT_KEYS:
                 self.logic.input_action = actions.WaitAction(self.logic.player)
+                self.logic.continuous_action = None
             elif event.key == pg.K_m:
                 self.interface.push(MapState(self.interface))
             elif event.key == pg.K_x:
@@ -267,3 +271,47 @@ class TitleState(game_interface.State):
 
     def quit_game(self):
         self.interface.pop()
+
+
+class GameMenuState(game_interface.State):
+    def __init__(self, parent: InGameState):
+        self.parent = parent
+        super().__init__(parent.interface)
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        self.menu = gui_elements.Menu(self.ui_group, ["Resume", "Map", "Quit"])
+
+    def update(self):
+        super().update()
+        w, h = self.interface.screen.size
+        self.menu.rect.center = (w * 3 // 4, h // 2)
+        self.ui_group.update()
+
+    def render(self, screen: pg.Surface):
+        super().render(screen)
+        self.parent.render(screen)
+        self.ui_group.draw(screen)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key == pg.K_ESCAPE:
+                self.interface.pop()
+            elif event.key == pg.K_RETURN:
+                self.select()
+            else:
+                self.menu.on_keyup(event.key)
+        elif event.type == pg.MOUSEBUTTONUP:
+            if not self.menu.rect.collidepoint(*event.pos):
+                self.interface.pop()
+            elif event.button == 1:
+                self.menu.update()
+                self.select()
+
+    def select(self):
+        item = self.menu.items[self.menu.selected_index].lower()
+        match item:
+            case "resume":
+                self.interface.pop()
+            case "quit":
+                self.interface.reset(TitleState(self.interface))
+            case "map":
+                self.interface.push(MapState(self.interface))
