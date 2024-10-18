@@ -233,6 +233,7 @@ class BumpAction(MoveAction):
         return None
 
     def can(self) -> bool:
+        self.actor.components[comp.Direction] = self.direction
         if super().can():
             return True
         return self.get_entity() is not None
