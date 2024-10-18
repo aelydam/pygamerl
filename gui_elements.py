@@ -236,3 +236,15 @@ class Menu(Box):
                 self.select_delta(1)
             case pg.K_UP:
                 self.select_delta(-1)
+            case pg.K_PAGEDOWN:
+                index = min(len(self.items) - 1, self.scroll_index + self.max_rows)
+                self.scroll_index = max(
+                    0, min(index, len(self.items) - self.max_rows + 1)
+                )
+                self.select(index)
+            case pg.K_PAGEUP:
+                index = max(0, self.scroll_index - self.max_rows)
+                self.scroll_index = max(
+                    0, min(index, len(self.items) - self.max_rows + 1)
+                )
+                self.select(index)
