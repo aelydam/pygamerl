@@ -118,7 +118,6 @@ class GameOverState(game_interface.State):
         )
         self.text_surface = pg.transform.scale_by(self.text_surface, 2)
         self.menu = gui_elements.Menu(self.ui_group, ["New Game", "Main Menu", "Quit"])
-        self.last_index = -1
 
     def update(self):
         w, h = self.interface.screen.size
@@ -141,10 +140,9 @@ class GameOverState(game_interface.State):
                 self.select()
             else:
                 self.menu.on_keyup(event.key)
-        elif event.type == pg.MOUSEBUTTONUP:
-            if self.last_index == self.menu.selected_index:
-                self.select()
-            self.last_index = self.menu.selected_index
+        elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
+            self.menu.update()
+            self.select()
 
     def select(self):
         item = self.menu.items[self.menu.selected_index].lower()
@@ -212,11 +210,11 @@ class MapState(game_interface.State):
             else:
                 self.menu.on_keyup(event.key)
                 self.map.depth = self.menu.selected_index
-        elif event.type == pg.MOUSEBUTTONUP:
+        elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
             if self.menu.rect.collidepoint(*event.pos):
                 self.menu.update()
                 self.map.depth = self.menu.selected_index
-            elif event.button == 1:
+            else:
                 self.interface.pop()
 
 
@@ -230,7 +228,6 @@ class TitleState(game_interface.State):
         )
         font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
         self.logo = font.render(consts.GAME_TITLE, False, "#FFFFFF").convert_alpha()
-        self.last_index = -1
 
     def update(self):
         super().update()
@@ -252,10 +249,10 @@ class TitleState(game_interface.State):
                 self.quit_game()
             else:
                 self.menu.on_keyup(event.key)
-        elif event.type == pg.MOUSEBUTTONUP:
-            if self.last_index == self.menu.selected_index:
+        elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
+            if self.menu.rect.collidepoint(event.pos):
+                self.menu.update()
                 self.select()
-            self.last_index = self.menu.selected_index
 
     def select(self):
         item = self.menu.items[self.menu.selected_index].lower()
