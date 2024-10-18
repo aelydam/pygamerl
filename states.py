@@ -47,6 +47,10 @@ class InGameState(game_interface.State):
                 self.logic.continuous_action = None
             elif event.key == pg.K_RETURN:
                 self.logic.input_action = actions.Interact(self.logic.player)
+            elif event.key == pg.K_l:
+                self.logic.input_action = actions.ToggleTorch(
+                    self.logic.player, self.logic.player
+                )
             elif event.key in consts.WAIT_KEYS:
                 self.logic.input_action = actions.WaitAction(self.logic.player)
             elif event.key == pg.K_m:
