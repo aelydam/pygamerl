@@ -278,7 +278,9 @@ class GameMenuState(game_interface.State):
         self.parent = parent
         super().__init__(parent.interface)
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
-        self.menu = gui_elements.Menu(self.ui_group, ["Resume", "Map", "Quit"])
+        self.menu = gui_elements.Menu(
+            self.ui_group, ["Resume", "Map", "Message Log", "Quit"]
+        )
 
     def update(self):
         super().update()
@@ -315,3 +317,36 @@ class GameMenuState(game_interface.State):
                 self.interface.reset(TitleState(self.interface))
             case "map":
                 self.interface.push(MapState(self.interface))
+            case "message log":
+                self.interface.push(MessageLogState(self))
+
+
+class MessageLogState(game_interface.State):
+    def __init__(self, parent: InGameState):
+        self.parent = parent
+        super().__init__(parent.interface)
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        messages = self.interface.logic.message_log
+        self.menu = gui_elements.Menu(self.ui_group, messages, 20, width=460)
+        self.menu.select(-1)
+
+    def update(self):
+        super().update()
+        w, h = self.interface.screen.size
+        self.menu.rect.center = (w // 2, h // 2)
+        self.ui_group.update()
+
+    def render(self, screen: pg.Surface):
+        super().render(screen)
+        self.parent.render(screen)
+        self.ui_group.draw(screen)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key == pg.K_ESCAPE:
+                self.interface.pop()
+            else:
+                self.menu.on_keyup(event.key)
+        elif event.type == pg.MOUSEBUTTONUP:
+            if not self.menu.rect.collidepoint(*event.pos):
+                self.interface.pop()
