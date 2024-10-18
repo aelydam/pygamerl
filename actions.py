@@ -28,18 +28,20 @@ class Action:
 
 
 @dataclass
-class WaitAction(Action):
-    actor: ecs.Entity | None = None
+class ActorAction(Action):
+    actor: ecs.Entity
 
+
+@dataclass
+class WaitAction(ActorAction):
     def perform(self) -> Action | None:
-        if self.actor is not None and comp.Initiative in self.actor.components:
+        if comp.Initiative in self.actor.components:
             self.cost = self.actor.components[comp.Initiative]
         return super().perform()
 
 
 @dataclass
-class MoveAction(Action):
-    actor: ecs.Entity
+class MoveAction(ActorAction):
     direction: tuple[int, int]
 
     def __post_init__(self, *args, **kwargs):
@@ -84,8 +86,7 @@ class MoveAction(Action):
 
 
 @dataclass
-class MoveToAction(Action):
-    actor: ecs.Entity
+class MoveToAction(ActorAction):
     target: tuple[int, int]
     cost: int = field(init=False, default=1)
 
@@ -101,8 +102,7 @@ class MoveToAction(Action):
 
 
 @dataclass
-class ExploreAction(Action):
-    actor: ecs.Entity
+class ExploreAction(ActorAction):
     cost: int = field(init=False, default=1)
 
     def can(self) -> bool:
@@ -162,8 +162,7 @@ class ExploreAction(Action):
 
 
 @dataclass
-class AttackAction(Action):
-    actor: ecs.Entity
+class AttackAction(ActorAction):
     target: ecs.Entity
     cost: int = field(init=False, default=1)
     damage: int = field(init=False, default=0)
@@ -254,9 +253,7 @@ class BumpAction(MoveAction):
 
 
 @dataclass
-class Interact(Action):
-    actor: ecs.Entity
-
+class Interact(ActorAction):
     def get_entity(self) -> ecs.Entity | None:
         map_entity = self.actor.relation_tag[comp.Map]
         pos = self.actor.components[comp.Position]
@@ -278,7 +275,6 @@ class Interact(Action):
             for e in query:
                 if e != self.actor:
                     return e
-
         return None
 
     def get_action(self) -> Interaction | None:
@@ -300,9 +296,7 @@ class Interact(Action):
 
 
 @dataclass
-class MagicMap(Action):
-    actor: ecs.Entity
-
+class MagicMap(ActorAction):
     def can(self) -> bool:
         map_ = self.actor.relation_tag[comp.Map]
         tiles = map_.components[comp.Tiles]
@@ -330,22 +324,27 @@ class MagicMap(Action):
 
 
 @dataclass
-class Interaction(Action):
-    actor: ecs.Entity
-    target: ecs.Entity
+class Interaction(ActorAction):
+    target: ecs.Entity | None = None
     bump: bool = False
 
     def can(self) -> bool:
-        return entities.dist(self.target, self.actor) < 1.5
+        return self.target is not None and entities.dist(self.target, self.actor) < 1.5
 
 
 class ToggleDoor(Interaction):
     def can(self) -> bool:
-        if self.bump and (comp.Obstacle not in self.target.tags):
+        if (
+            self.target is not None
+            and self.bump
+            and (comp.Obstacle not in self.target.tags)
+        ):
             return False
         return super().can()
 
     def perform(self) -> Action | None:
+        if self.target is None:
+            return None
         if comp.Obstacle in self.target.tags:
             verb = "opens"
             self.target.tags -= {comp.Obstacle, comp.Opaque}
@@ -368,9 +367,14 @@ class ToggleDoor(Interaction):
 
 
 class ToggleTorch(Interaction):
+    def can(self):
+        return self.target is None or super().can()
+
     def perform(self) -> Action | None:
         if not self.can():
             return None
+        if self.target is None:
+            self.target = self.actor
         if comp.Lit in self.target.tags:
             self.target.tags.discard(comp.Lit)
             verb = "extinguish"
@@ -390,7 +394,7 @@ class Descend(Interaction):
         return not self.bump and super().can()
 
     def perform(self) -> Action | None:
-        if not self.can():
+        if self.target is None or not self.can():
             return None
         pos = self.target.components[comp.Position]
         new_depth = pos.depth + 1
@@ -408,11 +412,13 @@ class Descend(Interaction):
 
 class Ascend(Interaction):
     def can(self) -> bool:
+        if self.target is None:
+            return False
         depth = self.target.components[comp.Position].depth
         return depth > 0 and not self.bump and super().can()
 
     def perform(self) -> Action | None:
-        if not self.can():
+        if self.target is None or not self.can():
             return None
         pos = self.target.components[comp.Position]
         new_depth = pos.depth - 1

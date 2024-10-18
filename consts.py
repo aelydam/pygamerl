@@ -13,22 +13,6 @@ FPS = 60
 TILE_SIZE = 16
 ENTITY_YOFFSET = TILE_SIZE // 4
 
-MOVE_KEYS = {
-    pg.K_UP: (0, -1),
-    pg.K_DOWN: (0, 1),
-    pg.K_LEFT: (-1, 0),
-    pg.K_RIGHT: (1, 0),
-    pg.K_w: (0, -1),
-    pg.K_s: (0, 1),
-    pg.K_a: (-1, 0),
-    pg.K_d: (1, 0),
-    pg.K_q: (-1, -1),
-    pg.K_e: (1, -1),
-    pg.K_z: (-1, 1),
-    pg.K_c: (1, 1),
-}
-WAIT_KEYS = (pg.K_SPACE, pg.K_PERIOD)
-
 MAP_SHAPE = (64, 48)
 N_ENEMIES = 10
 ENEMY_RADIUS = 12

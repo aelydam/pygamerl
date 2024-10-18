@@ -7,21 +7,22 @@ import consts
 import entities
 import game_interface
 import gui_elements
+import keybinds
 import map_renderer
 import maps
 import ui_elements
 
 
 class InGameState(game_interface.State):
-    def __init__(self, interface: game_interface.GameInterface):
-        self.interface = interface
-        self.logic = interface.logic
+    def __init__(self, parent: game_interface.GameInterface | game_interface.State):
+        super().__init__(parent)
+        self.logic = self.interface.logic
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
-        font = interface.font
+        font = self.interface.font
         self.hpbar = ui_elements.HPBar(self.ui_group, self.logic, font)
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, font)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
-        self.map_renderer = map_renderer.MapRenderer(interface)
+        self.map_renderer = map_renderer.MapRenderer(self.interface)
         self.hud = ui_elements.StatsHUD(
             self.ui_group,
             self.interface,
@@ -34,38 +35,33 @@ class InGameState(game_interface.State):
         )
 
     def handle_event(self, event: pg.Event):
+        action: actions.Action
         if event.type == pg.KEYUP:
-            if event.key in consts.MOVE_KEYS.keys():
-                dx, dy = consts.MOVE_KEYS[event.key]
+            if event.key in keybinds.MOVE_KEYS.keys():
+                dx, dy = keybinds.MOVE_KEYS[event.key]
                 action = actions.BumpAction(self.logic.player, (dx, dy))
                 if event.mod & pg.KMOD_SHIFT:
                     self.logic.continuous_action = action
                 else:
                     self.logic.input_action = action
-            elif event.key == pg.K_ESCAPE:
+            elif event.mod & pg.KMOD_SHIFT and event.key in keybinds.ACTION_SHIFT_KEYS:
+                self.logic.continuous_action = None
+                action_class = keybinds.ACTION_SHIFT_KEYS[event.key]
+                self.logic.input_action = action_class(self.logic.player)
+            elif event.key in keybinds.ACTION_KEYS:
+                self.logic.continuous_action = None
+                action_class = keybinds.ACTION_KEYS[event.key]
+                self.logic.input_action = action_class(self.logic.player)
+            elif event.key in keybinds.CONTINUOUS_ACTION_KEYS:
+                self.logic.input_action = None
+                action_class = keybinds.CONTINUOUS_ACTION_KEYS[event.key]
+                self.logic.continuous_action = action_class(self.logic.player)
+            elif event.key in keybinds.STATE_KEYS:
+                state = keybinds.STATE_KEYS[event.key]
                 self.logic.input_action = None
                 self.logic.continuous_action = None
-                self.interface.push(GameMenuState(self))
-            elif event.key == pg.K_RETURN:
-                self.logic.input_action = actions.Interact(self.logic.player)
-                self.logic.continuous_action = None
-            elif event.key == pg.K_l:
-                self.logic.input_action = actions.ToggleTorch(
-                    self.logic.player, self.logic.player
-                )
-                self.logic.continuous_action = None
-            elif event.key in consts.WAIT_KEYS:
-                self.logic.input_action = actions.WaitAction(self.logic.player)
-                self.logic.continuous_action = None
-            elif event.key == pg.K_m:
-                self.interface.push(MapState(self.interface))
-            elif event.key == pg.K_x:
-                if event.mod & pg.KMOD_SHIFT:
-                    self.logic.input_action = actions.MagicMap(self.logic.player)
-                else:
-                    self.logic.continuous_action = actions.ExploreAction(
-                        self.logic.player
-                    )
+                self.interface.push(state(self))
+
         elif event.type == pg.MOUSEBUTTONUP:
             if event.button == 3:
                 self.logic.input_action = None
@@ -74,7 +70,7 @@ class InGameState(game_interface.State):
             if event.button != 1:
                 return
             if self.minimap.rect.collidepoint(*event.pos):
-                return self.interface.push(MapState(self.interface))
+                return self.interface.push(MapState(self))
             x, y = self.map_renderer.screen_to_grid(event.pos[0], event.pos[1])
             if not maps.is_explored(self.logic.map, (x, y)):
                 return
@@ -169,9 +165,9 @@ class GameOverState(game_interface.State):
 
 
 class MapState(game_interface.State):
-    def __init__(self, interface: game_interface.GameInterface):
-        self.interface = interface
-        self.logic = interface.logic
+    def __init__(self, parent: game_interface.State):
+        super().__init__(parent)
+        self.logic = self.interface.logic
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         max_depth = self.logic.reg[None].components.get(comp.MaxDepth, 0)
         self.menu = gui_elements.Menu(
@@ -200,7 +196,7 @@ class MapState(game_interface.State):
         self.ui_group.update()
 
     def render(self, screen: pg.Surface):
-        screen.fill(consts.BACKGROUND_COLOR)
+        self.parent.render(screen)
         self.ui_group.draw(screen)
 
     def handle_event(self, event: pg.Event):
@@ -288,7 +284,8 @@ class GameMenuState(game_interface.State):
     def render(self, screen: pg.Surface):
         super().render(screen)
         self.parent.render(screen)
-        self.ui_group.draw(screen)
+        if self.interface.state == self:
+            self.ui_group.draw(screen)
 
     def handle_event(self, event: pg.Event):
         if event.type == pg.KEYUP:
@@ -313,7 +310,7 @@ class GameMenuState(game_interface.State):
             case "quit":
                 self.interface.reset(TitleState(self.interface))
             case "map":
-                self.interface.push(MapState(self.interface))
+                self.interface.push(MapState(self))
             case "message log":
                 self.interface.push(MessageLogState(self))
 

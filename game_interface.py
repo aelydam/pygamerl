@@ -8,8 +8,12 @@ import game_logic
 
 
 class State:
-    def __init__(self, interface: GameInterface):
-        self.interface = interface
+    def __init__(self, parent: GameInterface | State):
+        if isinstance(parent, GameInterface):
+            self.interface = parent
+        else:
+            self.parent = parent
+            self.interface = parent.interface
 
     def update(self):
         pass
