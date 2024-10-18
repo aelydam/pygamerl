@@ -338,7 +338,7 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
 def add_torches(
     map_entity: ecs.Entity,
     max_count: int = 30,
-    radius: int = 4,
+    radius: int = 8,
     condition: NDArray[np.bool_] | None = None,
 ):
     grid = map_entity.components[comp.Tiles]
@@ -349,7 +349,10 @@ def add_torches(
     wall_bm = funcs.bitmask(~walkable)
     wmoore = funcs.moore(walkable)
     available = (
-        (wmoore == 3) & ~walkable & (wall_bm == 7) & (funcs.moore(corridor) == 0)
+        (wmoore == 3)
+        & ~walkable
+        & np.isin(wall_bm, (7, 11, 13, 14))
+        & (funcs.moore(corridor) == 0)
     )
     if condition is not None:
         available &= condition
