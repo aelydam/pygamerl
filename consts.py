@@ -70,7 +70,7 @@ TILE_DTYPE = np.dtype(
     ]
 )
 TILES: dict[str, tuple[bool, bool, tuple[int, int, int], tuple[int, int], str]] = {
-    "void": (True, False, (0, 0, 0), (0, 0), ""),
+    "void": (True, True, (0, 0, 0), (0, 0), ""),
     "grass": (False, False, (109, 170, 44), (8, 7), "Objects/Floor"),
     "tree": (True, True, (109, 170, 44), (3, 3), "Objects/Tree0"),
     "floor": (False, False, (40, 40, 40), (1, 2 * 3 + 1), "Objects/Floor"),
