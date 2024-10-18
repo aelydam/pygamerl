@@ -102,6 +102,14 @@ def update_entity_light(entity: ecs.Entity):
     map_entity = entity.relation_tag[comp.Map]
     grid = map_entity.components[comp.Tiles]
     transparency = ~consts.TILE_ARRAY["opaque"][grid]
+    query = entity.registry.Q.all_of(
+        components=[comp.Position],
+        tags=[comp.Opaque],
+        relations=[(comp.Map, map_entity)],
+    )
+    for e in query:
+        xy = e.components[comp.Position].xy
+        transparency[xy] = False
     x, y = entity.components[comp.Position].xy
     radius = entity.components[comp.LightRadius]
     fov1 = tcod.map.compute_fov(transparency, (x, y), radius, light_walls=False)
