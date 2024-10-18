@@ -39,20 +39,36 @@ python main.py
 
 ## Controls
 
-**Keyboard**:
-`WASD` and arrow keys for cardinal movement,
-`QEZC` for diagonal movement.
-Bumping into an enemy will attack it.
-Return will interact with doors, torches and stairs.
-Bumping into a closed door will open it.
-Space or `.` will skip a turn.
-`L` will toggle the player torch.
+### Keyboard
 
-**Mouse**:
+`WASD` and arrow keys for cardinal movement
+
+`QEZC` for diagonal movement
+
+`Shift+Movement` will move until you get blocked or spot an enemy
+
+Bumping into an enemy will attack it
+
+`Return` will interact with doors, torches and stairs
+
+Bumping into torches and closed doors will interact as well
+
+`Space` or `.` will skip a turn
+
+`L` will toggle the player torch
+
+`X` will move towards the closest unexplored tile or stairs until you spot an enemy
+
+`Shift+X` will reveal the current map
+
+### Mouse
+
 Clicking on an enemy in melee range will attack it.
-Clicking on your character will skip a turn.
-Clicking on an explored floor tile will take the first step towards it.
-(still gotta implement continuous actions to allow the player to take the complete path)
+
+Clicking on your character will skip a turn or try to interact with doors, torches or stairs.
+
+Clicking on an explored floor tile will move towards it.
+If there is an enemy in field of view, you only take the first step.
 
 ## Credits
 
