@@ -77,7 +77,11 @@ class InGameState(game_interface.State):
             player = self.logic.player
             px, py = player.components[comp.Position].xy
             if x == px and y == py:
-                self.logic.input_action = actions.WaitAction(player)
+                interaction = actions.Interact(player)
+                if interaction.can():
+                    self.logic.input_action = interaction
+                else:
+                    self.logic.input_action = actions.WaitAction(player)
                 return
             if (x - px) ** 2 + (y - py) ** 2 <= 2:
                 self.logic.input_action = actions.BumpAction.to(player, (x, y))
