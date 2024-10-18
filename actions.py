@@ -373,10 +373,15 @@ class ToggleTorch(Interaction):
             return None
         if comp.Lit in self.target.tags:
             self.target.tags.discard(comp.Lit)
+            verb = "extinguish"
         else:
             self.target.tags |= {comp.Lit}
             entities.update_entity_light(self.target)
+            verb = "lits"
         self.cost = 1
+        aname = self.actor.components.get(comp.Name)
+        if aname is not None:
+            self.message = f"{aname} {verb} a torch"
         return self
 
 
@@ -395,6 +400,9 @@ class Descend(Interaction):
         self.cost = 1
         if new_depth > self.actor.registry[None].components.get(comp.MaxDepth, 0):
             self.actor.registry[None].components[comp.MaxDepth] = new_depth
+        aname = self.actor.components.get(comp.Name)
+        if aname is not None:
+            self.message = f"{aname} descends the stairs"
         return self
 
 
@@ -412,4 +420,7 @@ class Ascend(Interaction):
         new_pos = comp.Position(pos.xy, new_depth)
         self.actor.components[comp.Position] = new_pos
         self.cost = 1
+        aname = self.actor.components.get(comp.Name)
+        if aname is not None:
+            self.message = f"{aname} ascends the stairs"
         return self
