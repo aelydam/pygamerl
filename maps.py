@@ -145,7 +145,7 @@ def astar_path(
     return pathfinder.path_to(target).tolist()
 
 
-def update_map_light(map_entity: ecs.Entity):
+def update_map_light(map_entity: ecs.Entity, update_entities: bool = False):
     query = map_entity.registry.Q.all_of(
         components=[comp.LightRadius, comp.Position],
         tags={comp.Lit},
@@ -154,7 +154,7 @@ def update_map_light(map_entity: ecs.Entity):
     grid = map_entity.components[comp.Tiles]
     light = np.zeros(grid.shape, np.int8)
     for e in query:
-        if comp.Lightsource not in e.components:
+        if update_entities or comp.Lightsource not in e.components:
             entities.update_entity_light(e)
         elight = e.components[comp.Lightsource]
         light[elight > light] = elight[elight > light]

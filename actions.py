@@ -357,6 +357,7 @@ class ToggleDoor(Interaction):
             self.target.tags |= {comp.Obstacle, comp.Opaque}
             if comp.HideSprite in self.target.tags:
                 self.target.tags.discard(comp.HideSprite)
+        maps.update_map_light(self.target.relation_tag[comp.Map], True)
         entities.update_fov(self.actor)
         self.cost = 1
         aname = self.actor.components.get(comp.Name)
