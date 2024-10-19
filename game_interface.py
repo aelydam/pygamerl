@@ -4,6 +4,7 @@ import pygame as pg
 
 import assets
 import consts
+import db
 import game_logic
 
 
@@ -28,6 +29,7 @@ class State:
 class GameInterface:
     def __init__(self) -> None:
         pg.init()
+        db.load_tiles()
         self.screen = pg.display.set_mode(consts.SCREEN_SHAPE, pg.SCALED)
         self.clock = pg.time.Clock()
         self.font = assets.font(consts.FONTNAME, consts.FONTSIZE)

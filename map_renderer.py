@@ -10,6 +10,7 @@ import tcod.ecs as ecs
 import assets
 import comp
 import consts
+import db
 import entities
 import ui_elements
 
@@ -228,7 +229,7 @@ class MapRenderer(pg.sprite.LayeredUpdates):
     def create_surfaces(self) -> None:
         self.void_surface = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE))
         self.void_surface.fill(consts.BACKGROUND_COLOR)
-        for i, tile in enumerate(consts.TILE_ARRAY):
+        for i, tile in enumerate(db.tiles):
             color = tile[2]
             sprite = tuple(tile[3])
             sheet = tile[4]
@@ -282,5 +283,5 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.fov = player.components[comp.FOV]
         self.explored = map_.components[comp.Explored]
         self.light = map_.components[comp.Lightsource]
-        self.walkable = ~consts.TILE_ARRAY["obstacle"][self.tiles]
+        self.walkable = db.walkable[self.tiles]
         super().update(*args, **kwargs)

@@ -7,6 +7,7 @@ import pygame as pg
 
 import comp
 import consts
+import db
 import entities
 import map_renderer
 import maps
@@ -181,7 +182,7 @@ class Minimap(pg.sprite.Sprite):
             screen = pg.display.get_surface().size
             self.rect.center = ((self.x + screen[0]) // 2, (self.y + screen[1]) // 2)
         grid = map_.components[comp.Tiles]
-        walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+        walkable = db.walkable[grid]
         explored = map_.components[comp.Explored]
         shape = grid.shape
         if comp.FOV in player.components and self.depth == pdepth:

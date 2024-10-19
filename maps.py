@@ -10,6 +10,7 @@ from numpy.typing import NDArray
 
 import comp
 import consts
+import db
 import entities
 import procgen
 
@@ -60,7 +61,7 @@ def is_walkable(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) ->
     else:
         pos = comp.Position(pos, depth)
     grid = map_entity.components[comp.Tiles]
-    if consts.TILE_ARRAY["obstacle"][grid[pos.xy]]:
+    if db.obstacle[grid[pos.xy]]:
         return False
     query = map_entity.registry.Q.all_of(
         components=[comp.Position],
@@ -90,7 +91,7 @@ def lightlevel(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) -> 
 
 def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 2) -> NDArray[np.int8]:
     grid = map_entity.components[comp.Tiles]
-    cost = 1 - consts.TILE_ARRAY["obstacle"][grid]
+    cost = 1 - db.obstacle[grid]
     if entity_cost != 0:
         query = map_entity.registry.Q.all_of(
             components=[comp.Position],
@@ -107,16 +108,17 @@ def transparency_matrix(
     map_entity: ecs.Entity, entities: bool = True
 ) -> NDArray[np.bool_]:
     grid = map_entity.components[comp.Tiles]
-    transparency = ~consts.TILE_ARRAY["opaque"][grid]
+    transparency = db.transparency[grid]
     # Find opaque entities
-    query = map_entity.registry.Q.all_of(
-        components=[comp.Position],
-        tags=[comp.Opaque],
-        relations=[(comp.Map, map_entity)],
-    )
-    for e in query:
-        xy = e.components[comp.Position].xy
-        transparency[xy] = False
+    if entities:
+        query = map_entity.registry.Q.all_of(
+            components=[comp.Position],
+            tags=[comp.Opaque],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            xy = e.components[comp.Position].xy
+            transparency[xy] = False
     return transparency
 
 

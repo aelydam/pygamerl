@@ -11,7 +11,7 @@ def moore(array: NDArray[np.bool_], diagonals: bool = True) -> NDArray[np.int8]:
     return scipy.signal.convolve(array, mask, mode="same", method="direct")
 
 
-def bitmask(array: NDArray[np.int8], diagonals=False) -> NDArray[np.int16 | np.int8]:
+def bitmask(array: NDArray, diagonals=False) -> NDArray[np.int16 | np.int8]:
     mask: NDArray[np.int8 | np.int16]
     if diagonals:
         mask = np.array([[32, 64, 128], [16, 0, 8], [1, 2, 4]], dtype=np.int16).T

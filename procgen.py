@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 import actions
 import comp
 import consts
+import db
 import funcs
 import maps
 
@@ -27,7 +28,7 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
     xgrid, ygrid = np.indices(grid.shape)
-    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    walkable = db.walkable[grid]
     counter = 0
     # Initialize available array from walkable points
     available = walkable.copy()
@@ -317,7 +318,7 @@ def prune(area: NDArray[np.bool_], min_area: int = 16) -> NDArray[np.bool_]:
 def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None):
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
-    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    walkable = db.walkable[grid]
     bm = funcs.bitmask(walkable)
     wmoore = funcs.moore(walkable)
     rooms = walkable & (funcs.moore(wmoore >= 8) > 0)
@@ -345,7 +346,7 @@ def add_torches(
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
     seed = map_entity.components[np.random.RandomState]
-    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    walkable = db.walkable[grid]
     corridor = np.isin(funcs.bitmask(walkable), (6, 9))
     wall_bm = funcs.bitmask(~walkable)
     wmoore = funcs.moore(walkable)
@@ -387,7 +388,7 @@ def add_downstairs(
 ):
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
-    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    walkable = db.walkable[grid]
     cond = walkable & (funcs.moore(walkable) >= 8)
     if condition is not None:
         cond &= condition
@@ -449,15 +450,15 @@ def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
 
 def update_bitmasks(grid: NDArray[np.int8]) -> NDArray[np.int8]:
     bm = funcs.bitmask(grid)
-    for tile_name, tile_id in consts.TILE_ID.items():
-        tile_name = consts.TILE_NAMES[tile_id]
+    for tile_name, tile_id in db.tile_id.items():
+        tile_name = db.tile_names[tile_id]
         if tile_name[-1] in "1234567890":
             continue
         for j in range(16):
             new_name = f"{tile_name}{j}"
-            if new_name in consts.TILE_NAMES:
+            if new_name in db.tile_names:
                 np.sum((grid == tile_id) & (bm == j))
-                new_id = consts.TILE_ID[new_name]
+                new_id = db.tile_id[new_name]
                 grid[(grid == tile_id) & (bm == j)] = new_id
     return grid
 
@@ -474,7 +475,7 @@ def player_spawn(map_entity: ecs.Entity) -> comp.Position:
     #
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
-    walkable = ~consts.TILE_ARRAY["obstacle"][grid]
+    walkable = db.walkable[grid]
     # Fallback: spawn away from downstairs
     query = map_entity.registry.Q.all_of(
         components=[comp.Position, comp.Interaction],
@@ -511,7 +512,7 @@ def generate(map_entity: ecs.Entity):
         grid = generate_forest(map_entity)
     else:
         grid = generate_dungeon(map_entity)
-    room_floor = grid == consts.TILE_ID["floor"]
+    room_floor = grid == db.tile_id["floor"]
     map_entity.components[comp.Tiles] = grid
     map_entity.components[comp.Explored] = np.full(grid.shape, False)
     # Post processing
@@ -556,10 +557,10 @@ def generate_forest(map_entity: ecs.Entity) -> NDArray[np.int8]:
         grass & (funcs.moore(grass) >= 8) & (rand < 0.25)
     )
     #
-    grid[grass] = consts.TILE_ID["grass"]
-    grid[trees] = consts.TILE_ID["tree"]
-    grid[walls] = consts.TILE_ID["wall"]
-    grid[ruins] = consts.TILE_ID["floor"]
+    grid[grass] = db.tile_id["grass"]
+    grid[trees] = db.tile_id["tree"]
+    grid[walls] = db.tile_id["wall"]
+    grid[ruins] = db.tile_id["floor"]
     return grid
 
 
@@ -595,8 +596,8 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
     walls = get_walls(room_grid | corridors, ~floor)
     cave_walls = get_walls(cave_grid | new_corridors, ~floor & ~walls)
     # Set tiles
-    grid[cave_walls] = consts.TILE_ID["cavewall"]
-    grid[walls] = consts.TILE_ID["wall"]
-    grid[cave_grid | new_corridors] = consts.TILE_ID["cavefloor"]
-    grid[room_grid | corridors] = consts.TILE_ID["floor"]
+    grid[cave_walls] = db.tile_id["cavewall"]
+    grid[walls] = db.tile_id["wall"]
+    grid[cave_grid | new_corridors] = db.tile_id["cavefloor"]
+    grid[room_grid | corridors] = db.tile_id["floor"]
     return grid

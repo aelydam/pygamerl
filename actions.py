@@ -9,6 +9,7 @@ import tcod.ecs as ecs
 
 import comp
 import consts
+import db
 import entities
 import funcs
 import game_logic
@@ -114,7 +115,7 @@ class ExploreAction(ActorAction):
         map_entity = self.actor.relation_tag[comp.Map]
         explored = map_entity.components[comp.Explored]
         tiles = map_entity.components[comp.Tiles]
-        walkable = ~consts.TILE_ARRAY["obstacle"][tiles]
+        walkable = db.walkable[tiles]
         explorable = walkable | (funcs.moore(walkable) > 0)
         if np.sum(explorable & ~explored) > 0:
             return True
@@ -295,13 +296,18 @@ class Interact(ActorAction):
         return None
 
 
+import data
+
+data
+
+
 @dataclass
 class MagicMap(ActorAction):
     def can(self) -> bool:
         map_ = self.actor.relation_tag[comp.Map]
         tiles = map_.components[comp.Tiles]
         explored = map_.components[comp.Explored]
-        walkable = ~consts.TILE_ARRAY["obstacle"][tiles]
+        walkable = db.walkable[tiles]
         explorable = walkable | (funcs.moore(walkable) > 0)
         remaining = np.sum(explorable & ~explored)
         return bool(remaining > 0)
@@ -310,7 +316,7 @@ class MagicMap(ActorAction):
         map_ = self.actor.relation_tag[comp.Map]
         tiles = map_.components[comp.Tiles]
         explored = map_.components[comp.Explored]
-        walkable = ~consts.TILE_ARRAY["obstacle"][tiles]
+        walkable = db.walkable[tiles]
         explorable = walkable | (funcs.moore(walkable) > 0)
         remaining = np.sum(explorable & ~explored)
         if remaining < 1:
