@@ -288,10 +288,11 @@ def random_walk(condition: NDArray[np.bool_], walkers: int = 5, steps: int = 500
 def cellular_automata(
     condition: NDArray[np.bool_],
     seed: np.random.RandomState,
-    density=0.5,
-    iterations=3,
+    density: float = 0.5,
+    iterations: int = 3,
+    min_moore: int = 8,
 ) -> NDArray[np.bool_]:
-    grid = funcs.moore(condition) >= 8
+    grid = condition & (funcs.moore(condition) >= min_moore)
     grid &= seed.random(condition.shape) <= density
     for _ in range(iterations):
         neighbors = funcs.moore(grid)
