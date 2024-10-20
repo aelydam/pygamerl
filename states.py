@@ -28,6 +28,7 @@ class InGameState(game_interface.State):
             self.interface,
             {
                 "Depth": lambda: self.map_renderer.depth,
+                "Pos": lambda: ",".join(str(i) for i in self.logic.player.components[comp.Position].xy),
                 "Turn": lambda: self.logic.turn_count,
                 "Played": lambda: f"{self.logic.played_time // 3600:0.0f}:{self.logic.played_time // 60 % 60:0.0f}:{self.logic.played_time % 60:02.0f}",
                 "FPS": lambda: int(self.interface.clock.get_fps()),
