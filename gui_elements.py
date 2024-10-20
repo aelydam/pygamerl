@@ -4,6 +4,8 @@ import assets
 
 BORDER_WIDTH = 2
 BOX_PADDING = 4
+BORDER_PADDING = 2
+BORDER_RADIUS = 2
 BORDER_COLOR = "#DFEFD7"
 BOX_BGCOLOR = "#4D494D"
 BOX_FGCOLOR = "#AAAAAA"
@@ -33,6 +35,8 @@ class Box(pg.sprite.Sprite):
         self.group = group
         super().__init__(group)
         self.border = BORDER_WIDTH
+        self.border_radius = BORDER_RADIUS
+        self.border_padding = BORDER_PADDING
         self.padding = BOX_PADDING
         self.bgcolor = BOX_BGCOLOR
         self.fgcolor = BOX_FGCOLOR
@@ -49,19 +53,34 @@ class Box(pg.sprite.Sprite):
 
     def set_surface(self, surface: pg.Surface):
         self._surface = surface
-        w = self._surface.width + 2 * (self.border + self.padding)
-        h = self._surface.height + 2 * (self.border + self.padding)
+        w = self._surface.width + 2 * (self.border + self.padding + self.border_padding)
+        h = self._surface.height + 2 * (
+            self.border + self.padding + self.border_padding
+        )
         self.rect = pg.Rect(self.rect.x, self.rect.y, w, h)
         self.image = pg.Surface((w, h)).convert_alpha()
         self.image.fill("#00000000")
-        rect = pg.Rect(self.border, self.border, w - self.border, h - self.border)
-        self.image.fill(self.bgcolor, rect)
         pg.draw.rect(
-            self.image, self.border_color, (0, 0, w, h), self.border, self.border
+            self.image,
+            self.bgcolor,
+            (0, 0, w, h),
+            0,
+            self.border_radius + self.border_padding,
         )
-        self.image.blit(
-            surface, (self.border + self.padding, self.border + self.padding)
+        rect = (
+            self.border_padding,
+            self.border_padding,
+            w - 2 * self.border_padding,
+            h - 2 * self.border_padding,
         )
+        pg.draw.rect(
+            self.image, self.border_color, rect, self.border, self.border_radius
+        )
+        pos = (
+            self.border_padding + self.border + self.padding,
+            self.border_padding + self.border + self.padding,
+        )
+        self.image.blit(surface, pos)
 
 
 class Textbox(Box):
