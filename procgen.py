@@ -353,6 +353,7 @@ def add_torches(
     available = (
         (wmoore == 3)
         & ~walkable
+        & (funcs.moore(walkable, diagonals=False) == 1)
         & np.isin(wall_bm, (7, 11, 13, 14))
         & (funcs.moore(corridor) == 0)
     )
