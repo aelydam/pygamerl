@@ -329,6 +329,7 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
     for x, y in zip(all_x, all_y):
         door = map_entity.registry.new_entity(
             components={
+                comp.Name: "Door",
                 comp.Position: comp.Position((x, y), depth),
                 comp.Sprite: comp.Sprite("Objects/Door0", (0, 0)),
                 comp.Interaction: actions.ToggleDoor,
@@ -370,6 +371,7 @@ def add_torches(
         x, y = all_x[i], all_y[i]
         map_entity.registry.new_entity(
             components={
+                comp.Name: "Torch",
                 comp.Position: comp.Position((int(x), int(y)), depth),
                 comp.Sprite: comp.Sprite("Objects/Decor0", (0, 8)),
                 comp.LightRadius: 7,
@@ -400,6 +402,7 @@ def add_downstairs(
         xy = all_x[i], all_y[i]
         map_entity.registry.new_entity(
             components={
+                comp.Name: "Stairs",
                 comp.Position: comp.Position(xy, depth),
                 comp.Sprite: comp.Sprite("Objects/Tile", (6, 3)),
                 comp.Interaction: actions.Descend,
@@ -439,6 +442,7 @@ def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
         rooms[point] = True
         map_entity.registry.new_entity(
             components={
+                comp.Name: "Stairs",
                 comp.Position: comp.Position(point, depth),
                 comp.Sprite: comp.Sprite("Objects/Tile", (4, 3)),
                 comp.Interaction: actions.Ascend,
