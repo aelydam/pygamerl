@@ -465,9 +465,9 @@ class Damage(ActorAction):
 class Die(ActorAction):
     def perform(self) -> Action | None:
         aname = self.actor.components.get(comp.Name)
+        self.xy = self.actor.components[comp.Position].xy
         if comp.Player not in self.actor.tags:
             self.actor.clear()
         if aname is not None:
             self.message = f"{aname} dies!"
-        self.xy = self.actor.components[comp.Position].xy
         return self
