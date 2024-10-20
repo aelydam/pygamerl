@@ -190,9 +190,6 @@ class AttackAction(ActorAction):
         if roll >= self.target.components.get(comp.ArmorClass, 12):
             dice = self.actor.components.get(comp.DamageDice, 4)
             self.damage = random.randint(1, dice)
-            self.target.components[comp.HP] = max(
-                0, self.target.components[comp.HP] - self.damage
-            )
             text += f"{self.damage} points of damage!"
         else:
             self.damage = 0
@@ -200,11 +197,7 @@ class AttackAction(ActorAction):
         apos = self.actor.components[comp.Position].xy
         tpos = self.target.components[comp.Position].xy
         self.actor.components[comp.Direction] = (tpos[0] - apos[0], tpos[1] - apos[1])
-        if not entities.is_alive(self.target):
-            text += f" {tname} dies!"
-            if comp.Player not in self.target.tags:
-                self.target.clear()
-        self.xy = tpos
+        game_logic.push_action(self.target.registry, Damage(self.target, self.damage))
         self.message = text
         self.cost = 1
         return self
@@ -431,4 +424,35 @@ class Ascend(Interaction):
         aname = self.actor.components.get(comp.Name)
         if aname is not None:
             self.message = f"{aname} ascends the stairs"
+        return self
+
+
+@dataclass
+class Damage(ActorAction):
+    amount: int
+
+    def can(self) -> bool:
+        return comp.HP in self.actor.components
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        self.cost = 0
+        new_hp = max(0, self.actor.components[comp.HP] - self.amount)
+        self.actor.components[comp.HP] = new_hp
+        self.xy = self.actor.components[comp.Position].xy
+        if new_hp < 1:
+            game_logic.push_action(self.actor.registry, Die(self.actor))
+        return self
+
+
+@dataclass
+class Die(ActorAction):
+    def perform(self) -> Action | None:
+        aname = self.actor.components.get(comp.Name)
+        if comp.Player not in self.actor.tags:
+            self.actor.clear()
+        if aname is not None:
+            self.message = f"{aname} dies!"
+        self.xy = self.actor.components[comp.Position].xy
         return self

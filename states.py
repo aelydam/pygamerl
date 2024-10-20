@@ -93,7 +93,7 @@ class InGameState(game_interface.State):
         if not entities.is_alive(self.logic.player):
             self.interface.push(GameOverState(self))
             return
-        if isinstance(self.logic.last_action, actions.AttackAction):
+        if isinstance(self.logic.last_action, actions.Damage):
             ui_elements.Popup(
                 self.map_renderer, self.logic.last_action, self.interface.font
             )

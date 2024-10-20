@@ -116,7 +116,7 @@ class Popup(pg.sprite.Sprite):
     def __init__(
         self,
         group: map_renderer.MapRenderer,
-        action: actions.AttackAction,
+        action: actions.Damage,
         font: pg.Font,
     ):
         self._layer = map_renderer.UI_LAYER
@@ -125,7 +125,7 @@ class Popup(pg.sprite.Sprite):
         self.group = group
         self.counter = 0
         self.x, self.y = self.action.xy
-        text = str(self.action.damage)
+        text = str(self.action.amount)
         if text == "0":
             text = "MISS"
         self.image: pg.Surface = font.render(text, False, consts.POPUP_TEXT_COLOR, None)
