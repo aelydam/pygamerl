@@ -59,6 +59,9 @@ class Position:
         return self.__class__(xy, self.depth)
 
 
+AITarget = ("AITarget", Position)
+
+
 # See https://python-tcod.readthedocs.io/en/latest/tutorial/part-02.html#ecs-components
 @ecs.callbacks.register_component_changed(component=Position)
 def on_position_changed(

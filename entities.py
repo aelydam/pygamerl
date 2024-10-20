@@ -151,20 +151,30 @@ def can_act(actor: ecs.Entity) -> bool:
 
 def enemy_action(actor: ecs.Entity) -> actions.Action:
     player = actor.registry[comp.Player]
-    # Move if player dead or not in FOV
-    if not is_alive(player) or not is_in_fov(actor, player):
-        return actions.MoveAction.random(actor)
+    player_infov = is_alive(player) and is_in_fov(actor, player)
+    if player_infov:
+        actor.components[comp.AITarget] = player.components[comp.Position]
 
-    player_pos = player.components[comp.Position]
-    # Attack player if in reach
-    if dist(actor, player_pos) < 1.5:
-        return actions.AttackAction(actor, player)
-    # Move towards player
-    move_to = actions.MoveAction.to(actor, player_pos.xy)
-    if move_to is None or not move_to.can():
-        return actions.WaitAction(actor)
-    else:
-        return move_to
+    target = actor.components.get(comp.AITarget)
+    if target is not None:
+        d = dist(actor, target)
+        # Attack player if in reach
+        if d < 1.5 and player_infov:
+            return actions.AttackAction(actor, player)
+        elif d == 0:
+            actor.components.pop(comp.AITarget)
+            dir = actor.components.get(comp.Direction)
+            if dir is not None:
+                move = actions.MoveAction(actor, dir)
+                if move.can():
+                    return move
+        elif d >= 1.5:
+            # Move towards target
+            move_to = actions.MoveAction.to(actor, target.xy)
+            if move_to is not None and move_to.can():
+                return move_to
+
+    return actions.MoveAction.random(actor)
 
 
 def spawn_creature(
