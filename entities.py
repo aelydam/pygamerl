@@ -72,6 +72,8 @@ def is_in_fov(
     if isinstance(pos, ecs.Entity):
         if actor == pos:
             return True
+        if comp.Position not in pos.components:
+            return False
         pos = pos.components[comp.Position]
     if isinstance(pos, comp.Position):
         if apos.depth != pos.depth:
