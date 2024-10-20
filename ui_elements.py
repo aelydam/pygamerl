@@ -196,8 +196,15 @@ class Minimap(pg.sprite.Sprite):
             grid[:, :, k] += 40 * explored * (~walkable)
             grid[:, :, k] += 40 * explored * (~walkable) * fov
         #
-        query = map_.registry.Q.all_of(
-            components=[comp.Position], relations=[(comp.Map, map_)]
+        query = (
+            map_.registry.Q.all_of(
+                components=[comp.Position, comp.HP],
+                relations=[(comp.Map, map_)],
+            ).get_entities()
+            | map_.registry.Q.all_of(
+                components=[comp.Position, comp.Interaction],
+                relations=[(comp.Map, map_)],
+            ).get_entities()
         )
         for e in query:
             ex, ey = e.components[comp.Position].xy
