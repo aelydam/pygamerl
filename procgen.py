@@ -413,11 +413,13 @@ def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
     seed = map_entity.components[np.random.RandomState]
     points = []
     if depth < 1:
-        x = consts.MAX_ROOM_SIZE + seed.randint(
-            1, consts.MAP_SHAPE[0] - consts.MAX_ROOM_SIZE
+        x = seed.randint(
+            consts.MAX_ROOM_SIZE,
+            consts.MAP_SHAPE[0] - consts.MAX_ROOM_SIZE,
         )
-        y = consts.MAX_ROOM_SIZE + seed.randint(
-            1, consts.MAP_SHAPE[1] - consts.MAX_ROOM_SIZE
+        y = seed.randint(
+            consts.MAX_ROOM_SIZE,
+            consts.MAP_SHAPE[1] - consts.MAX_ROOM_SIZE,
         )
         points = [(x, y)]
     else:
@@ -431,9 +433,10 @@ def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
     rooms = np.full(consts.MAP_SHAPE, False)
     for point in points:
         w, h = random_room_size(seed)
-        x = min(max(1, point[0] - w // 2), consts.MAP_SHAPE[0] - w)
-        y = min(max(1, point[1] - h // 2), consts.MAP_SHAPE[1] - h)
+        x = min(max(1, point[0] - w // 2 + 1), consts.MAP_SHAPE[0] - w - 1)
+        y = min(max(1, point[1] - h // 2 + 1), consts.MAP_SHAPE[1] - h - 1)
         rooms |= rect_room(consts.MAP_SHAPE, x, y, w, h)
+        rooms[point] = True
         map_entity.registry.new_entity(
             components={
                 comp.Position: comp.Position(point, depth),
