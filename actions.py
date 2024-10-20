@@ -440,9 +440,24 @@ class Damage(ActorAction):
         self.cost = 0
         new_hp = max(0, self.actor.components[comp.HP] - self.amount)
         self.actor.components[comp.HP] = new_hp
-        self.xy = self.actor.components[comp.Position].xy
+        apos = self.actor.components[comp.Position]
+        self.xy = apos.xy
         if new_hp < 1:
             game_logic.push_action(self.actor.registry, Die(self.actor))
+        if self.amount > 0:
+            map_entity = self.actor.relation_tag[comp.Map]
+            query = self.actor.registry.Q.all_of(
+                components=[comp.Position, comp.Sprite],
+                tags=[comp.Bloodstain],
+                relations=[(comp.Map, map_entity)],
+            )
+            if len(query.get_entities()) < 1:
+                self.actor.registry.new_entity(
+                    components={
+                        comp.Position: apos,
+                        comp.Sprite: comp.Sprite("Objects/Ground0", (1, 5)),
+                    }
+                )
         return self
 
 

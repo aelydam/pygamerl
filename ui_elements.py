@@ -204,9 +204,9 @@ class Minimap(pg.sprite.Sprite):
             if explored[ex, ey]:
                 if comp.Player in e.tags:
                     grid[ex, ey, :] = [0, 0, 255]
-                elif not comp.HP in e.components:
+                elif comp.Interaction in e.components and not comp.HP in e.components:
                     grid[ex, ey, :] = [255, 255, 0]
-                elif fov[ex, ey]:
+                elif fov[ex, ey] and comp.HP in e.components:
                     grid[ex, ey, :] = [255, 0, 0]
         self.image = pg.surfarray.make_surface(grid.astype(np.uint8))
         self.image.set_colorkey((1, 1, 1))

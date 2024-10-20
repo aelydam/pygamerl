@@ -18,6 +18,7 @@ HideSprite = "HideSprite"
 Downstairs = "Downstairs"
 Upstairs = "Upstairs"
 Lit = "Lit"
+Bloodstain = "Bloodstain"
 
 # Map components
 Depth = ("Depth", int)
