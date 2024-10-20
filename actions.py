@@ -465,9 +465,16 @@ class Damage(ActorAction):
 class Die(ActorAction):
     def perform(self) -> Action | None:
         aname = self.actor.components.get(comp.Name)
-        self.xy = self.actor.components[comp.Position].xy
+        apos = self.actor.components[comp.Position]
+        self.xy = apos.xy
         if comp.Player not in self.actor.tags:
             self.actor.clear()
+        self.actor.registry.new_entity(
+            components={
+                comp.Position: apos,
+                comp.Sprite: comp.Sprite("Objects/Decor0", (1, 12)),
+            }
+        )
         if aname is not None:
             self.message = f"{aname} dies!"
         return self
