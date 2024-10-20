@@ -38,6 +38,7 @@ FOV = ("FOV", NDArray[np.bool_])
 Initiative = ("Initiative", float)
 LightRadius = ("LightRadius", int)
 Lightsource = ("Lightsource", NDArray[np.int8])
+Speed = ("Speed", int)
 
 # Global components
 MessageLog = ("MessageLog", list[str])

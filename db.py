@@ -98,3 +98,7 @@ def load_data(reg: ecs.Registry, kind: str):
             entity.tags |= {kind}
             if kind == "creatures":
                 entity.tags |= {comp.Obstacle}
+                if comp.Speed not in entity.components:
+                    entity.components[comp.Speed] = consts.BASE_SPEED
+                if comp.FOVRadius not in entity.components:
+                    entity.components[comp.FOVRadius] = consts.DEFAULT_FOV_RADIUS

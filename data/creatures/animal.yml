@@ -1,24 +1,21 @@
 Giant Bat:
   Sprite: {sheet: "Characters/Avian0", tile: [0, 11]}
   HP: 6
-  FOVRadius: 24
+  Speed: 8
 
 Giant Rat:
   Sprite: {sheet: "Characters/Rodent0", tile: [0, 1]}
   HP: 6
-  FOVRadius: 24
 
 Giant Spider:
   Sprite: {sheet: "Characters/Pest0", tile: [1, 2]}
   HP: 6
-  FOVRadius: 24
 
 Jackal:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 0]}
   HP: 6
-  FOVRadius: 24
 
 Wolf:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 1]}
   HP: 6
-  FOVRadius: 24
+  Speed: 6

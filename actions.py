@@ -47,6 +47,9 @@ class MoveAction(ActorAction):
 
     def __post_init__(self, *args, **kwargs):
         self.cost = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
+        self.cost *= (1 + consts.BASE_SPEED) / (
+            1 + self.actor.components.get(comp.Speed, 0)
+        )
 
     def can(self) -> bool:
         dist = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
@@ -54,6 +57,8 @@ class MoveAction(ActorAction):
             return False
         if (
             comp.Position not in self.actor.components
+            or comp.Speed not in self.actor.components
+            or self.actor.components[comp.Speed] < 1
             or comp.Map not in self.actor.relation_tag
         ):
             return False
@@ -68,7 +73,6 @@ class MoveAction(ActorAction):
             return None
         self.actor.components[comp.Position] += self.direction
         self.actor.components[comp.Direction] = self.direction
-        self.cost = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
         return self
 
     @classmethod

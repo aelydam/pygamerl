@@ -75,7 +75,8 @@ class GameLogic:
         player.components[comp.AttackBonus] = 4
         player.components[comp.ArmorClass] = 14
         player.components[comp.DamageDice] = 6
-        player.components[comp.FOVRadius] = 24
+        player.components[comp.FOVRadius] = consts.DEFAULT_FOV_RADIUS
+        player.components[comp.Speed] = consts.BASE_SPEED
         player.components[comp.Initiative] = 1
         player.components[comp.LightRadius] = 5
         player.tags |= {comp.Player, comp.Obstacle, comp.Lit}
