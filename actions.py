@@ -296,11 +296,6 @@ class Interact(ActorAction):
         return None
 
 
-import data
-
-data
-
-
 @dataclass
 class MagicMap(ActorAction):
     def can(self) -> bool:
