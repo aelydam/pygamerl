@@ -10,6 +10,7 @@ import tcod.ecs as ecs
 
 import comp
 import consts
+import db
 import entities
 import maps
 import procgen
@@ -54,6 +55,7 @@ class GameLogic:
         self.reg[None].components[comp.TurnCount] = 0
         self.reg[None].components[comp.LastPlayed] = datetime.datetime.now()
         self.reg[None].components[comp.PlayedTime] = 0
+        db.load_data(self.reg, "creatures")
         maps.get_map(self.reg, 0)
 
     def new_game(self) -> None:

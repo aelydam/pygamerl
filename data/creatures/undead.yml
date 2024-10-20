@@ -1,0 +1,14 @@
+Skeleton:
+  Sprite: {sheet: "Characters/Undead0", tile: [0, 2]}
+  HP: 6
+  FOVRadius: 24
+
+Zombie:
+  Sprite: {sheet: "Characters/Undead0", tile: [5, 0]}
+  HP: 6
+  FOVRadius: 24
+
+Ghost:
+  Sprite: {sheet: "Characters/Undead0", tile: [0, 4]}
+  HP: 6
+  FOVRadius: 24

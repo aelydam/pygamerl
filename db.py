@@ -1,7 +1,12 @@
+import glob
+import os
+
 import numpy as np
+import tcod.ecs as ecs
 import yaml  # type: ignore
 from numpy.typing import NDArray
 
+import comp
 import consts
 
 tiles: NDArray[np.void]
@@ -43,3 +48,53 @@ def load_tiles() -> None:
     obstacle = tiles["obstacle"]
     transparency = ~opaque
     walkable = ~obstacle
+
+
+def load_entity(
+    entity: ecs.Entity, name: str, data: dict[str, int | str | float | list | dict]
+):
+    entity.clear()
+    if "Name" not in data:
+        entity.components[comp.Name] = name
+    for k, v in data.items():
+        if k == "tags":
+            assert not isinstance(v, dict)
+            if isinstance(v, list):
+                entity.tags |= set(v)
+            else:
+                entity.tags |= {v}
+            continue
+        assert hasattr(comp, k)
+        if k == "HP":
+            comp_key = comp.MaxHP
+        else:
+            comp_key = getattr(comp, k)
+        if isinstance(comp_key, tuple):
+            comp_class = comp_key[1]
+        else:
+            assert callable(comp_key)
+            comp_class = comp_key
+        if isinstance(v, dict):
+            comp_obj = comp_class(**v)
+        elif isinstance(v, list):
+            comp_obj = comp_class(*v)
+        else:
+            comp_obj = comp_class(v)
+        entity.components[comp_key] = comp_obj
+
+
+def load_data(reg: ecs.Registry, kind: str):
+    dir_name = consts.GAME_PATH / "data" / kind
+    if os.path.isdir(dir_name):
+        files = glob.glob(str(dir_name / "*.yml"))
+    else:
+        files = [f"{dir_name}.yml"]
+    for fn in files:
+        with open(fn, "r") as file:
+            data: dict = yaml.safe_load(file)
+        for k, v in data.items():
+            entity = reg[(kind, k)]
+            load_entity(entity, k, v)
+            entity.tags |= {kind}
+            if kind == "creatures":
+                entity.tags |= {comp.Obstacle}

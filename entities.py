@@ -165,3 +165,17 @@ def enemy_action(actor: ecs.Entity) -> actions.Action:
         return actions.WaitAction(actor)
     else:
         return move_to
+
+
+def spawn_creature(
+    map_entity: ecs.Entity, pos: tuple[int, int], kind: str | ecs.Entity
+) -> ecs.Entity:
+    if isinstance(kind, str):
+        kind = map_entity.registry[("creatures", kind)]
+    entity = kind.instantiate()
+    if comp.MaxHP in entity.components:
+        entity.components[comp.HP] = entity.components[comp.MaxHP]
+    depth = map_entity.components[comp.Depth]
+    entity.components[comp.Position] = comp.Position(pos, depth)
+    entity.components[comp.Initiative] = 0
+    return entity

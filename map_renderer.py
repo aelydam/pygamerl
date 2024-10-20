@@ -68,7 +68,7 @@ class EntitySprite(pg.sprite.Sprite):
             max_frames = 2
         else:
             max_frames = 1
-        frames = assets.frames(spr.sheet, spr.tile, max_frames)
+        frames = assets.frames(spr.sheet, tuple(spr.tile), max_frames)
         self.tiles = [frames]
         for j in range(consts.MAX_LIGHT_RADIUS + 1):
             tint = light_tint(consts.MAX_LIGHT_RADIUS - j)

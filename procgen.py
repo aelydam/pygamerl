@@ -12,6 +12,7 @@ import actions
 import comp
 import consts
 import db
+import entities
 import funcs
 import maps
 
@@ -24,9 +25,19 @@ def get_walls(grid: NDArray[np.bool_], condition: NDArray[np.bool_] | None = Non
     return walls
 
 
+def pick_creature_kind(map_entity: ecs.Entity) -> ecs.Entity:
+    kinds = list(
+        map_entity.registry.Q.all_of(tags=["creatures"])
+        .none_of(components=[comp.Position, comp.Initiative])
+        .get_entities()
+    )
+    seed = map_entity.components[np.random.RandomState]
+    i = seed.randint(0, len(kinds))
+    return kinds[i]
+
+
 def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
     grid = map_entity.components[comp.Tiles]
-    depth = map_entity.components[comp.Depth]
     xgrid, ygrid = np.indices(grid.shape)
     walkable = db.walkable[grid]
     counter = 0
@@ -55,19 +66,8 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
         i = random.randint(0, len(all_x) - 1)
         x, y = all_x[i], all_y[i]
         # Spawn enemy and increase counter
-        enemy = map_entity.registry.new_entity(
-            components={
-                comp.Position: comp.Position((x, y), depth),
-                comp.Name: "Skeleton",
-                comp.Sprite: comp.Sprite("Characters/Undead0", (0, 2)),
-                comp.MaxHP: 6,
-                comp.HP: 6,
-                comp.Initiative: 0,
-                comp.FOVRadius: 24,
-            },
-            tags=[comp.Obstacle],
-        )
-        enemy.relation_tag[comp.Map] = map_entity
+        kind = pick_creature_kind(map_entity)
+        entities.spawn_creature(map_entity, (x, y), kind)
         counter += 1
         # Make all points within radius unavailable
         dist2 = (xgrid - x) ** 2 + (ygrid - y) ** 2
