@@ -52,6 +52,11 @@ def drop(item: ecs.Entity):
     stack_item(item, query)
 
 
+def drop_all(actor: ecs.Entity):
+    for e in inventory(actor):
+        drop(e)
+
+
 def spawn_item(
     map_entity: ecs.Entity, pos: tuple[int, int], kind: str | ecs.Entity, count: int = 1
 ) -> ecs.Entity:

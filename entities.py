@@ -240,4 +240,7 @@ def spawn_creature(
     depth = map_entity.components[comp.Depth]
     entity.components[comp.Position] = comp.Position(pos, depth)
     entity.components[comp.Initiative] = 0
+    if comp.TempInventory in kind.components:
+        for k, v in kind.components[comp.TempInventory].items():
+            items.add_item(entity, k, v)
     return entity

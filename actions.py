@@ -584,6 +584,7 @@ class Die(ActorAction):
         apos = self.actor.components[comp.Position]
         self.xy = apos.xy
         if comp.Player not in self.actor.tags:
+            items.drop_all(self.actor)
             self.actor.clear()
         self.actor.registry.new_entity(
             components={

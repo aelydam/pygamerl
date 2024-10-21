@@ -70,6 +70,14 @@ def load_entity(
             comp_key = comp.MaxHP
         else:
             comp_key = getattr(comp, k)
+        if comp_key == comp.Inventory:
+            if isinstance(v, list):
+                entity.components[comp.TempInventory] = {i: 1 for i in v}
+            elif isinstance(v, dict):
+                entity.components[comp.TempInventory] = v
+            elif isinstance(v, str):
+                entity.components[comp.TempInventory] = {v: 1}
+            continue
         if isinstance(comp_key, tuple):
             comp_class = comp_key[1]
         else:
