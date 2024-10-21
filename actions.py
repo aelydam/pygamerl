@@ -255,9 +255,9 @@ class BumpAction(MoveAction):
 
 @dataclass
 class Interact(ActorAction):
-    def get_entity(self) -> ecs.Entity | None:
+    def get_entity_at(self, direction: tuple[int, int]) -> ecs.Entity | None:
         map_entity = self.actor.relation_tag[comp.Map]
-        pos = self.actor.components[comp.Position]
+        pos = self.actor.components[comp.Position] + direction
         query = self.actor.registry.Q.all_of(
             [comp.Position, comp.Interaction],
             tags=[pos],
@@ -266,16 +266,14 @@ class Interact(ActorAction):
         for e in query:
             if e != self.actor:
                 return e
-        if comp.Direction in self.actor.components:
-            newpos = pos + self.actor.components[comp.Direction]
-            query = self.actor.registry.Q.all_of(
-                [comp.Position, comp.Interaction],
-                tags=[newpos],
-                relations=[(comp.Map, map_entity)],
-            )
-            for e in query:
-                if e != self.actor:
-                    return e
+        return None
+
+    def get_entity(self) -> ecs.Entity | None:
+        direction = self.actor.components.get(comp.Direction, (0, 0))
+        for d in {(0, 0), direction}:
+            e = self.get_entity_at(d)
+            if e is not None:
+                return e
         return None
 
     def get_action(self) -> Interaction | None:
