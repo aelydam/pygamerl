@@ -199,6 +199,8 @@ class AttackAction(ActorAction):
         else:
             self.damage = 0
             text += "Miss!"
+        if comp.Trap in self.actor.tags and comp.HideSprite in self.actor.tags:
+            self.actor.tags.discard(comp.HideSprite)
         apos = self.actor.components[comp.Position].xy
         tpos = self.target.components[comp.Position].xy
         self.actor.components[comp.Direction] = (tpos[0] - apos[0], tpos[1] - apos[1])
@@ -386,6 +388,27 @@ class ToggleTorch(Interaction):
         aname = self.actor.components.get(comp.Name)
         if aname is not None:
             self.message = f"{aname} {verb} a torch"
+        return self
+
+
+class DisarmTrap(Interaction):
+    def can(self):
+        return (
+            not self.bump
+            and self.target is not None
+            and comp.Trap in self.target.tags
+            and comp.HideSprite not in self.target.tags
+            and super().can()
+        )
+
+    def perform(self) -> Action | None:
+        if not self.can() or self.target is None:
+            return None
+        self.target.clear()
+        self.cost = 1
+        aname = self.actor.components.get(comp.Name)
+        if aname is not None:
+            self.message = f"{aname} disarms a trap"
         return self
 
 

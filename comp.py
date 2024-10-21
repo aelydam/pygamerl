@@ -17,6 +17,7 @@ Opaque = "Opaque"
 HideSprite = "HideSprite"
 Downstairs = "Downstairs"
 Upstairs = "Upstairs"
+Trap = "Trap"
 Lit = "Lit"
 Bloodstain = "Bloodstain"
 
