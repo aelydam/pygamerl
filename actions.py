@@ -365,7 +365,8 @@ class Pickup(Interaction):
     def perform(self) -> Action | None:
         if self.target is None or not self.can():
             return None
-        self.cost = 1
+        count = self.target.components.get(comp.Count, 1)
+        self.cost = count / self.target.components.get(comp.MaxStack, 1)
         aname = self.actor.components.get(comp.Name)
         tname = self.target.components.get(comp.Name)
         if aname is not None and tname is not None:
