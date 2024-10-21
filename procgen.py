@@ -411,6 +411,43 @@ def add_downstairs(
         )
 
 
+def add_traps(
+    map_entity: ecs.Entity,
+    radius: int = consts.MAX_ROOM_SIZE,
+    max_count: int = 10,
+    condition: NDArray[np.bool_] | None = None,
+):
+    tiles = map_entity.components[comp.Tiles]
+    depth = map_entity.components[comp.Depth]
+    seed = map_entity.components[np.random.RandomState]
+    walkable = db.walkable[tiles]
+    bm = funcs.bitmask(walkable)
+    wmoore = funcs.moore(walkable)
+    available = walkable & (wmoore == 2) & np.isin(bm, (6, 9))
+    if condition is not None:
+        available &= condition
+    grid_x, grid_y = np.indices(tiles.shape)
+    for _ in range(max_count):
+        if np.sum(available) < 1:
+            break
+        all_x, all_y = np.where(available)
+        i = seed.randint(0, len(all_x))
+        x, y = all_x[i], all_y[i]
+        dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2
+        available[dist2 <= radius**2] = False
+        map_entity.registry.new_entity(
+            components={
+                comp.Name: "Trap",
+                comp.Position: comp.Position((x, y), depth),
+                comp.Sprite: comp.Sprite("Objects/Trap0", (3, 3)),
+                comp.Initiative: 0,
+                comp.Reach: 0,
+                comp.DamageDice: 4,
+                comp.AttackBonus: 10,
+            }
+        )
+
+
 def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
     depth = map_entity.components[comp.Depth]
     seed = map_entity.components[np.random.RandomState]
@@ -531,8 +568,10 @@ def generate(map_entity: ecs.Entity):
     add_doors(
         map_entity, room_floor
     )  # & (funcs.moore(room_floor, diagonals=False) > 2))
-    # Add
+    # Add torches
     add_torches(map_entity, condition=funcs.moore(room_floor) > 0)
+    # Add traps
+    add_traps(map_entity)
     # Stairs
     add_downstairs(map_entity, room_floor, max_count=1 + (depth > 0))
     # Spawn enemies
