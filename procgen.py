@@ -622,13 +622,13 @@ def generate(map_entity: ecs.Entity):
     # Add torches
     add_torches(map_entity, condition=funcs.moore(room_floor) > 0)
     # Add traps
-    # add_traps(map_entity)
+    add_traps(map_entity)
     # Stairs
     add_downstairs(map_entity, room_floor, max_count=1 + (depth > 0))
     # Spawn items
     spawn_items(map_entity)
     # Spawn enemies
-    # spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
+    spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
 
 
 def generate_forest(map_entity: ecs.Entity) -> NDArray[np.int8]:

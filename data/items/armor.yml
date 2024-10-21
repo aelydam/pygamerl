@@ -1,0 +1,14 @@
+Leather Armor:
+  Sprite: {sheet: "Items/Armor", tile: [0, 6]}
+  ArmorClass: 2
+  EquipSlot: Chest
+
+Chain Mail:
+  Sprite: {sheet: "Items/Armor", tile: [0, 8]}
+  ArmorClass: 4
+  EquipSlot: Chest
+
+Breastplate:
+  Sprite: {sheet: "Items/Armor", tile: [5, 6]}
+  ArmorClass: 6
+  EquipSlot: Chest

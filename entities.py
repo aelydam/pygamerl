@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any, Never
+
 import numpy as np
 import tcod
 import tcod.ecs as ecs
@@ -8,6 +10,7 @@ import actions
 import comp
 import consts
 import funcs
+import items
 import maps
 
 
@@ -32,11 +35,49 @@ def dist(
     return sum([(origin[i] - target[i]) ** 2 for i in range(2)]) ** 0.5
 
 
+def get_combined_component(
+    actor: ecs.Entity, component: tuple[str, type[int]], default: int = 0
+) -> int:
+    res = actor.components.get(component, default)
+    for e in items.equipment(actor).values():
+        if e is not None:
+            res += e.components.get(component, 0)
+    return res
+
+
+def armor_class(actor: ecs.Entity, default: int = 10) -> int:
+    return get_combined_component(actor, comp.ArmorClass, default)
+
+
+def attack_bonus(actor: ecs.Entity, default: int = 2) -> int:
+    return get_combined_component(actor, comp.AttackBonus, default)
+
+
+def damage_dice(actor: ecs.Entity, default: int = 1) -> int:
+    mainhand = items.equipment_at_slot(actor, comp.EquipSlot.Main_Hand)
+    if mainhand is not None and comp.DamageDice in mainhand.components:
+        return mainhand.components[comp.DamageDice]
+    return actor.components.get(comp.DamageDice, default)
+
+
+def damage_bonus(actor: ecs.Entity, default: int = 0) -> int:
+    return get_combined_component(actor, comp.DamageBonus, default)
+
+
+def speed(actor: ecs.Entity, default: int = consts.BASE_SPEED) -> int:
+    return get_combined_component(actor, comp.Speed, default)
+
+
+def fov_radius(actor: ecs.Entity, default: int = consts.DEFAULT_FOV_RADIUS) -> int:
+    return get_combined_component(actor, comp.FOVRadius, default)
+
+
 def update_fov(actor: ecs.Entity):
+    radius = fov_radius(actor)
     if (
-        comp.Map not in actor.relation_tag
+        radius < 1
+        or comp.Map not in actor.relation_tag
         or comp.Position not in actor.components
-        or comp.FOVRadius not in actor.components
     ):
         return
     map_entity = actor.relation_tag[comp.Map]
@@ -49,7 +90,6 @@ def update_fov(actor: ecs.Entity):
     xy = actor.components[comp.Position].xy
     transparency[xy] = True
     # Update player FOV
-    radius = actor.components[comp.FOVRadius]
     fov = tcod.map.compute_fov(
         transparency, xy, radius, algorithm=tcod.constants.FOV_SYMMETRIC_SHADOWCAST
     )

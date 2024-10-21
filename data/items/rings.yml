@@ -1,0 +1,13 @@
+Commong Ring:
+  Sprite: {sheet: "Items/Ring", tile: [0,0]}
+  EquipSlot: Ring
+
+Protection Ring:
+  Sprite: {sheet: "Items/Ring", tile: [1,0]}
+  ArmorClass: 1
+  EquipSlot: Ring
+
+Speed Ring:
+  Sprite: {sheet: "Items/Ring", tile: [2,0]}
+  Speed: 2
+  EquipSlot: Ring

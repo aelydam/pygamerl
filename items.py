@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Iterable
 
 import tcod.ecs as ecs
@@ -39,6 +41,8 @@ def pickup(actor: ecs.Entity, item: ecs.Entity):
 
 
 def drop(item: ecs.Entity):
+    if is_equipped(item):
+        unequip_item(item)
     actor = item.relation_tag[comp.Inventory]
     pos = actor.components[comp.Position]
     kind = item.relation_tag[ecs.IsA]
@@ -64,5 +68,62 @@ def spawn_item(
     return entity
 
 
+def add_item(actor: ecs.Entity, kind: str | ecs.Entity, count: int = 1):
+    if isinstance(kind, str):
+        kind = actor.registry[("items", kind)]
+    max_stack = kind.components.get(comp.MaxStack, 1)
+    while count > 0:
+        stack_count = min(count, max_stack)
+        entity = kind.instantiate()
+        entity.components[comp.Count] = stack_count
+        entity.relation_tag[comp.Inventory] = actor
+        count -= stack_count
+    return entity
+
+
 def inventory(actor: ecs.Entity) -> Iterable[ecs.Entity]:
     return actor.registry.Q.all_of(tags={"items"}, relations=[(comp.Inventory, actor)])
+
+
+def is_equippable(item: ecs.Entity) -> bool:
+    return comp.EquipSlot in item.components
+
+
+def is_equipped(item: ecs.Entity) -> bool:
+    if comp.EquipSlot not in item.components or comp.Inventory not in item.relation_tag:
+        return False
+    actor = item.relation_tag[comp.Inventory]
+    slot = item.components[comp.EquipSlot]
+    in_slot = equipment_at_slot(actor, slot)
+    return in_slot == item
+
+
+def equipment_at_slot(actor: ecs.Entity, slot: comp.EquipSlot) -> ecs.Entity | None:
+    if slot in actor.relation_tag:
+        return actor.relation_tag[slot]
+    return None
+
+
+def unequip_slot(actor: ecs.Entity, slot: comp.EquipSlot):
+    if slot in actor.relation_tag:
+        actor.relation_tag.pop(slot)
+
+
+def unequip_item(item: ecs.Entity):
+    if is_equipped(item):
+        actor = item.relation_tag[comp.Inventory]
+        slot = item.components[comp.EquipSlot]
+        unequip_slot(actor, slot)
+
+
+def equip(actor: ecs.Entity, item: ecs.Entity):
+    if item.relation_tag[comp.Inventory] != actor:
+        return
+    slot = item.components[comp.EquipSlot]
+    unequip_slot(actor, slot)
+    actor.relation_tag[slot] = item
+
+
+def equipment(actor: ecs.Entity) -> dict[comp.EquipSlot, ecs.Entity | None]:
+    x = {slot: equipment_at_slot(actor, slot) for slot in comp.EquipSlot}
+    return x

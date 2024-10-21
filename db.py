@@ -1,5 +1,6 @@
 import glob
 import os
+from enum import Enum
 
 import numpy as np
 import tcod.ecs as ecs
@@ -74,7 +75,10 @@ def load_entity(
         else:
             assert callable(comp_key)
             comp_class = comp_key
-        if isinstance(v, dict):
+        if issubclass(comp_class, Enum):
+            entity.components[comp_key] = comp_class.__members__[v]  # type: ignore
+            continue
+        elif isinstance(v, dict):
             comp_obj = comp_class(**v)
         elif isinstance(v, list):
             comp_obj = comp_class(*v)

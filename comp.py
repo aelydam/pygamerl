@@ -1,6 +1,7 @@
 import datetime
 from collections import deque
 from dataclasses import dataclass
+from enum import Enum, auto
 from typing import Protocol
 
 import numpy as np
@@ -33,6 +34,7 @@ Direction = ("Direction", tuple[int, int])
 ArmorClass = ("ArmorClass", int)
 AttackBonus = ("AttackBonus", int)
 DamageDice = ("DamageDice", int)
+DamageBonus = ("DamageBonus", int)
 MaxHP = ("MaxHP", int)
 HP = ("HP", int)
 FOVRadius = ("FOVRadius", int)
@@ -55,6 +57,12 @@ TurnCount = ("TurnCount", int)
 LastPlayed = ("LastPlayed", datetime.datetime)
 PlayedTime = ("PlayedTime", float)
 MaxDepth = ("MaxDepth", int)
+
+
+class EquipSlot(Enum):
+    Main_Hand = auto()
+    Chest = auto()
+    Ring = auto()
 
 
 @dataclass(frozen=True)

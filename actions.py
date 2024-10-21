@@ -48,9 +48,7 @@ class MoveAction(ActorAction):
 
     def __post_init__(self, *args, **kwargs):
         self.cost = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
-        self.cost *= (1 + consts.BASE_SPEED) / (
-            1 + self.actor.components.get(comp.Speed, 0)
-        )
+        self.cost *= (1 + consts.BASE_SPEED) / (1 + entities.speed(self.actor))
 
     def can(self) -> bool:
         dist = sum([self.direction[i] ** 2 for i in range(2)]) ** 0.5
@@ -189,13 +187,14 @@ class AttackAction(ActorAction):
         if not self.can():
             return None
         roll = random.randint(1, 20)
-        roll += self.actor.components.get(comp.AttackBonus, 2)
+        roll += entities.attack_bonus(self.actor)
         aname = self.actor.components.get(comp.Name, "Something")
         tname = self.target.components.get(comp.Name, "Something")
         text = f"{aname} attacks {tname}: "
-        if roll >= self.target.components.get(comp.ArmorClass, 12):
-            dice = self.actor.components.get(comp.DamageDice, 4)
+        if roll >= entities.armor_class(self.target):
+            dice = entities.damage_dice(self.actor)
             self.damage = random.randint(1, dice)
+            self.damage += entities.damage_bonus(self.actor)
             text += f"{self.damage} points of damage!"
         else:
             self.damage = 0
@@ -379,6 +378,46 @@ class Drop(Interaction):
         tname = self.target.components.get(comp.Name)
         if aname is not None and tname is not None:
             self.message = f"{aname} drops {tname}"
+        return self
+
+
+class Equip(Interaction):
+    def can(self) -> bool:
+        return (
+            self.target is not None
+            and self.target.relation_tag[comp.Inventory] == self.actor
+            and items.is_equippable(self.target)
+        )
+
+    def perform(self) -> Action | None:
+        if self.target is None or not self.can():
+            return None
+        items.equip(self.actor, self.target)
+        aname = self.actor.components.get(comp.Name)
+        tname = self.target.components.get(comp.Name)
+        if aname is not None and tname is not None:
+            self.message = f"{aname} equips {tname}"
+        self.cost = 2
+        return self
+
+
+class Unequip(Interaction):
+    def can(self) -> bool:
+        return (
+            self.target is not None
+            and self.target.relation_tag[comp.Inventory] == self.actor
+            and items.is_equipped(self.target)
+        )
+
+    def perform(self) -> Action | None:
+        if self.target is None or not self.can():
+            return None
+        items.unequip_item(self.target)
+        aname = self.actor.components.get(comp.Name)
+        tname = self.target.components.get(comp.Name)
+        if aname is not None and tname is not None:
+            self.message = f"{aname} unequips {tname}"
+        self.cost = 0
         return self
 
 

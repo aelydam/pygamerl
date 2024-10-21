@@ -34,6 +34,9 @@ class InGameState(game_interface.State):
                 "Pos": lambda: ",".join(
                     str(i) for i in self.logic.player.components[comp.Position].xy
                 ),
+                "AC": lambda: entities.armor_class(self.logic.player),
+                "Hit": lambda: entities.attack_bonus(self.logic.player),
+                "Dmg": lambda: f"1d{entities.damage_dice(self.logic.player)}",
                 "Turn": lambda: self.logic.turn_count,
                 "Played": lambda: f"{self.logic.played_time // 3600:0.0f}:{self.logic.played_time // 60 % 60:0.0f}:{self.logic.played_time % 60:02.0f}",
                 "FPS": lambda: int(self.interface.clock.get_fps()),
@@ -384,13 +387,15 @@ class InventoryState(game_interface.State):
     def item_text(item: ecs.Entity) -> str:
         count = item.components.get(comp.Count, 1)
         name = item.components.get(comp.Name)
-        return f"{count}x {name}"
+        equipped = " [E]" if items.is_equipped(item) else ""
+        return f"{count}x {name}{equipped}"
 
     def update(self):
         super().update()
         logic = self.interface.logic
         if (
-            logic.current_entity != logic.player
+            len(logic.initiative) < 1
+            or logic.current_entity != logic.player
             or len(logic.action_queue) > 0
             or logic.input_action is not None
         ):
@@ -409,6 +414,8 @@ class InventoryState(game_interface.State):
         if event.type == pg.KEYUP:
             if event.key == pg.K_ESCAPE:
                 self.interface.pop()
+            elif event.key == pg.K_RETURN:
+                self.select()
             elif event.key == pg.K_DELETE:
                 self.drop()
             else:
@@ -416,6 +423,8 @@ class InventoryState(game_interface.State):
         elif event.type == pg.MOUSEBUTTONUP:
             if not self.menu.rect.collidepoint(*event.pos):
                 self.interface.pop()
+            elif self.menu.pressed_index == self.menu.selected_index:
+                self.select()
 
     def refresh(self):
         self.items = list(items.inventory(self.interface.logic.player))
@@ -425,4 +434,15 @@ class InventoryState(game_interface.State):
     def drop(self):
         item = self.items[self.menu.selected_index]
         player = self.interface.logic.player
-        self.interface.logic.input_action = actions.Drop(player, item)
+        if items.is_equipped(item):
+            self.interface.logic.input_action = actions.Unequip(player, item)
+        else:
+            self.interface.logic.input_action = actions.Drop(player, item)
+
+    def select(self):
+        item = self.items[self.menu.selected_index]
+        player = self.interface.logic.player
+        if items.is_equipped(item):
+            self.interface.logic.input_action = actions.Unequip(player, item)
+        elif items.is_equippable(item):
+            self.interface.logic.input_action = actions.Equip(player, item)

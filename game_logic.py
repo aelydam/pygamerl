@@ -12,6 +12,7 @@ import comp
 import consts
 import db
 import entities
+import items
 import maps
 import procgen
 
@@ -55,8 +56,8 @@ class GameLogic:
         self.reg[None].components[comp.TurnCount] = 0
         self.reg[None].components[comp.LastPlayed] = datetime.datetime.now()
         self.reg[None].components[comp.PlayedTime] = 0
-        db.load_data(self.reg, "creatures")
         db.load_data(self.reg, "items")
+        db.load_data(self.reg, "creatures")
         maps.get_map(self.reg, 0)
 
     def new_game(self) -> None:
@@ -74,8 +75,8 @@ class GameLogic:
         player.components[comp.MaxHP] = 48
         player.components[comp.HP] = 48
         player.components[comp.AttackBonus] = 4
-        player.components[comp.ArmorClass] = 14
-        player.components[comp.DamageDice] = 6
+        player.components[comp.ArmorClass] = 10
+        player.components[comp.DamageDice] = 1
         player.components[comp.FOVRadius] = consts.DEFAULT_FOV_RADIUS
         player.components[comp.Speed] = consts.BASE_SPEED
         player.components[comp.Initiative] = 1
@@ -83,6 +84,10 @@ class GameLogic:
         player.tags |= {comp.Player, comp.Obstacle, comp.Lit}
         player.relation_tag[comp.Map] = map_entity
         entities.update_fov(player)
+        items.add_item(player, "Protection Ring")
+        items.add_item(player, "Speed Ring")
+        items.equip(player, items.add_item(player, "Dagger"))
+        items.equip(player, items.add_item(player, "Leather Armor"))
 
     def log(self, text: str):
         self.message_log.append(text)

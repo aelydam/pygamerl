@@ -1,5 +1,6 @@
 import os
 
+import comp
 import consts
 import game_interface
 import keybinds  # must be here to avoid circular import
