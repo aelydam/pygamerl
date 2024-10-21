@@ -50,6 +50,7 @@ class EntitySprite(pg.sprite.Sprite):
         self.is_in_fov: bool | None = None
         self.flip: bool | None = None
         self.light = -1
+        self.x, self.y = -1, -1
         self.visible: bool | None = None
         self.spr: comp.Sprite | None = None
         self.hpbar: ui_elements.MapHPBar | None = None
@@ -96,6 +97,7 @@ class EntitySprite(pg.sprite.Sprite):
             return
         self.prepare_surfaces()
         pos = self.entity.components[comp.Position]
+        self.x, self.y = pos.xy
         x, y = self.group.grid_to_screen(*pos.xy)
         if comp.HP in self.entity.components:
             y -= consts.ENTITY_YOFFSET
@@ -148,9 +150,8 @@ class EntitySprite(pg.sprite.Sprite):
                 self.tooltip.kill()
                 self.tooltip = None
             return
-        x, y = pg.mouse.get_pos()
         pressed = pg.key.get_pressed()
-        self.hovered = self.rect.collidepoint(x, y)
+        self.hovered = self.group.cursor == (self.x, self.y)
         show_tooltip = self.hovered or pressed[pg.K_RALT] or pressed[pg.K_LALT]
         show_tooltip = show_tooltip and self.is_in_fov
         show_tooltip = show_tooltip and entities.is_alive(self.entity)
@@ -224,6 +225,8 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.dark_tint = consts.UNEXPLORED_TINT
         self.tile_sprites: dict[tuple[int, int], TileSprite] = {}
         self.entity_sprites: dict[ecs.Entity, EntitySprite] = {}
+        self.center: tuple[int, int] = (0, 0)
+        self.cursor: tuple[int, int] | None = None
         self.create_surfaces()
         self.create_tile_sprites()
         self.create_entity_sprites()
@@ -265,16 +268,16 @@ class MapRenderer(pg.sprite.LayeredUpdates):
                 self.entity_sprites[e] = EntitySprite(self, e)
 
     def grid_to_screen(self, i: int, j: int) -> tuple[int, int]:
-        pi, pj = self.logic.player.components[comp.Position].xy
+        pi, pj = self.center
         x = self.shape[0] // 2 + (i - pi) * consts.TILE_SIZE
         y = self.shape[1] // 2 + (j - pj) * consts.TILE_SIZE
-        return (x, y)
+        return (int(x), int(y))
 
     def screen_to_grid(self, x: int, y: int) -> tuple[int, int]:
-        pi, pj = self.logic.player.components[comp.Position].xy
+        pi, pj = self.center
         i = (x - self.shape[0] // 2) // consts.TILE_SIZE + pi
         j = (y - self.shape[1] // 2) // consts.TILE_SIZE + pj
-        return (i, j)
+        return (int(i), int(j))
 
     def update(self, *args, **kwargs):
         self.create_entity_sprites()
@@ -288,3 +291,8 @@ class MapRenderer(pg.sprite.LayeredUpdates):
         self.light = map_.components[comp.Lightsource]
         self.walkable = db.walkable[self.tiles]
         super().update(*args, **kwargs)
+
+    def move_center(self, direction: tuple[int, int]):
+        x = min(max(0, self.center[0] + direction[0]), consts.MAP_SHAPE[0])
+        y = min(max(0, self.center[1] + direction[1]), consts.MAP_SHAPE[1])
+        self.center = (x, y)

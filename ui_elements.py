@@ -293,14 +293,17 @@ class MapCursor(pg.sprite.Sprite):
         )
 
     def update(self, *args, **kwargs) -> None:
-        mouse_x, mouse_y = pg.mouse.get_pos()
-        grid_x, grid_y = self.group.screen_to_grid(mouse_x, mouse_y)
-        x, y = self.group.grid_to_screen(grid_x, grid_y)
+        cursor_pos = self.group.cursor
+        if cursor_pos is None:
+            self.image = self.blank_image
+            self.rect = self.image.get_rect(bottomright=(-1, -1))
+            return
+        x, y = self.group.grid_to_screen(*cursor_pos)
         self.rect = self.image.get_rect(topleft=(x, y))
         map_ = self.group.logic.map
-        in_bounds = maps.is_in_bounds(map_, (grid_x, grid_y))
-        is_explored = in_bounds and self.group.explored[grid_x, grid_y]
-        is_walkable = is_explored and maps.is_walkable(map_, (grid_x, grid_y))
+        in_bounds = maps.is_in_bounds(map_, cursor_pos)
+        is_explored = in_bounds and self.group.explored[cursor_pos]
+        is_walkable = is_explored and maps.is_walkable(map_, cursor_pos)
         if not is_explored:
             self.image = self.blank_image
         elif not is_walkable:

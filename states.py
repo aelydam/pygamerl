@@ -23,12 +23,15 @@ class InGameState(game_interface.State):
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, font)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
         self.map_renderer = map_renderer.MapRenderer(self.interface)
+        self.map_renderer.center = self.logic.player.components[comp.Position].xy
         self.hud = ui_elements.StatsHUD(
             self.ui_group,
             self.interface,
             {
                 "Depth": lambda: self.map_renderer.depth,
-                "Pos": lambda: ",".join(str(i) for i in self.logic.player.components[comp.Position].xy),
+                "Pos": lambda: ",".join(
+                    str(i) for i in self.logic.player.components[comp.Position].xy
+                ),
                 "Turn": lambda: self.logic.turn_count,
                 "Played": lambda: f"{self.logic.played_time // 3600:0.0f}:{self.logic.played_time // 60 % 60:0.0f}:{self.logic.played_time % 60:02.0f}",
                 "FPS": lambda: int(self.interface.clock.get_fps()),
@@ -43,6 +46,9 @@ class InGameState(game_interface.State):
                 action = actions.BumpAction(self.logic.player, (dx, dy))
                 if event.mod & pg.KMOD_SHIFT:
                     self.logic.continuous_action = action
+                elif event.mod & pg.KMOD_ALT:
+                    self.map_renderer.move_center((dx, dy))
+                    self.map_renderer.cursor = self.map_renderer.center
                 else:
                     self.logic.input_action = action
             elif event.mod & pg.KMOD_SHIFT and event.key in keybinds.ACTION_SHIFT_KEYS:
@@ -89,11 +95,20 @@ class InGameState(game_interface.State):
             else:
                 self.logic.continuous_action = actions.MoveToAction(player, (x, y))
 
+        elif event.type == pg.MOUSEMOTION:
+            self.map_renderer.cursor = self.map_renderer.screen_to_grid(*event.pos)
+
     def update(self):
         self.logic.update()
         if not entities.is_alive(self.logic.player):
             self.interface.push(GameOverState(self))
             return
+        if (
+            isinstance(self.logic.last_action, actions.ActorAction)
+            and self.logic.last_action.actor == self.logic.player
+        ):
+            self.map_renderer.center = self.logic.player.components[comp.Position].xy
+            self.map_renderer.cursor = None
         if isinstance(self.logic.last_action, actions.Damage):
             ui_elements.Popup(
                 self.map_renderer, self.logic.last_action, self.interface.font
