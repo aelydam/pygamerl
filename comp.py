@@ -43,6 +43,10 @@ Lightsource = ("Lightsource", NDArray[np.int8])
 Speed = ("Speed", int)
 Reach = ("Reach", float)
 
+# Item Components
+MaxStack = ("MaxStack", int)
+Count = ("Count", int)
+
 # Global components
 MessageLog = ("MessageLog", list[str])
 InitiativeTracker = ("InitiativeTracker", deque[ecs.Entity])

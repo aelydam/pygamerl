@@ -1,4 +1,5 @@
 import pygame as pg
+import tcod.ecs as ecs
 
 import actions
 import assets
@@ -6,7 +7,6 @@ import comp
 import consts
 import entities
 import game_interface
-import game_logic
 import gui_elements
 import items
 import keybinds
@@ -376,9 +376,15 @@ class InventoryState(game_interface.State):
         super().__init__(parent.interface)
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.items = list(items.inventory(self.interface.logic.player))
-        names = [i.components[comp.Name] for i in self.items]
+        names = [self.item_text(i) for i in self.items]
         self.menu = gui_elements.Menu(self.ui_group, names, 16, width=240)
         self.menu.select(-1)
+
+    @staticmethod
+    def item_text(item: ecs.Entity) -> str:
+        count = item.components.get(comp.Count, 1)
+        name = item.components.get(comp.Name)
+        return f"{count}x {name}"
 
     def update(self):
         super().update()
@@ -413,7 +419,7 @@ class InventoryState(game_interface.State):
 
     def refresh(self):
         self.items = list(items.inventory(self.interface.logic.player))
-        names = [i.components[comp.Name] for i in self.items]
+        names = [self.item_text(i) for i in self.items]
         self.menu.set_items(names, True)
 
     def drop(self):

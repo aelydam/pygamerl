@@ -48,6 +48,15 @@ def pick_item_kind(map_entity: ecs.Entity) -> ecs.Entity:
     return kinds[i]
 
 
+def pick_item_count(map_entity: ecs.Entity, item: ecs.Entity) -> int:
+    max_stack = item.components.get(comp.MaxStack, 1)
+    if max_stack > 1:
+        seed = map_entity.components[np.random.RandomState]
+        count = min(seed.randint(1, max_stack) for _ in range(2))
+        return count
+    return 1
+
+
 def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
     grid = map_entity.components[comp.Tiles]
     xgrid, ygrid = np.indices(grid.shape)
@@ -110,7 +119,8 @@ def spawn_items(
         counter += 1
         #
         kind = pick_item_kind(map_entity)
-        items.spawn_item(map_entity, (x, y), kind)
+        count = pick_item_count(map_entity, kind)
+        items.spawn_item(map_entity, (x, y), kind, count)
 
 
 def respawn(map_entity: ecs.Entity):
@@ -612,13 +622,13 @@ def generate(map_entity: ecs.Entity):
     # Add torches
     add_torches(map_entity, condition=funcs.moore(room_floor) > 0)
     # Add traps
-    add_traps(map_entity)
+    # add_traps(map_entity)
     # Stairs
     add_downstairs(map_entity, room_floor, max_count=1 + (depth > 0))
     # Spawn items
     spawn_items(map_entity)
     # Spawn enemies
-    spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
+    # spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
 
 
 def generate_forest(map_entity: ecs.Entity) -> NDArray[np.int8]:

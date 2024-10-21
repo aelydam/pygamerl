@@ -354,12 +354,13 @@ class Pickup(Interaction):
     def perform(self) -> Action | None:
         if self.target is None or not self.can():
             return None
-        items.pickup(self.actor, self.target)
         self.cost = 1
         aname = self.actor.components.get(comp.Name)
         tname = self.target.components.get(comp.Name)
         if aname is not None and tname is not None:
-            self.message = f"{aname} picks {tname}"
+            count = self.target.components.get(comp.Count, 1)
+            self.message = f"{aname} picks {count} {tname}"
+        items.pickup(actor=self.actor, item=self.target)
         return self
 
 
