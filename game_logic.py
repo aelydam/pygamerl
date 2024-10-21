@@ -56,6 +56,7 @@ class GameLogic:
         self.reg[None].components[comp.LastPlayed] = datetime.datetime.now()
         self.reg[None].components[comp.PlayedTime] = 0
         db.load_data(self.reg, "creatures")
+        db.load_data(self.reg, "items")
         maps.get_map(self.reg, 0)
 
     def new_game(self) -> None:

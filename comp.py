@@ -12,6 +12,7 @@ import actions
 # Tags
 Map = "Map"
 Player = "Player"
+Inventory = "Inventory"
 Obstacle = "Obstacle"
 Opaque = "Opaque"
 HideSprite = "HideSprite"

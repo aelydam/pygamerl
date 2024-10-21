@@ -13,6 +13,7 @@ import db
 import entities
 import funcs
 import game_logic
+import items
 import maps
 
 
@@ -266,6 +267,13 @@ class Interact(ActorAction):
         for e in query:
             if e != self.actor:
                 return e
+        query = self.actor.registry.Q.all_of(
+            [comp.Position],
+            tags=[pos, "items"],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            return e
         return None
 
     def get_entity(self) -> ecs.Entity | None:
@@ -279,7 +287,10 @@ class Interact(ActorAction):
     def get_action(self) -> Interaction | None:
         entity = self.get_entity()
         if entity is not None:
-            action_class = entity.components[comp.Interaction]
+            if comp.Interaction in entity.components:
+                action_class = entity.components[comp.Interaction]
+            else:
+                action_class = Pickup
             return action_class(self.actor, entity, bump=False)
         return None
 
@@ -329,6 +340,45 @@ class Interaction(ActorAction):
 
     def can(self) -> bool:
         return self.target is not None and entities.dist(self.target, self.actor) < 1.5
+
+
+class Pickup(Interaction):
+    def can(self) -> bool:
+        return (
+            not self.bump
+            and self.target is not None
+            and "items" in self.target.tags
+            and super().can()
+        )
+
+    def perform(self) -> Action | None:
+        if self.target is None or not self.can():
+            return None
+        items.pickup(self.actor, self.target)
+        self.cost = 1
+        aname = self.actor.components.get(comp.Name)
+        tname = self.target.components.get(comp.Name)
+        if aname is not None and tname is not None:
+            self.message = f"{aname} picks {tname}"
+        return self
+
+
+class Drop(Interaction):
+    def can(self) -> bool:
+        return (
+            self.target is not None
+            and self.target.relation_tag[comp.Inventory] == self.actor
+        )
+
+    def perform(self) -> Action | None:
+        if self.target is None or not self.can():
+            return None
+        items.drop(self.target)
+        aname = self.actor.components.get(comp.Name)
+        tname = self.target.components.get(comp.Name)
+        if aname is not None and tname is not None:
+            self.message = f"{aname} drops {tname}"
+        return self
 
 
 class ToggleDoor(Interaction):

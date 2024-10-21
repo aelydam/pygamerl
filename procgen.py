@@ -14,6 +14,7 @@ import consts
 import db
 import entities
 import funcs
+import items
 import maps
 
 
@@ -29,6 +30,17 @@ def pick_creature_kind(map_entity: ecs.Entity) -> ecs.Entity:
     kinds = list(
         map_entity.registry.Q.all_of(tags=["creatures"])
         .none_of(components=[comp.Position, comp.Initiative])
+        .get_entities()
+    )
+    seed = map_entity.components[np.random.RandomState]
+    i = seed.randint(0, len(kinds))
+    return kinds[i]
+
+
+def pick_item_kind(map_entity: ecs.Entity) -> ecs.Entity:
+    kinds = list(
+        map_entity.registry.Q.all_of(tags=["items"])
+        .none_of(components=[comp.Position], relations=[(comp.Inventory, ...)])
         .get_entities()
     )
     seed = map_entity.components[np.random.RandomState]
@@ -72,6 +84,33 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
         # Make all points within radius unavailable
         dist2 = (xgrid - x) ** 2 + (ygrid - y) ** 2
         available[dist2 <= radius**2] = False
+
+
+def spawn_items(
+    map_entity: ecs.Entity,
+    radius: int = consts.MAX_ROOM_SIZE,
+    max_count: int = 0,
+    condition: NDArray[np.bool_] | None = None,
+):
+    grid = map_entity.components[comp.Tiles]
+    depth = map_entity.components[comp.Depth]
+    xgrid, ygrid = np.indices(grid.shape)
+    walkable = db.walkable[grid]
+    counter = 0
+    # Initialize available array from walkable points
+    available = walkable.copy()
+    while (counter < max_count or max_count < 1) and np.sum(available) > 0:
+        if np.sum(available) < 1:
+            break
+        all_x, all_y = np.where(available)
+        i = random.randint(0, len(all_x) - 1)
+        x, y = all_x[i], all_y[i]
+        dist2 = (xgrid - x) ** 2 + (ygrid - y) ** 2
+        available[dist2 <= radius**2] = False
+        counter += 1
+        #
+        kind = pick_item_kind(map_entity)
+        items.spawn_item(map_entity, (x, y), kind)
 
 
 def respawn(map_entity: ecs.Entity):
@@ -576,6 +615,8 @@ def generate(map_entity: ecs.Entity):
     add_traps(map_entity)
     # Stairs
     add_downstairs(map_entity, room_floor, max_count=1 + (depth > 0))
+    # Spawn items
+    spawn_items(map_entity)
     # Spawn enemies
     spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
 

@@ -39,4 +39,5 @@ ACTION_SHIFT_KEYS: dict[int, type[actions.ActorAction]] = {
 STATE_KEYS: dict[int, type[game_interface.State]] = {
     pg.K_ESCAPE: states.GameMenuState,
     pg.K_m: states.MapState,
+    pg.K_i: states.InventoryState,
 }

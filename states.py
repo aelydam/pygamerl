@@ -6,7 +6,9 @@ import comp
 import consts
 import entities
 import game_interface
+import game_logic
 import gui_elements
+import items
 import keybinds
 import map_renderer
 import maps
@@ -292,7 +294,7 @@ class GameMenuState(game_interface.State):
         super().__init__(parent.interface)
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.menu = gui_elements.Menu(
-            self.ui_group, ["Resume", "Map", "Message Log", "Quit"]
+            self.ui_group, ["Resume", "Inventory", "Map", "Message Log", "Quit"]
         )
 
     def update(self):
@@ -331,6 +333,8 @@ class GameMenuState(game_interface.State):
                 self.interface.reset(TitleState(self.interface))
             case "map":
                 self.interface.push(MapState(self))
+            case "inventory":
+                self.interface.push(InventoryState(self))
             case "message log":
                 self.interface.push(MessageLogState(self))
 
@@ -364,3 +368,55 @@ class MessageLogState(game_interface.State):
         elif event.type == pg.MOUSEBUTTONUP:
             if not self.menu.rect.collidepoint(*event.pos):
                 self.interface.pop()
+
+
+class InventoryState(game_interface.State):
+    def __init__(self, parent: InGameState):
+        self.parent = parent
+        super().__init__(parent.interface)
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        self.items = list(items.inventory(self.interface.logic.player))
+        names = [i.components[comp.Name] for i in self.items]
+        self.menu = gui_elements.Menu(self.ui_group, names, 16, width=240)
+        self.menu.select(-1)
+
+    def update(self):
+        super().update()
+        logic = self.interface.logic
+        if (
+            logic.current_entity != logic.player
+            or len(logic.action_queue) > 0
+            or logic.input_action is not None
+        ):
+            logic.update()
+            self.refresh()
+        w, h = self.interface.screen.size
+        self.menu.rect.center = (w // 2, h // 2)
+        self.ui_group.update()
+
+    def render(self, screen: pg.Surface):
+        super().render(screen)
+        self.parent.render(screen)
+        self.ui_group.draw(screen)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key == pg.K_ESCAPE:
+                self.interface.pop()
+            elif event.key == pg.K_DELETE:
+                self.drop()
+            else:
+                self.menu.on_keyup(event.key)
+        elif event.type == pg.MOUSEBUTTONUP:
+            if not self.menu.rect.collidepoint(*event.pos):
+                self.interface.pop()
+
+    def refresh(self):
+        self.items = list(items.inventory(self.interface.logic.player))
+        names = [i.components[comp.Name] for i in self.items]
+        self.menu.set_items(names, True)
+
+    def drop(self):
+        item = self.items[self.menu.selected_index]
+        player = self.interface.logic.player
+        self.interface.logic.input_action = actions.Drop(player, item)
