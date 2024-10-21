@@ -177,7 +177,8 @@ class AttackAction(ActorAction):
         if self.actor == self.target:
             return False
         dist = entities.dist(self.actor, self.target)
-        if dist > 1.5:
+        reach = self.actor.components.get(comp.Reach, 1.5)
+        if dist > reach:
             return False
         if not entities.is_alive(self.target):
             return False

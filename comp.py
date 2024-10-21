@@ -39,6 +39,7 @@ Initiative = ("Initiative", float)
 LightRadius = ("LightRadius", int)
 Lightsource = ("Lightsource", NDArray[np.int8])
 Speed = ("Speed", int)
+Reach = ("Reach", float)
 
 # Global components
 MessageLog = ("MessageLog", list[str])
