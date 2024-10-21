@@ -45,6 +45,7 @@ Lightsource = ("Lightsource", NDArray[np.int8])
 Speed = ("Speed", int)
 Reach = ("Reach", float)
 TempInventory = ("TempInventory", dict[str, int])
+TempEquipment = ("TempEquipment", list[str])
 
 # Item Components
 MaxStack = ("MaxStack", int)

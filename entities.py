@@ -243,4 +243,7 @@ def spawn_creature(
     if comp.TempInventory in kind.components:
         for k, v in kind.components[comp.TempInventory].items():
             items.add_item(entity, k, v)
+    if comp.TempEquipment in kind.components:
+        for k in kind.components[comp.TempEquipment]:
+            items.equip(entity, items.add_item(entity, k, 1))
     return entity

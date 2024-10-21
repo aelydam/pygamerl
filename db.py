@@ -65,12 +65,7 @@ def load_entity(
             else:
                 entity.tags |= {v}
             continue
-        assert hasattr(comp, k)
-        if k == "HP":
-            comp_key = comp.MaxHP
-        else:
-            comp_key = getattr(comp, k)
-        if comp_key == comp.Inventory:
+        if k == "Inventory":
             if isinstance(v, list):
                 entity.components[comp.TempInventory] = {i: 1 for i in v}
             elif isinstance(v, dict):
@@ -78,6 +73,19 @@ def load_entity(
             elif isinstance(v, str):
                 entity.components[comp.TempInventory] = {v: 1}
             continue
+        if k == "Equipment":
+            if isinstance(v, dict):
+                entity.components[comp.TempEquipment] = list(v.items())
+            elif isinstance(v, list):
+                entity.components[comp.TempEquipment] = v
+            elif isinstance(v, str):
+                entity.components[comp.TempEquipment] = [v]
+            continue
+        if k == "HP":
+            comp_key = comp.MaxHP
+        else:
+            comp_key = getattr(comp, k)
+        assert hasattr(comp, k)
         if isinstance(comp_key, tuple):
             comp_class = comp_key[1]
         else:
