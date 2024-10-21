@@ -180,6 +180,8 @@ class GameLogic:
             if comp.Initiative in actor.components:
                 actor.components[comp.Initiative] -= result.cost
             in_fov = entities.is_in_fov(self.player, actor)
+            if hasattr(result, "target") and result.target == self.player:
+                self.continuous_action = None
         else:
             in_fov = False
         return not in_fov
