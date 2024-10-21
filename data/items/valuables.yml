@@ -1,11 +1,14 @@
 Copper Pieces:
   Sprite: {sheet: "Items/Money", tile: [1, 0]}
   MaxStack: 100
+  tags: Autopick
 
 Silver Pieces:
   Sprite: {sheet: "Items/Money", tile: [4, 1]}
   MaxStack: 100
+  tags: Autopick
 
 Gold Pieces:
   Sprite: {sheet: "Items/Money", tile: [1, 1]}
   MaxStack: 100
+  tags: Autopick

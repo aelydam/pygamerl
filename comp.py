@@ -22,6 +22,7 @@ Upstairs = "Upstairs"
 Trap = "Trap"
 Lit = "Lit"
 Bloodstain = "Bloodstain"
+Autopick = "Autopick"
 
 # Map components
 Depth = ("Depth", int)

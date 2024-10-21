@@ -230,6 +230,14 @@ class BumpAction(MoveAction):
         for e in query:
             if e != self.actor:
                 return e
+        query = self.actor.registry.Q.all_of(
+            [comp.Position],
+            tags=[new_pos, "items", comp.Autopick],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            if e != self.actor:
+                return e
         return None
 
     def can(self) -> bool:
@@ -248,6 +256,10 @@ class BumpAction(MoveAction):
             elif comp.Interaction in entity.components:
                 action_class = entity.components[comp.Interaction]
                 action = action_class(self.actor, entity, bump=True)
+                if action.can():
+                    return action.perform()
+            if comp.Autopick in entity.tags:
+                action = Pickup(self.actor, entity, bump=True)
                 if action.can():
                     return action.perform()
         return super().perform()
@@ -344,8 +356,8 @@ class Interaction(ActorAction):
 class Pickup(Interaction):
     def can(self) -> bool:
         return (
-            not self.bump
-            and self.target is not None
+            self.target is not None
+            and (not self.bump or comp.Autopick in self.target.tags)
             and "items" in self.target.tags
             and super().can()
         )
