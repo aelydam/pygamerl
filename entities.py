@@ -152,7 +152,7 @@ def update_entity_light(entity: ecs.Entity):
     radius = entity.components[comp.LightRadius]
     fov1 = tcod.map.compute_fov(transparency, (x, y), radius, light_walls=False)
     fov2 = tcod.map.compute_fov(transparency, (x, y), radius, light_walls=True)
-    fov = fov1 | (fov2 & (funcs.moore(fov1 & transparency, diagonals=False) > 0))
+    fov = fov1 | (fov2 & (funcs.moore(fov1 & transparency) > 0))
     grid_x, grid_y = np.indices(grid.shape)
     dist = ((grid_x - x) ** 2 + (grid_y - y) ** 2) ** 0.5
     light = np.astype(
