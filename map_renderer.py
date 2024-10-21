@@ -21,9 +21,10 @@ if TYPE_CHECKING:
 TILE_LAYER = 0
 TILE_UI_LAYER = 1
 ENTITY_LAYER = 2
-INTERACTION_LAYER = 3
-ACTOR_LAYER = 4
-UI_LAYER = 5
+ITEM_LAYER = 3
+INTERACTION_LAYER = 4
+ACTOR_LAYER = 5
+UI_LAYER = 6
 
 
 def light_tint(light_level: int) -> tuple[int, int, int]:
@@ -42,6 +43,8 @@ class EntitySprite(pg.sprite.Sprite):
             layer = ACTOR_LAYER
         elif comp.Interaction in entity.components:
             layer = INTERACTION_LAYER
+        elif "items" in entity.tags:
+            layer = ITEM_LAYER
         else:
             layer = ENTITY_LAYER
         group.add(self, layer=layer)
