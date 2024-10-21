@@ -16,8 +16,12 @@ def dist(
     target: ecs.Entity | comp.Position | tuple[int, int],
 ) -> float:
     if isinstance(origin, ecs.Entity):
+        if not comp.Position in origin.components:
+            return 255
         origin = origin.components[comp.Position]
     if isinstance(target, ecs.Entity):
+        if not comp.Position in target.components:
+            return 255
         target = target.components[comp.Position]
     if isinstance(origin, comp.Position):
         if isinstance(target, comp.Position) and origin.depth != target.depth:
@@ -152,6 +156,8 @@ def can_act(actor: ecs.Entity) -> bool:
 
 
 def enemy_action(actor: ecs.Entity) -> actions.Action:
+    if not is_alive(actor):
+        return actions.WaitAction(actor)
     player = actor.registry[comp.Player]
     player_infov = is_alive(player) and is_in_fov(actor, player)
     if player_infov:
