@@ -70,6 +70,7 @@ MaxDepth = ("MaxDepth", int)
 
 class EquipSlot(Enum):
     Main_Hand = auto()
+    Offhand = auto()
     Chest = auto()
     Ring = auto()
 

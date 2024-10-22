@@ -5,6 +5,7 @@ from typing import Iterable
 import tcod.ecs as ecs
 
 import comp
+import entities
 
 
 def is_same_kind(item1: ecs.Entity, item2: ecs.Entity) -> bool:
@@ -127,6 +128,9 @@ def equip(actor: ecs.Entity, item: ecs.Entity):
     slot = item.components[comp.EquipSlot]
     unequip_slot(actor, slot)
     actor.relation_tag[slot] = item
+    if comp.LightRadius in item.components:
+        actor.tags |= {comp.Lit}
+        entities.update_entity_light(actor)
 
 
 def equipment(actor: ecs.Entity) -> dict[comp.EquipSlot, ecs.Entity | None]:

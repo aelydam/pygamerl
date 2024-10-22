@@ -163,14 +163,16 @@ class GameLogic:
         player.components[comp.FOVRadius] = consts.DEFAULT_FOV_RADIUS
         player.components[comp.Speed] = consts.BASE_SPEED
         player.components[comp.Initiative] = 1
-        player.components[comp.LightRadius] = 5
         player.tags |= {comp.Player, comp.Obstacle, comp.Lit}
         player.relation_tag[comp.Map] = map_entity
         entities.update_fov(player)
         items.add_item(player, "Protection Ring")
         items.add_item(player, "Speed Ring")
+        items.add_item(player, "Lamp")
+        items.add_item(player, "Candle")
         items.equip(player, items.add_item(player, "Dagger"))
         items.equip(player, items.add_item(player, "Leather Armor"))
+        items.equip(player, items.add_item(player, "Torch"))
 
     def log(self, text: str):
         self.message_log.append(text)

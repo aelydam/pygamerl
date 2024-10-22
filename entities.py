@@ -37,12 +37,12 @@ def dist(
 
 
 def get_combined_component(
-    actor: ecs.Entity, component: tuple[str, type[int]], default: int = 0
+    actor: ecs.Entity, component: tuple[str, type[int]], default: int = 0, func=sum
 ) -> int:
     res = actor.components.get(component, default)
     for e in items.equipment(actor).values():
-        if e is not None:
-            res += e.components.get(component, 0)
+        if e is not None and component in e.components:
+            res = func([res, e.components[component]])
     return res
 
 
@@ -73,6 +73,10 @@ def speed(actor: ecs.Entity, default: int = consts.BASE_SPEED) -> int:
 
 def fov_radius(actor: ecs.Entity, default: int = consts.DEFAULT_FOV_RADIUS) -> int:
     return get_combined_component(actor, comp.FOVRadius, default)
+
+
+def light_radius(actor: ecs.Entity, default: int = 0) -> int:
+    return get_combined_component(actor, comp.LightRadius, default, func=max)
 
 
 def update_fov(actor: ecs.Entity):
@@ -140,11 +144,8 @@ def is_in_fov(
 
 
 def update_entity_light(entity: ecs.Entity):
-    if (
-        comp.LightRadius not in entity.components
-        or comp.Position not in entity.components
-        or comp.Lit not in entity.tags
-    ):
+    radius = light_radius(entity)
+    if radius < 1 or comp.Lit not in entity.tags:
         if comp.Lightsource in entity.components:
             entity.components.pop(comp.Lightsource)
         return
@@ -152,7 +153,6 @@ def update_entity_light(entity: ecs.Entity):
     grid = map_entity.components[comp.Tiles]
     transparency = maps.transparency_matrix(map_entity)
     x, y = entity.components[comp.Position].xy
-    radius = entity.components[comp.LightRadius]
     fov1 = tcod.map.compute_fov(transparency, (x, y), radius, light_walls=False)
     fov2 = tcod.map.compute_fov(transparency, (x, y), radius, light_walls=True)
     fov = fov1 | (fov2 & (funcs.moore(fov1 & transparency) > 0))

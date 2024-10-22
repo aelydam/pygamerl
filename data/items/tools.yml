@@ -1,0 +1,18 @@
+
+Candle:
+  Sprite: {sheet: "Items/Light", tile: [1, 0]}
+  EquipSlot: Offhand
+  LightRadius: 2
+  tags: Lit
+
+Torch:
+  Sprite: {sheet: "Items/Armor", tile: [5, 0]}
+  EquipSlot: Offhand
+  LightRadius: 4
+  tags: Lit
+
+Lamp:
+  Sprite: {sheet: "Items/Light", tile: [3, 0]}
+  EquipSlot: Offhand
+  LightRadius: 6
+  tags: Lit

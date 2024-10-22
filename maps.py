@@ -148,16 +148,19 @@ def astar_path(
 
 
 def update_map_light(map_entity: ecs.Entity, update_entities: bool = False):
+    grid = map_entity.components[comp.Tiles]
+    light = np.zeros(grid.shape, np.int8)
+    #
     query = map_entity.registry.Q.all_of(
         components=[comp.LightRadius, comp.Position],
         tags={comp.Lit},
         relations=[(comp.Map, map_entity)],
+        traverse=[slot for slot in comp.EquipSlot] + [ecs.IsA],
     )
-    grid = map_entity.components[comp.Tiles]
-    light = np.zeros(grid.shape, np.int8)
     for e in query:
         if update_entities or comp.Lightsource not in e.components:
             entities.update_entity_light(e)
-        elight = e.components[comp.Lightsource]
-        light[elight > light] = elight[elight > light]
+        if comp.Lightsource in e.components:
+            elight = e.components[comp.Lightsource]
+            light[elight > light] = elight[elight > light]
     map_entity.components[comp.Lightsource] = light
