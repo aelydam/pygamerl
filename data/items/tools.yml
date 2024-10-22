@@ -6,7 +6,7 @@ Candle:
   tags: Lit
 
 Torch:
-  Sprite: {sheet: "Items/Armor", tile: [5, 0]}
+  Sprite: {sheet: "Objects/Decor0", tile: [0, 8]}
   EquipSlot: Offhand
   LightRadius: 4
   tags: Lit
