@@ -173,7 +173,19 @@ class ExploreAction(ActorAction):
             cost[xy] = 0
             if xy == pos:
                 return Descend(self.actor, e, False).perform()
-        #
+        # Set currency as objective
+        query = self.actor.registry.Q.all_of(
+            components=[comp.Position],
+            tags=[comp.Currency, "items"],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            xy = e.components[comp.Position].xy
+            dijkstra[xy] = 0
+            cost[xy] = 0
+            if xy == pos:
+                return Pickup(self.actor, e, False).perform()
+
         tcod.path.dijkstra2d(dijkstra, cost, 2, 3, out=dijkstra)
         cost[pos] = 1
         path = tcod.path.hillclimb2d(dijkstra, pos, True, True).tolist()
