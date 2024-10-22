@@ -30,7 +30,6 @@ class GameLogic:
         self.input_action: actions.Action | None
         self.last_action: actions.Action | None
         self.frame_count = 0
-        self.new_game()
 
     @property
     def map(self) -> ecs.Entity:
