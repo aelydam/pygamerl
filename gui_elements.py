@@ -148,6 +148,7 @@ class Menu(Box):
         items: list[str],
         max_rows: int = 0,
         width: int = 96,
+        icons: list[pg.Surface | None] | None = None,
     ):
         super().__init__(group, None)
         self.width = width
@@ -155,17 +156,24 @@ class Menu(Box):
             max_rows = len(items)
         self.max_rows = max_rows
         self.items: list[str] = []
+        self.icons: list[pg.Surface | None] | None = None
         self.scroll_index = 0
         self.selected_index = 0
         self.disabled = False
         self.pressed_index = -1
-        self.set_items(items)
+        self.set_items(items, icons)
         self.redraw()
 
-    def set_items(self, items: list, force: bool = False):
-        if not force and items == self.items:
+    def set_items(
+        self,
+        items: list[str],
+        icons: list[pg.Surface | None] | None,
+        force: bool = False,
+    ):
+        if not force and items == self.items and icons == self.icons:
             return
         self.items = items
+        self.icons = icons
         self.redraw()
 
     def redraw(self):
@@ -178,6 +186,7 @@ class Menu(Box):
         w = self.width - 2 * self.border
         surface = pg.Surface((w, item_h * rows)).convert_alpha()
         surface.fill("#00000000")
+        has_icons = self.icons is not None
         for i in range(rows):
             index = i + self.scroll_index
             if index < 0 or index >= len(self.items):
@@ -192,7 +201,12 @@ class Menu(Box):
             rect = pg.Rect(0, i * item_h, w, item_h)
             surface.fill(bgcolor, rect)
             text_surf = font.render(text, False, fgcolor)
-            surface.blit(text_surf, (rect.x + self.padding, rect.y + self.padding))
+            x, y = rect.x + self.padding, rect.y + self.padding
+            if has_icons and index < len(self.icons) and self.icons[index] is not None:
+                icon = self.icons[index]
+                surface.blit(icon, (x - self.padding, y - self.padding))
+                x += icon.width
+            surface.blit(text_surf, (x, y))
         # Scrollbar
         if rows < len(self.items):
             scroll_item_h = (item_h * rows - 2 * self.scrollbar_padding) / len(

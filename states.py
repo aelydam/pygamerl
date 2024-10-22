@@ -396,9 +396,8 @@ class InventoryState(game_interface.State):
         self.parent = parent
         super().__init__(parent.interface)
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
-        self.items = list(items.inventory(self.interface.logic.player))
-        names = [self.item_text(i) for i in self.items]
-        self.menu = gui_elements.Menu(self.ui_group, names, 16, width=240)
+        self.menu = gui_elements.Menu(self.ui_group, [], 16, width=240)
+        self.refresh()
         self.menu.select(-1)
 
     @staticmethod
@@ -407,6 +406,13 @@ class InventoryState(game_interface.State):
         name = item.components.get(comp.Name)
         equipped = " [E]" if items.is_equipped(item) else ""
         return f"{count}x {name}{equipped}"
+
+    @staticmethod
+    def item_icon(item: ecs.Entity) -> pg.Surface | None:
+        if comp.Sprite not in item.components:
+            return None
+        spr = item.components[comp.Sprite]
+        return assets.tile(spr.sheet, tuple(spr.tile))
 
     def update(self):
         super().update()
@@ -447,7 +453,8 @@ class InventoryState(game_interface.State):
     def refresh(self):
         self.items = list(items.inventory(self.interface.logic.player))
         names = [self.item_text(i) for i in self.items]
-        self.menu.set_items(names, True)
+        icons = [self.item_icon(i) for i in self.items]
+        self.menu.set_items(names, icons, True)
 
     def drop(self):
         item = self.items[self.menu.selected_index]
@@ -471,23 +478,33 @@ class LoadGameState(game_interface.State):
         super().__init__(parent)
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.files = self.interface.logic.list_savefiles()
-        text = [self.file_text(fn) for fn in self.files]
-        self.menu = gui_elements.Menu(self.ui_group, text, 12, 224)
+        text, icons = self.item_lists()
+        self.menu = gui_elements.Menu(self.ui_group, text, 12, 224, icons)
         self.filename = ""
         self.background = pg.Surface(consts.SCREEN_SHAPE)
 
-    def file_text(self, filename: str) -> str:
-        size = float(os.stat(consts.SAVE_PATH / f"{filename}.pickle").st_size)
-        size_text = f"{size} bytes"
-        for x in ["bytes", "KB", "MB", "GB", "TB"]:
-            if size < 1024.0:
-                size_text = "%3.1f %s" % (size, x)
-                break
-            size /= 1024.0
-        metadata = self.interface.logic.file_metadata(filename)
-        last_played = metadata["last_played"]
-        depth = metadata["depth"]
-        return f"{last_played:%Y-%m-%d} Depth:{depth} {size_text}"
+    def item_lists(self) -> tuple[list[str], list[pg.Surface | None]]:
+        text_list: list[str] = []
+        surf_list: list[pg.Surface | None] = []
+        for fn in self.files:
+            size = float(os.stat(consts.SAVE_PATH / f"{fn}.pickle").st_size)
+            size_text = f"{size} bytes"
+            for x in ["bytes", "KB", "MB", "GB", "TB"]:
+                if size < 1024.0:
+                    size_text = "%3.1f %s" % (size, x)
+                    break
+                size /= 1024.0
+            metadata = self.interface.logic.file_metadata(fn)
+            last_played = metadata["last_played"]
+            depth = metadata["depth"]
+            text = f"{last_played:%Y-%m-%d} Depth:{depth} {size_text}"
+            text_list.append(text)
+            if "player_sprite" not in metadata:
+                surf_list.append(None)
+            else:
+                spr: comp.Sprite = metadata["player_sprite"]
+                surf_list.append(assets.tile(spr.sheet, tuple(spr.tile)))
+        return text_list, surf_list
 
     def update(self):
         super().update()

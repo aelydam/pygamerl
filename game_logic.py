@@ -86,6 +86,7 @@ class GameLogic:
     def metadata(self) -> dict:
         return {
             "player_name": self.player.components[comp.Name],
+            "player_sprite": self.player.components[comp.Sprite],
             "last_played": self.reg[None].components[comp.LastPlayed],
             "played_time": self.played_time,
             "turns": self.turn_count,
