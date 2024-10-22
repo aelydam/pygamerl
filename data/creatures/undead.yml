@@ -1,7 +1,7 @@
 Skeleton:
   Sprite: {sheet: "Characters/Undead0", tile: [0, 2]}
   HP: 2+2d4
-  Equipment: Shortsword
+  Equipment: [Shortsword, Shield]
 
 Zombie:
   Sprite: {sheet: "Characters/Undead0", tile: [5, 0]}
