@@ -1,3 +1,8 @@
+Shield:
+  Sprite: {sheet: "Items/Shield", tile: [5, 0]}
+  ArmorClass: 2
+  EquipSlot: Offhand
+
 Leather Armor:
   Sprite: {sheet: "Items/Armor", tile: [0, 6]}
   ArmorClass: 2
