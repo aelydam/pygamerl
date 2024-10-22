@@ -30,6 +30,7 @@ ACTION_KEYS: dict[int, type[actions.ActorAction]] = {
 
 CONTINUOUS_ACTION_KEYS: dict[int, type[actions.ActorAction]] = {
     pg.K_x: actions.ExploreAction,
+    pg.K_COMMA: actions.Rest,
 }
 
 ACTION_SHIFT_KEYS: dict[int, type[actions.ActorAction]] = {

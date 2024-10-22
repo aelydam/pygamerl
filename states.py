@@ -116,7 +116,9 @@ class InGameState(game_interface.State):
         ):
             self.map_renderer.center = self.logic.player.components[comp.Position].xy
             self.map_renderer.cursor = None
-        if isinstance(self.logic.last_action, actions.Damage):
+        if isinstance(self.logic.last_action, actions.Damage) or isinstance(
+            self.logic.last_action, actions.Heal
+        ):
             ui_elements.Popup(
                 self.map_renderer, self.logic.last_action, self.interface.font
             )

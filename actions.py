@@ -38,9 +38,27 @@ class ActorAction(Action):
 @dataclass
 class WaitAction(ActorAction):
     def perform(self) -> Action | None:
-        if comp.Initiative in self.actor.components:
-            self.cost = self.actor.components[comp.Initiative]
+        initiative = self.actor.components.get(comp.Initiative, 0)
+        if initiative >= 1 and (
+            self.actor.components.get(comp.HP, 0)
+            < self.actor.components.get(comp.MaxHP, 0)
+        ):
+            seed = self.actor.registry[None].components[random.Random]
+            roll = dice.dice_roll("1d20", seed)
+            if roll >= 15:
+                amount = int(dice.dice_roll("1d4", seed))
+                heal = Heal(self.actor, amount)
+                game_logic.push_action(self.actor.registry, heal)
+        self.cost = initiative
         return super().perform()
+
+
+class Rest(WaitAction):
+    def can(self):
+        return super().can() and (
+            self.actor.components.get(comp.HP, 0)
+            < self.actor.components.get(comp.MaxHP, 0)
+        )
 
 
 @dataclass
@@ -569,6 +587,25 @@ class Ascend(Interaction):
         aname = self.actor.components.get(comp.Name)
         if aname is not None:
             self.message = f"{aname} ascends the stairs"
+        return self
+
+
+@dataclass
+class Heal(ActorAction):
+    amount: int
+
+    def can(self) -> bool:
+        return comp.HP in self.actor.components
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        max_hp = self.actor.components[comp.MaxHP]
+        new_hp = min(max_hp, max(0, self.actor.components[comp.HP] + self.amount))
+        self.cost = 0
+        self.actor.components[comp.HP] = new_hp
+        apos = self.actor.components[comp.Position]
+        self.xy = apos.xy
         return self
 
 

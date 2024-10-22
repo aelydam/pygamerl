@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Callable
 import numpy as np
 import pygame as pg
 
+import actions
 import comp
 import consts
 import db
@@ -14,7 +15,6 @@ import maps
 from game_interface import GameInterface
 
 if TYPE_CHECKING:
-    import actions
     from game_logic import GameLogic
 
 
@@ -116,7 +116,7 @@ class Popup(pg.sprite.Sprite):
     def __init__(
         self,
         group: map_renderer.MapRenderer,
-        action: actions.Damage,
+        action: actions.Damage | actions.Heal,
         font: pg.Font,
     ):
         self._layer = map_renderer.UI_LAYER
@@ -128,6 +128,8 @@ class Popup(pg.sprite.Sprite):
         text = str(self.action.amount)
         if text == "0":
             text = "MISS"
+        elif isinstance(action, actions.Heal):
+            text = f"+{text}"
         self.image: pg.Surface = font.render(text, False, consts.POPUP_TEXT_COLOR, None)
 
     def update(self):

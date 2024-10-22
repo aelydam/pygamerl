@@ -225,6 +225,9 @@ def enemy_action(actor: ecs.Entity) -> actions.Action:
             move_to = actions.MoveAction.to(actor, target.xy)
             if move_to is not None and move_to.can():
                 return move_to
+    # Rest on low HP
+    if actor.components.get(comp.HP, 0) < actor.components.get(comp.MaxHP, 0):
+        return actions.WaitAction(actor)
 
     move = actions.MoveAction.random(actor)
     if move.can():
