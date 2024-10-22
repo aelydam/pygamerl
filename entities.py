@@ -186,7 +186,7 @@ def has_enemy_in_fov(actor: ecs.Entity) -> bool:
 def is_alive(actor: ecs.Entity) -> bool:
     if comp.MaxHP in actor.components:
         return actor.components.get(comp.HP, 0) > 0
-    return True
+    return comp.Position in actor.components and comp.Map in actor.relation_tag
 
 
 def can_act(actor: ecs.Entity) -> bool:
