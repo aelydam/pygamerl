@@ -132,3 +132,14 @@ def equip(actor: ecs.Entity, item: ecs.Entity):
 def equipment(actor: ecs.Entity) -> dict[comp.EquipSlot, ecs.Entity | None]:
     x = {slot: equipment_at_slot(actor, slot) for slot in comp.EquipSlot}
     return x
+
+
+def money(actor: ecs.Entity) -> float:
+    query = actor.registry.Q.all_of(
+        components=[comp.Price],
+        tags=[comp.Currency],
+        relations=[(comp.Inventory, actor)],
+    )
+    return sum(
+        e.components.get(comp.Count, 0) * e.components.get(comp.Price, 0) for e in query
+    )

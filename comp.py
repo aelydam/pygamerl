@@ -23,6 +23,7 @@ Trap = "Trap"
 Lit = "Lit"
 Bloodstain = "Bloodstain"
 Autopick = "Autopick"
+Currency = "Currency"
 
 # Map components
 Seed = ("Seed", int)
@@ -54,6 +55,7 @@ TempEquipment = ("TempEquipment", list[str])
 MaxStack = ("MaxStack", int)
 Count = ("Count", int)
 SpawnCount = ("SpawnCount", str)
+Price = ("Price", float)
 
 # Global components
 Filename = ("Filename", str)
