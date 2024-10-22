@@ -9,6 +9,7 @@ import tcod.ecs as ecs
 import actions
 import comp
 import consts
+import dice
 import funcs
 import items
 import maps
@@ -237,14 +238,20 @@ def spawn_creature(
     if isinstance(kind, str):
         kind = map_entity.registry[("creatures", kind)]
     entity = kind.instantiate()
+    depth = map_entity.components[comp.Depth]
+    seed = map_entity.components[np.random.RandomState]
+    if comp.HPDice in kind.components:
+        maxhp = dice.dice_roll(kind.components[comp.HPDice], seed)  # type: ignore
+        entity.components[comp.MaxHP] = int(maxhp)
     if comp.MaxHP in entity.components:
         entity.components[comp.HP] = entity.components[comp.MaxHP]
-    depth = map_entity.components[comp.Depth]
     entity.components[comp.Position] = comp.Position(pos, depth)
     entity.components[comp.Initiative] = 0
     if comp.TempInventory in kind.components:
         for k, v in kind.components[comp.TempInventory].items():
-            items.add_item(entity, k, v)
+            q = max(0, int(dice.dice_roll(v, seed)))
+            if q > 0:
+                items.add_item(entity, k, q)
     if comp.TempEquipment in kind.components:
         for k in kind.components[comp.TempEquipment]:
             items.equip(entity, items.add_item(entity, k, 1))

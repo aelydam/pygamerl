@@ -12,6 +12,7 @@ import actions
 import comp
 import consts
 import db
+import dice
 import entities
 import funcs
 import items
@@ -50,9 +51,11 @@ def pick_item_kind(map_entity: ecs.Entity) -> ecs.Entity:
 
 def pick_item_count(map_entity: ecs.Entity, item: ecs.Entity) -> int:
     max_stack = item.components.get(comp.MaxStack, 1)
-    if max_stack > 1:
+    if max_stack > 1 and comp.SpawnCount in item.components:
         seed = map_entity.components[np.random.RandomState]
-        count = min(seed.randint(1, max_stack) for _ in range(2))
+        dice_expr = item.components[comp.SpawnCount]
+        depth = map_entity.components[comp.Depth]
+        count = int(dice.dice_roll(dice_expr, seed, {"depth": depth}))
         return count
     return 1
 
@@ -114,13 +117,15 @@ def spawn_items(
         all_x, all_y = np.where(available)
         i = random.randint(0, len(all_x) - 1)
         x, y = all_x[i], all_y[i]
-        dist2 = (xgrid - x) ** 2 + (ygrid - y) ** 2
-        available[dist2 <= radius**2] = False
-        counter += 1
         #
         kind = pick_item_kind(map_entity)
         count = pick_item_count(map_entity, kind)
+        if count < 1:
+            continue
         items.spawn_item(map_entity, (x, y), kind, count)
+        dist2 = (xgrid - x) ** 2 + (ygrid - y) ** 2
+        available[dist2 <= radius**2] = False
+        counter += 1
 
 
 def respawn(map_entity: ecs.Entity):

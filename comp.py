@@ -37,6 +37,7 @@ ArmorClass = ("ArmorClass", int)
 AttackBonus = ("AttackBonus", int)
 DamageDice = ("DamageDice", str)
 DamageBonus = ("DamageBonus", int)
+HPDice = ("HPDice", str)
 MaxHP = ("MaxHP", int)
 HP = ("HP", int)
 FOVRadius = ("FOVRadius", int)
@@ -46,12 +47,13 @@ LightRadius = ("LightRadius", int)
 Lightsource = ("Lightsource", NDArray[np.int8])
 Speed = ("Speed", int)
 Reach = ("Reach", float)
-TempInventory = ("TempInventory", dict[str, int])
+TempInventory = ("TempInventory", dict[str, str])
 TempEquipment = ("TempEquipment", list[str])
 
 # Item Components
 MaxStack = ("MaxStack", int)
 Count = ("Count", int)
+SpawnCount = ("SpawnCount", str)
 
 # Global components
 MessageLog = ("MessageLog", list[str])

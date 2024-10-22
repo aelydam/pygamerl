@@ -1,12 +1,12 @@
 
 Goblin:
   Sprite: {sheet: "Characters/Player0", tile: [0, 13]}
-  HP: 6
-  Inventory: {Copper Pieces: 5}
+  HP: 2+2d4
+  Inventory: {Copper Pieces: 2+2d6, Silver Pieces: 1d8-4}
   Equipment: Dagger
 
 Orc:
   Sprite: {sheet: "Characters/Player0", tile: [0, 12]}
-  HP: 6
-  Inventory: {Copper Pieces: 10}
+  HP: 2+2d4
+  Inventory: {Copper Pieces: 4+3d6, Silver Pieces: 1d8-3}
   Equipment: [Shortsword, Leather Armor]

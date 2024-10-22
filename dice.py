@@ -26,9 +26,17 @@ def dice_avg(expression: str) -> float:
     return eval(dice_expand(expression, "(1+%s)/2"))
 
 
-def dice_roll(expression: str, seed: random.Random | np.random.RandomState) -> float:
+def dice_roll(
+    expression: str,
+    seed: random.Random | np.random.RandomState,
+    locals: dict | None = None,
+) -> float:
     if isinstance(seed, np.random.RandomState):
         dice = lambda x: seed.randint(1, x + 1)
     else:
         dice = lambda x: seed.randint(1, x)
-    return eval(dice_expand(expression, "dice(%s)"), None, {"dice": dice})
+    if locals is None:
+        locals = {"dice": dice}
+    else:
+        locals = locals | {"dice": dice}
+    return eval(dice_expand(expression, "dice(%s)"), None, locals)

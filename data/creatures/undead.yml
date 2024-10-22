@@ -1,13 +1,13 @@
 Skeleton:
   Sprite: {sheet: "Characters/Undead0", tile: [0, 2]}
-  HP: 6
+  HP: 2+2d4
   Equipment: Shortsword
 
 Zombie:
   Sprite: {sheet: "Characters/Undead0", tile: [5, 0]}
-  HP: 6
+  HP: 2+2d4
   Speed: 4
 
 Ghost:
   Sprite: {sheet: "Characters/Undead0", tile: [0, 4]}
-  HP: 6
+  HP: 2+2d4

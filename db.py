@@ -67,11 +67,13 @@ def load_entity(
             continue
         if k == "Inventory":
             if isinstance(v, list):
-                entity.components[comp.TempInventory] = {i: 1 for i in v}
+                entity.components[comp.TempInventory] = {i: "1" for i in v}
             elif isinstance(v, dict):
-                entity.components[comp.TempInventory] = v
+                entity.components[comp.TempInventory] = {
+                    i: str(q) for i, q in v.items()
+                }
             elif isinstance(v, str):
-                entity.components[comp.TempInventory] = {v: 1}
+                entity.components[comp.TempInventory] = {v: "1"}
             continue
         if k == "Equipment":
             if isinstance(v, dict):
@@ -82,7 +84,7 @@ def load_entity(
                 entity.components[comp.TempEquipment] = [v]
             continue
         if k == "HP":
-            comp_key = comp.MaxHP
+            comp_key = comp.HPDice
         else:
             comp_key = getattr(comp, k)
         assert hasattr(comp, k)

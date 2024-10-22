@@ -1,14 +1,17 @@
 Copper Pieces:
   Sprite: {sheet: "Items/Money", tile: [1, 0]}
   MaxStack: 100
+  SpawnCount: 3+3d6+3*depth
   tags: Autopick
 
 Silver Pieces:
   Sprite: {sheet: "Items/Money", tile: [4, 1]}
   MaxStack: 100
+  SpawnCount: 2+2d6+4*depth
   tags: Autopick
 
 Gold Pieces:
   Sprite: {sheet: "Items/Money", tile: [1, 1]}
   MaxStack: 100
+  SpawnCount: 1+1d6+5*depth
   tags: Autopick
