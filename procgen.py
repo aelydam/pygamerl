@@ -601,7 +601,10 @@ def player_spawn(map_entity: ecs.Entity) -> comp.Position:
 
 def generate(map_entity: ecs.Entity):
     # Generate map
-    seed = np.random.RandomState()
+    world_seed = map_entity.registry[None].components[np.random.RandomState]
+    seed_id = world_seed.randint(1, 999999)
+    seed = np.random.RandomState(seed_id)
+    map_entity.components[comp.Seed] = seed_id
     map_entity.components[np.random.RandomState] = seed
     depth = map_entity.components[comp.Depth]
     if depth < 0:

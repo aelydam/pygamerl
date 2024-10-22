@@ -25,6 +25,7 @@ Bloodstain = "Bloodstain"
 Autopick = "Autopick"
 
 # Map components
+Seed = ("Seed", int)
 Depth = ("Depth", int)
 Tiles = ("Tiles", NDArray[np.int8])
 Explored = ("Explored", NDArray[np.bool_])

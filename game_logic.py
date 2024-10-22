@@ -44,7 +44,11 @@ class GameLogic:
     def player(self) -> ecs.Entity:
         return self.reg[comp.Player]
 
-    def new_world(self) -> None:
+    def new_world(self, seed: int | None = None) -> None:
+        if seed is None:
+            random.seed()
+            seed = random.randint(1, 999999)
+        print(f"World seed: {seed}")
         self.reg = ecs.Registry()
         self.frame_count = 0
         self.input_action = None
@@ -56,6 +60,9 @@ class GameLogic:
         self.reg[None].components[comp.TurnCount] = 0
         self.reg[None].components[comp.LastPlayed] = datetime.datetime.now()
         self.reg[None].components[comp.PlayedTime] = 0
+        self.reg[None].components[comp.Seed] = seed
+        self.reg[None].components[random.Random] = random.Random(seed)
+        self.reg[None].components[np.random.RandomState] = np.random.RandomState(seed)
         db.load_data(self.reg, "items")
         db.load_data(self.reg, "creatures")
         maps.get_map(self.reg, 0)

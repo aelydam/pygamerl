@@ -186,14 +186,15 @@ class AttackAction(ActorAction):
     def perform(self) -> Action | None:
         if not self.can():
             return None
-        roll = random.randint(1, 20)
+        seed = self.actor.registry[None].components[random.Random]
+        roll = seed.randint(1, 20)
         roll += entities.attack_bonus(self.actor)
         aname = self.actor.components.get(comp.Name, "Something")
         tname = self.target.components.get(comp.Name, "Something")
         text = f"{aname} attacks {tname}: "
         if roll >= entities.armor_class(self.target):
             dice = entities.damage_dice(self.actor)
-            self.damage = random.randint(1, dice)
+            self.damage = seed.randint(1, dice)
             self.damage += entities.damage_bonus(self.actor)
             text += f"{self.damage} points of damage!"
         else:
