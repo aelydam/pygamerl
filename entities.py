@@ -53,15 +53,17 @@ def attack_bonus(actor: ecs.Entity, default: int = 2) -> int:
     return get_combined_component(actor, comp.AttackBonus, default)
 
 
-def damage_dice(actor: ecs.Entity, default: int = 1) -> int:
+def damage_dice(actor: ecs.Entity, default: str = "1") -> str:
     mainhand = items.equipment_at_slot(actor, comp.EquipSlot.Main_Hand)
+    dice = actor.components.get(comp.DamageDice, default)
     if mainhand is not None and comp.DamageDice in mainhand.components:
-        return mainhand.components[comp.DamageDice]
-    return actor.components.get(comp.DamageDice, default)
-
-
-def damage_bonus(actor: ecs.Entity, default: int = 0) -> int:
-    return get_combined_component(actor, comp.DamageBonus, default)
+        dice = mainhand.components[comp.DamageDice]
+    bonus = get_combined_component(actor, comp.DamageBonus, 0)
+    if bonus > 0:
+        return f"{dice}+{bonus}"
+    elif bonus < 0:
+        return f"{dice}-{abs(bonus)}"
+    return dice
 
 
 def speed(actor: ecs.Entity, default: int = consts.BASE_SPEED) -> int:

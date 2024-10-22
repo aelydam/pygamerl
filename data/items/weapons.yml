@@ -1,14 +1,14 @@
 Dagger:
   Sprite: {sheet: "Items/ShortWep", tile: [0,0]}
-  DamageDice: 4
+  DamageDice: 1d4
   EquipSlot: Main_Hand
 
 Shortsword:
   Sprite: {sheet: "Items/MedWep", tile: [0,0]}
-  DamageDice: 6
+  DamageDice: 1d6
   EquipSlot: Main_Hand
 
 Longsword:
   Sprite: {sheet: "Items/LongWep", tile: [0,1]}
-  DamageDice: 8
+  DamageDice: 1d8
   EquipSlot: Main_Hand

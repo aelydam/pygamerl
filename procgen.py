@@ -491,7 +491,7 @@ def add_traps(
                 comp.Sprite: comp.Sprite("Objects/Trap0", (3, 3)),
                 comp.Initiative: 0,
                 comp.Reach: 0,
-                comp.DamageDice: 4,
+                comp.DamageDice: "1d4",
                 comp.AttackBonus: 10,
                 comp.Interaction: actions.DisarmTrap,
             },

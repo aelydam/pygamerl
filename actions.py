@@ -10,6 +10,7 @@ import tcod.ecs as ecs
 import comp
 import consts
 import db
+import dice
 import entities
 import funcs
 import game_logic
@@ -170,6 +171,9 @@ class AttackAction(ActorAction):
     target: ecs.Entity
     cost: int = field(init=False, default=1)
     damage: int = field(init=False, default=0)
+    roll: int = field(init=False, default=0)
+    hit: bool = field(init=False, default=False)
+    crit: bool = field(init=False, default=False)
     xy: tuple[int, int] = field(init=False, default=(0, 0))
 
     def can(self) -> bool:
@@ -187,16 +191,27 @@ class AttackAction(ActorAction):
         if not self.can():
             return None
         seed = self.actor.registry[None].components[random.Random]
-        roll = seed.randint(1, 20)
-        roll += entities.attack_bonus(self.actor)
+        bonus = entities.attack_bonus(self.actor)
+        attack_expr = f"1d20+{bonus}"
+        self.roll = int(dice.dice_roll(attack_expr, seed))
+        min_roll = dice.dice_min(attack_expr)
+        max_roll = dice.dice_max(attack_expr)
+        ac = entities.armor_class(self.target)
+        self.hit = (self.roll >= ac and self.roll > min_roll) or (self.roll >= max_roll)
+        self.crit = self.roll in {min_roll, max_roll}
+
         aname = self.actor.components.get(comp.Name, "Something")
         tname = self.target.components.get(comp.Name, "Something")
         text = f"{aname} attacks {tname}: "
-        if roll >= entities.armor_class(self.target):
-            dice = entities.damage_dice(self.actor)
-            self.damage = seed.randint(1, dice)
-            self.damage += entities.damage_bonus(self.actor)
+        if self.hit:
+            dmg_dice = entities.damage_dice(self.actor)
+            dmg_min = dice.dice_min(dmg_dice)
+            self.damage = int(dice.dice_roll(dmg_dice, seed))
+            if self.crit:
+                self.damage += int(dice.dice_roll(dmg_dice, seed) - dmg_min + 1)
             text += f"{self.damage} points of damage!"
+            if self.crit:
+                text += " (critical)"
         else:
             self.damage = 0
             text += "Miss!"
