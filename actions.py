@@ -305,6 +305,13 @@ class Interact(ActorAction):
         map_entity = self.actor.relation_tag[comp.Map]
         pos = self.actor.components[comp.Position] + direction
         query = self.actor.registry.Q.all_of(
+            [comp.Position],
+            tags=[pos, "items"],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in query:
+            return e
+        query = self.actor.registry.Q.all_of(
             [comp.Position, comp.Interaction],
             tags=[pos],
             relations=[(comp.Map, map_entity)],
@@ -312,18 +319,11 @@ class Interact(ActorAction):
         for e in query:
             if e != self.actor:
                 return e
-        query = self.actor.registry.Q.all_of(
-            [comp.Position],
-            tags=[pos, "items"],
-            relations=[(comp.Map, map_entity)],
-        )
-        for e in query:
-            return e
         return None
 
     def get_entity(self) -> ecs.Entity | None:
         direction = self.actor.components.get(comp.Direction, (0, 0))
-        for d in {(0, 0), direction}:
+        for d in [(0, 0), direction]:
             e = self.get_entity_at(d)
             if e is not None:
                 return e
