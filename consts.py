@@ -3,9 +3,11 @@ import pathlib
 import numpy as np
 import pygame as pg
 
+GAME_ID = "pygamerl"
 GAME_TITLE = "Pygame Roguelike"
 
 GAME_PATH = pathlib.Path(__file__).parent
+SAVE_PATH = pathlib.Path(pg.system.get_pref_path(GAME_ID, GAME_ID))
 
 SCREEN_SHAPE = (640, 480)
 FPS = 60

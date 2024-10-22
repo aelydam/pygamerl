@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import datetime
+import glob
+import os
+import pickle
 import random
 from collections import deque
 from typing import TYPE_CHECKING
@@ -29,6 +32,13 @@ class GameLogic:
         self.continuous_action: actions.Action | None
         self.input_action: actions.Action | None
         self.last_action: actions.Action | None
+        self.clear()
+
+    def clear(self) -> None:
+        self.active = False
+        self.continuous_action = None
+        self.input_action = None
+        self.last_action = None
         self.frame_count = 0
 
     @property
@@ -70,6 +80,69 @@ class GameLogic:
         self.new_world()
         self.init_player()
         self.next_turn()
+        self.active = True
+
+    def metadata(self) -> dict:
+        return {
+            "player_name": self.player.components[comp.Name],
+            "last_played": self.reg[None].components[comp.LastPlayed],
+            "played_time": self.played_time,
+            "turns": self.turn_count,
+            "depth": self.player.components[comp.Position].depth,
+        }
+
+    def save_game(self):
+        if comp.Filename in self.reg[None].components:
+            filename = self.reg[None].components[comp.Filename]
+        else:
+            i = 1
+            filename = f"game{i}"
+            while os.path.exists(consts.SAVE_PATH / f"{filename}.pickle"):
+                i += 1
+                filename = f"game{i}"
+            self.reg[None].components[comp.Filename] = filename
+        path = consts.SAVE_PATH / f"{filename}.pickle"
+        #
+        metadata = self.metadata()
+        with open(path, "wb") as f:
+            pickle.dump(metadata, f)
+            pickle.dump(self.reg, f)
+        print(f"Game saved at {path}")
+
+    def file_metadata(self, filename: str) -> dict:
+        path = consts.SAVE_PATH / f"{filename}.pickle"
+        with open(path, "rb") as f:
+            metadata = pickle.load(f)
+        return metadata
+
+    def load_game(self, filename: str):
+        path = consts.SAVE_PATH / f"{filename}.pickle"
+        with open(path, "rb") as f:
+            metadata = pickle.load(f)  # Discard header
+            data = pickle.load(f)
+        assert isinstance(data, ecs.Registry)
+        self.reg = data
+        self.reg[None].components[comp.Filename] = filename
+        last_played = self.reg[None].components[comp.LastPlayed]
+        now = datetime.datetime.now(last_played.tzinfo)
+        self.reg[None].components[comp.LastPlayed] = now
+
+        self.frame_count = 0
+        self.input_action = None
+        self.last_action = None
+        self.continuous_action = None
+        self.active = True
+
+    @staticmethod
+    def delete_game(filename: str):
+        path = consts.SAVE_PATH / f"{filename}.pickle"
+        os.remove(path)
+
+    @staticmethod
+    def list_savefiles() -> list[str]:
+        files = glob.glob(str(consts.SAVE_PATH / "game*.pickle"))
+        files = sorted(files, key=lambda f: -os.stat(f).st_mtime)
+        return [os.path.splitext(os.path.basename(f))[0] for f in files]
 
     def init_player(self):
         map_entity = maps.get_map(self.reg, 0)

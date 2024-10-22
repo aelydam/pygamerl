@@ -245,7 +245,7 @@ class TitleState(game_interface.State):
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.menu = gui_elements.Menu(
             self.ui_group,
-            ["New Game", "Quit Game"],
+            ["New Game", "Last Game", "Load Game", "Quit Game"],
         )
         font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
         self.logo = font.render(consts.GAME_TITLE, False, "#FFFFFF").convert_alpha()
@@ -282,6 +282,15 @@ class TitleState(game_interface.State):
                 self.new_game()
             case "quit game":
                 self.quit_game()
+            case "load game":
+                files = self.interface.logic.list_savefiles()
+                if len(files) > 0:
+                    self.interface.push(LoadGameState(self))
+            case "last game":
+                files = self.interface.logic.list_savefiles()
+                if len(files) > 0:
+                    self.interface.logic.load_game(files[0])
+                    self.interface.push(InGameState(self.interface))
 
     def new_game(self):
         self.interface.logic.new_game()
@@ -333,6 +342,7 @@ class GameMenuState(game_interface.State):
             case "resume":
                 self.interface.pop()
             case "quit":
+                self.interface.logic.save_game()
                 self.interface.reset(TitleState(self.interface))
             case "map":
                 self.interface.push(MapState(self))
@@ -446,3 +456,59 @@ class InventoryState(game_interface.State):
             self.interface.logic.input_action = actions.Unequip(player, item)
         elif items.is_equippable(item):
             self.interface.logic.input_action = actions.Equip(player, item)
+
+
+class LoadGameState(game_interface.State):
+    def __init__(self, parent: game_interface.State):
+        super().__init__(parent)
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        self.files = self.interface.logic.list_savefiles()
+        text = [self.file_text(fn) for fn in self.files]
+        self.menu = gui_elements.Menu(self.ui_group, text, 12, 360)
+        font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
+
+    def file_text(self, filename: str) -> str:
+        metadata = self.interface.logic.file_metadata(filename)
+        last_played = metadata["last_played"]
+        depth = metadata["depth"]
+        turns = metadata["turns"]
+        return f"Depth:{depth}, Turn:{turns}, {last_played}"
+
+    def update(self):
+        super().update()
+        shape = self.interface.screen.size
+        self.menu.rect.center = (shape[0] // 2, shape[1] // 2)
+        self.ui_group.update()
+
+    def render(self, screen: pg.Surface):
+        screen.fill(consts.BACKGROUND_COLOR)
+        self.ui_group.draw(screen)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key == pg.K_ESCAPE:
+                self.interface.pop()
+            elif event.key == pg.K_RETURN:
+                self.select()
+            elif event.key == pg.K_DELETE:
+                self.delete_file()
+            else:
+                self.menu.on_keyup(event.key)
+
+        elif event.type == pg.MOUSEBUTTONUP:
+            if not self.menu.rect.collidepoint(event.pos):
+                self.interface.pop()
+            elif self.menu.pressed_index == self.menu.selected_index:
+                self.select()
+
+    def delete_file(self):
+        filename = self.files[self.menu.selected_index]
+        self.interface.logic.delete_game(filename)
+        self.interface.pop()
+        self.interface.push(self.__class__(self.parent))
+
+    def select(self):
+        filename = self.files[self.menu.selected_index]
+        self.interface.logic.load_game(filename)
+        self.interface.pop()
+        self.interface.push(InGameState(self.interface))

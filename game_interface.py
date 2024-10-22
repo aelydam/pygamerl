@@ -59,6 +59,8 @@ class GameInterface:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.running = False
+                if self.logic.active:
+                    self.logic.save_game()
             elif self.state is not None:
                 self.state.handle_event(event)
 

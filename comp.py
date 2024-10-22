@@ -56,6 +56,7 @@ Count = ("Count", int)
 SpawnCount = ("SpawnCount", str)
 
 # Global components
+Filename = ("Filename", str)
 MessageLog = ("MessageLog", list[str])
 InitiativeTracker = ("InitiativeTracker", deque[ecs.Entity])
 ActionQueue = ("ActionQueue", deque[actions.Action])
