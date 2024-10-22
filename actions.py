@@ -46,8 +46,7 @@ class WaitAction(ActorAction):
             seed = self.actor.registry[None].components[random.Random]
             roll = dice.dice_roll("1d20", seed)
             if roll >= 15:
-                amount = int(dice.dice_roll("1d4", seed))
-                heal = Heal(self.actor, amount)
+                heal = Heal(self.actor, "min(1d4,1d4)")
                 game_logic.push_action(self.actor.registry, heal)
         self.cost = initiative
         return super().perform()
@@ -592,7 +591,7 @@ class Ascend(Interaction):
 
 @dataclass
 class Heal(ActorAction):
-    amount: int
+    amount: int | str
 
     def can(self) -> bool:
         return comp.HP in self.actor.components
@@ -600,6 +599,9 @@ class Heal(ActorAction):
     def perform(self) -> Action | None:
         if not self.can():
             return None
+        if isinstance(self.amount, str):
+            seed = self.actor.registry[None].components[random.Random]
+            self.amount = int(dice.dice_roll(self.amount, seed))
         max_hp = self.actor.components[comp.MaxHP]
         new_hp = min(max_hp, max(0, self.actor.components[comp.HP] + self.amount))
         self.cost = 0
@@ -611,7 +613,7 @@ class Heal(ActorAction):
 
 @dataclass
 class Damage(ActorAction):
-    amount: int
+    amount: int | str
 
     def can(self) -> bool:
         return comp.HP in self.actor.components
@@ -619,6 +621,9 @@ class Damage(ActorAction):
     def perform(self) -> Action | None:
         if not self.can():
             return None
+        if isinstance(self.amount, str):
+            seed = self.actor.registry[None].components[random.Random]
+            self.amount = int(dice.dice_roll(self.amount, seed))
         self.cost = 0
         new_hp = max(0, self.actor.components[comp.HP] - self.amount)
         self.actor.components[comp.HP] = new_hp
