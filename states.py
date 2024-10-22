@@ -1,3 +1,5 @@
+import os
+
 import pygame as pg
 import tcod.ecs as ecs
 
@@ -125,6 +127,9 @@ class InGameState(game_interface.State):
         self.ui_group.update()
         screen.fill(consts.BACKGROUND_COLOR)
         self.map_renderer.draw(screen)
+        self.interface.logic.visual_metadata["screenshot"] = pg.surfarray.array2d(
+            screen
+        )
         self.ui_group.draw(screen)
 
 
@@ -464,24 +469,41 @@ class LoadGameState(game_interface.State):
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.files = self.interface.logic.list_savefiles()
         text = [self.file_text(fn) for fn in self.files]
-        self.menu = gui_elements.Menu(self.ui_group, text, 12, 360)
-        font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
+        self.menu = gui_elements.Menu(self.ui_group, text, 12, 224)
+        self.filename = ""
+        self.background = pg.Surface(consts.SCREEN_SHAPE)
 
     def file_text(self, filename: str) -> str:
+        size = float(os.stat(consts.SAVE_PATH / f"{filename}.pickle").st_size)
+        size_text = f"{size} bytes"
+        for x in ["bytes", "KB", "MB", "GB", "TB"]:
+            if size < 1024.0:
+                size_text = "%3.1f %s" % (size, x)
+                break
+            size /= 1024.0
         metadata = self.interface.logic.file_metadata(filename)
         last_played = metadata["last_played"]
         depth = metadata["depth"]
-        turns = metadata["turns"]
-        return f"Depth:{depth}, Turn:{turns}, {last_played}"
+        return f"{last_played:%Y-%m-%d} Depth:{depth} {size_text}"
 
     def update(self):
         super().update()
+        if len(self.files) < 1:
+            return
         shape = self.interface.screen.size
-        self.menu.rect.center = (shape[0] // 2, shape[1] // 2)
+        self.menu.rect.midleft = (consts.TILE_SIZE, shape[1] // 2)
+        filename = self.files[self.menu.selected_index]
+        if filename != self.filename:
+            self.metadata = self.interface.logic.file_metadata(filename)
+            self.filename = filename
+            if "screenshot" in self.metadata:
+                pg.surfarray.blit_array(self.background, self.metadata["screenshot"])
+            else:
+                self.background.fill(consts.BACKGROUND_COLOR)
         self.ui_group.update()
 
     def render(self, screen: pg.Surface):
-        screen.fill(consts.BACKGROUND_COLOR)
+        screen.blit(self.background)
         self.ui_group.draw(screen)
 
     def handle_event(self, event: pg.Event):

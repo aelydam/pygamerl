@@ -40,6 +40,7 @@ class GameLogic:
         self.input_action = None
         self.last_action = None
         self.frame_count = 0
+        self.visual_metadata: dict = {}
 
     @property
     def map(self) -> ecs.Entity:
@@ -91,7 +92,7 @@ class GameLogic:
             "depth": self.player.components[comp.Position].depth,
         }
 
-    def save_game(self):
+    def save_game(self, extra_metadata: dict | None = None):
         if comp.Filename in self.reg[None].components:
             filename = self.reg[None].components[comp.Filename]
         else:
@@ -103,7 +104,9 @@ class GameLogic:
             self.reg[None].components[comp.Filename] = filename
         path = consts.SAVE_PATH / f"{filename}.pickle"
         #
-        metadata = self.metadata()
+        metadata = self.metadata() | self.visual_metadata
+        if extra_metadata is not None:
+            metadata |= extra_metadata
         with open(path, "wb") as f:
             pickle.dump(metadata, f)
             pickle.dump(self.reg, f)
@@ -116,6 +119,7 @@ class GameLogic:
         return metadata
 
     def load_game(self, filename: str):
+        self.clear()
         path = consts.SAVE_PATH / f"{filename}.pickle"
         with open(path, "rb") as f:
             metadata = pickle.load(f)  # Discard header
