@@ -130,6 +130,8 @@ class Popup(pg.sprite.Sprite):
             text = "MISS"
         elif isinstance(action, actions.Heal):
             text = f"+{text}"
+        if action.critical:
+            text += "!"
         self.image: pg.Surface = font.render(text, False, consts.POPUP_TEXT_COLOR, None)
 
     def update(self):

@@ -237,7 +237,8 @@ class AttackAction(ActorAction):
         apos = self.actor.components[comp.Position].xy
         tpos = self.target.components[comp.Position].xy
         self.actor.components[comp.Direction] = (tpos[0] - apos[0], tpos[1] - apos[1])
-        game_logic.push_action(self.target.registry, Damage(self.target, self.damage))
+        damage = Damage(self.target, self.damage, self.crit)
+        game_logic.push_action(self.target.registry, damage)
         self.message = text
         self.cost = 1
         return self
@@ -592,6 +593,7 @@ class Ascend(Interaction):
 @dataclass
 class Heal(ActorAction):
     amount: int | str
+    critical: bool = False
 
     def can(self) -> bool:
         return comp.HP in self.actor.components
@@ -614,6 +616,7 @@ class Heal(ActorAction):
 @dataclass
 class Damage(ActorAction):
     amount: int | str
+    critical: bool = False
 
     def can(self) -> bool:
         return comp.HP in self.actor.components
