@@ -208,7 +208,9 @@ class Minimap(pg.sprite.Sprite):
             | map_.registry.Q.all_of(
                 components=[comp.Position, comp.Interaction],
                 relations=[(comp.Map, map_)],
-            ).get_entities()
+            )
+            .none_of(tags=[comp.Trap])
+            .get_entities()
         )
         for e in query:
             ex, ey = e.components[comp.Position].xy
