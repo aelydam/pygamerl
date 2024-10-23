@@ -403,7 +403,7 @@ class InventoryState(game_interface.State):
     @staticmethod
     def item_text(item: ecs.Entity) -> str:
         count = item.components.get(comp.Count, 1)
-        name = item.components.get(comp.Name)
+        name = items.display_name(item)
         equipped = " [E]" if items.is_equipped(item) else ""
         return f"{count}x {name}{equipped}"
 

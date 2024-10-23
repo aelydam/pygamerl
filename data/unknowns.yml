@@ -1,0 +1,33 @@
+Potion:
+  Red Potion:
+    Sprite: {sheet: "Items/Potion", tile: [0, 0]}
+  Pink Potion:
+    Sprite: {sheet: "Items/Potion", tile: [1, 0]}
+  Orange Potion:
+    Sprite: {sheet: "Items/Potion", tile: [2, 0]}
+  Yellow Potion:
+    Sprite: {sheet: "Items/Potion", tile: [3, 0]}
+  Green Potion:
+    Sprite: {sheet: "Items/Potion", tile: [4, 0]}
+  Light Green Potion:
+    Sprite: {sheet: "Items/Potion", tile: [5, 0]}
+  Blue Potion:
+    Sprite: {sheet: "Items/Potion", tile: [6, 0]}
+
+Ring:
+  Copper Ring:
+    Sprite: {sheet: "Items/Ring", tile: [0, 0]}
+  Iron Ring:
+    Sprite: {sheet: "Items/Ring", tile: [1, 0]}
+  Diamong Ring:
+    Sprite: {sheet: "Items/Ring", tile: [2, 0]}
+  Blue Ring:
+    Sprite: {sheet: "Items/Ring", tile: [3, 0]}
+  Emerald Ring:
+    Sprite: {sheet: "Items/Ring", tile: [3, 1]}
+  Ruby Ring:
+    Sprite: {sheet: "Items/Ring", tile: [0, 2]}
+  Silver Ring:
+    Sprite: {sheet: "Items/Ring", tile: [0, 3]}
+  Gold Ring:
+    Sprite: {sheet: "Items/Ring", tile: [1, 3]}

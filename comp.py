@@ -25,6 +25,7 @@ Bloodstain = "Bloodstain"
 Autopick = "Autopick"
 Currency = "Currency"
 Consumable = "Consumable"
+Identified = "Identified"
 
 # Map components
 Seed = ("Seed", int)
@@ -56,6 +57,7 @@ TempEquipment = ("TempEquipment", list[str])
 MaxStack = ("MaxStack", int)
 Count = ("Count", int)
 Price = ("Price", float)
+UnidentifiedName = ("UnidentifiedName", str)
 
 # Spawn components
 SpawnWeight = ("SpawnWeight", int)

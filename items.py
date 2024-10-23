@@ -9,6 +9,29 @@ import entities
 import game_logic
 
 
+def is_identified(item: ecs.Entity) -> bool:
+    return comp.Identified in item.tags or comp.UnidentifiedName not in item.components
+
+
+def display_name(item: ecs.Entity) -> str:
+    if not is_identified(item):
+        return item.components[comp.UnidentifiedName]
+    return item.components[comp.Name]
+
+
+def identify(item: ecs.Entity):
+    if is_identified(item):
+        return
+    if ecs.IsA in item.relation_tag:
+        kind = item.relation_tag[ecs.IsA]
+        if comp.UnidentifiedName in kind.components:
+            kind.components.pop(comp.UnidentifiedName)
+        kind.tags |= {comp.Identified}
+    elif comp.UnidentifiedName in item.components:
+        item.components.pop(comp.UnidentifiedName)
+        item.tags |= {comp.Identified}
+
+
 def is_same_kind(item1: ecs.Entity, item2: ecs.Entity) -> bool:
     return (
         item1.components.get(comp.Name) == item2.components.get(comp.Name)

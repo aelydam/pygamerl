@@ -73,6 +73,7 @@ class GameLogic:
         self.reg[None].components[comp.Seed] = seed
         self.reg[None].components[random.Random] = random.Random(seed)
         self.reg[None].components[np.random.RandomState] = np.random.RandomState(seed)
+        db.load_unknowns(self.reg)
         db.load_data(self.reg, "items")
         db.load_data(self.reg, "creatures")
         maps.get_map(self.reg, 0)

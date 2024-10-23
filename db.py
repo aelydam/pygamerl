@@ -95,6 +95,14 @@ def load_entity(
                 continue
             entity.components[comp.Effects] = effects
             continue
+        if k == "Unidentified":
+            if not isinstance(v, str):
+                continue
+            kind = pick_unknown(entity.registry, v)
+            if kind is not None:
+                entity.relation_tag[ecs.IsA] = kind
+                entity.components[comp.UnidentifiedName] = kind.components[comp.Name]
+            continue
         if k == "HP":
             comp_key = comp.HPDice
         else:
@@ -136,3 +144,26 @@ def load_data(reg: ecs.Registry, kind: str):
                     entity.components[comp.Speed] = consts.BASE_SPEED
                 if comp.FOVRadius not in entity.components:
                     entity.components[comp.FOVRadius] = consts.DEFAULT_FOV_RADIUS
+
+
+def load_unknowns(reg: ecs.Registry):
+    fn = consts.GAME_PATH / "data" / "unknowns.yml"
+    with open(fn, "r") as file:
+        data: dict = yaml.safe_load(file)
+    for kind, items in data.items():
+        g_key = f"unknown_{kind}"
+        for k, v in items.items():
+            entity = reg[(g_key, k)]
+            load_entity(entity, k, v)
+            entity.tags |= {g_key}
+
+
+def pick_unknown(reg: ecs.Registry, kind: str) -> ecs.Entity | None:
+    g_key = f"unknown_{kind}"
+    query = reg.Q.all_of(tags=[g_key]).none_of(tags=["unknown_used"])
+    kinds = list(query.get_entities())
+    seed = reg[None].components[np.random.RandomState]
+    i = seed.randint(0, len(kinds))
+    picked = kinds[i]
+    picked.tags |= {"unknown_used"}
+    return picked

@@ -414,7 +414,7 @@ class Pickup(Interaction):
         count = self.target.components.get(comp.Count, 1)
         self.cost = count / self.target.components.get(comp.MaxStack, 1)
         aname = self.actor.components.get(comp.Name)
-        tname = self.target.components.get(comp.Name)
+        tname = items.display_name(self.target)
         if aname is not None and tname is not None:
             count = self.target.components.get(comp.Count, 1)
             self.message = f"{aname} picks {count} {tname}"
@@ -434,7 +434,7 @@ class Drop(Interaction):
             return None
         items.drop(self.target)
         aname = self.actor.components.get(comp.Name)
-        tname = self.target.components.get(comp.Name)
+        tname = items.display_name(self.target)
         if aname is not None and tname is not None:
             self.message = f"{aname} drops {tname}"
         return self
@@ -452,9 +452,13 @@ class Use(Interaction):
         if self.target is None or not self.can():
             return None
         aname = self.actor.components.get(comp.Name)
-        tname = self.target.components.get(comp.Name)
+        tname = items.display_name(self.target)
         if aname is not None and tname is not None:
             self.message = f"{aname} uses {tname}"
+        if not items.is_identified(self.target):
+            items.identify(self.target)
+            tname = items.display_name(self.target)
+            self.message += f": it is a {tname}"
         items.apply_effects(self.target, self.actor)
         return self
 
@@ -472,9 +476,13 @@ class Equip(Interaction):
             return None
         items.equip(self.actor, self.target)
         aname = self.actor.components.get(comp.Name)
-        tname = self.target.components.get(comp.Name)
+        tname = items.display_name(self.target)
         if aname is not None and tname is not None:
             self.message = f"{aname} equips {tname}"
+        if not items.is_identified(self.target):
+            items.identify(self.target)
+            tname = items.display_name(self.target)
+            self.message += f": it is a {tname}"
         self.cost = 2
         return self
 
