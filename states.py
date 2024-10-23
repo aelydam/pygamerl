@@ -414,6 +414,14 @@ class InventoryState(game_interface.State):
         spr = item.components[comp.Sprite]
         return assets.tile(spr.sheet, tuple(spr.tile))
 
+    @staticmethod
+    def item_sortkey(item: ecs.Entity) -> tuple:
+        return (
+            str(item.components.get(comp.EquipSlot, "Z")),
+            items.display_name(item),
+            100 - item.components.get(comp.Count, 1),
+        )
+
     def update(self):
         super().update()
         logic = self.interface.logic
@@ -451,7 +459,9 @@ class InventoryState(game_interface.State):
                 self.select()
 
     def refresh(self):
-        self.items = list(items.inventory(self.interface.logic.player))
+        self.items = sorted(
+            items.inventory(self.interface.logic.player), key=self.item_sortkey
+        )
         names = [self.item_text(i) for i in self.items]
         icons = [self.item_icon(i) for i in self.items]
         self.menu.set_items(names, icons, True)
