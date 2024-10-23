@@ -59,6 +59,9 @@ class InGameState(game_interface.State):
                     self.map_renderer.cursor = self.map_renderer.center
                 else:
                     self.logic.input_action = action
+            elif event.key == pg.K_ESCAPE and self.logic.continuous_action is not None:
+                self.logic.input_action = None
+                self.logic.continuous_action = None
             elif event.mod & pg.KMOD_SHIFT and event.key in keybinds.ACTION_SHIFT_KEYS:
                 self.logic.continuous_action = None
                 action_class = keybinds.ACTION_SHIFT_KEYS[event.key]
