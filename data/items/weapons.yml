@@ -2,13 +2,19 @@ Dagger:
   Sprite: {sheet: "Items/ShortWep", tile: [0,0]}
   DamageDice: 1d4
   EquipSlot: Main_Hand
+  SpawnWeight: 1
+  NativeDepth: 1
 
 Shortsword:
   Sprite: {sheet: "Items/MedWep", tile: [0,0]}
   DamageDice: 1d6
   EquipSlot: Main_Hand
+  SpawnWeight: 1
+  NativeDepth: 3
 
 Longsword:
   Sprite: {sheet: "Items/LongWep", tile: [0,1]}
   DamageDice: 1d8
   EquipSlot: Main_Hand
+  SpawnWeight: 1
+  NativeDepth: 5

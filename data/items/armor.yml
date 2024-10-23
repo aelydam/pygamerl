@@ -2,18 +2,26 @@ Shield:
   Sprite: {sheet: "Items/Shield", tile: [5, 0]}
   ArmorClass: 2
   EquipSlot: Offhand
+  SpawnWeight: 1
+  NativeDepth: 2
 
 Leather Armor:
   Sprite: {sheet: "Items/Armor", tile: [0, 6]}
   ArmorClass: 2
   EquipSlot: Chest
+  SpawnWeight: 1
+  NativeDepth: 1
 
 Chain Mail:
   Sprite: {sheet: "Items/Armor", tile: [0, 8]}
   ArmorClass: 4
   EquipSlot: Chest
+  SpawnWeight: 1
+  NativeDepth: 3
 
 Breastplate:
   Sprite: {sheet: "Items/Armor", tile: [5, 6]}
   ArmorClass: 6
   EquipSlot: Chest
+  SpawnWeight: 1
+  NativeDepth: 5

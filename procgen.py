@@ -27,25 +27,43 @@ def get_walls(grid: NDArray[np.bool_], condition: NDArray[np.bool_] | None = Non
     return walls
 
 
-def pick_creature_kind(map_entity: ecs.Entity) -> ecs.Entity:
+def get_spawn_table(
+    map_entity: ecs.Entity, tags: list[str]
+) -> tuple[list[ecs.Entity], list[float]]:
+    depth = map_entity.components[comp.Depth]
     kinds = list(
-        map_entity.registry.Q.all_of(tags=["creatures"])
+        map_entity.registry.Q.all_of(components=[comp.SpawnWeight], tags=tags)
         .none_of(components=[comp.Position, comp.Initiative])
         .get_entities()
     )
+    kinds = [
+        e
+        for e in kinds
+        if e.components.get(comp.MaxDepth, depth + 1) >= depth
+        and e.components.get(comp.MinDepth, -1) <= depth
+    ]
+    weights = [
+        e.components[comp.SpawnWeight]
+        * e.components.get(comp.SpawnWeightDecay, 0.9)
+        ** ((e.components.get(comp.NativeDepth, depth) - depth) ** 2)
+        for e in kinds
+    ]
+    total = np.sum(weights)
+    probs = [w / total for w in weights]
+    return kinds, probs
+
+
+def pick_creature_kind(map_entity: ecs.Entity) -> ecs.Entity:
+    kinds, probs = get_spawn_table(map_entity, ["creatures"])
     seed = map_entity.components[np.random.RandomState]
-    i = seed.randint(0, len(kinds))
+    i = seed.choice(list(range(len(kinds))), p=probs)
     return kinds[i]
 
 
 def pick_item_kind(map_entity: ecs.Entity) -> ecs.Entity:
-    kinds = list(
-        map_entity.registry.Q.all_of(tags=["items"])
-        .none_of(components=[comp.Position], relations=[(comp.Inventory, ...)])
-        .get_entities()
-    )
+    kinds, probs = get_spawn_table(map_entity, ["items"])
     seed = map_entity.components[np.random.RandomState]
-    i = seed.randint(0, len(kinds))
+    i = seed.choice(list(range(len(kinds))), p=probs)
     return kinds[i]
 
 

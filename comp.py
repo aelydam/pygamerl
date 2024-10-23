@@ -54,8 +54,15 @@ TempEquipment = ("TempEquipment", list[str])
 # Item Components
 MaxStack = ("MaxStack", int)
 Count = ("Count", int)
-SpawnCount = ("SpawnCount", str)
 Price = ("Price", float)
+
+# Spawn components
+SpawnWeight = ("SpawnWeight", int)
+NativeDepth = ("NativeDepth", int)
+SpawnWeightDecay = ("SpawnWeightDecay", float)
+MaxDepth = ("MaxDepth", int)
+MinDepth = ("MinDepth", int)
+SpawnCount = ("SpawnCount", str)
 
 # Global components
 Filename = ("Filename", str)

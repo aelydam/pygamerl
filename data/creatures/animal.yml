@@ -2,20 +2,30 @@ Giant Bat:
   Sprite: {sheet: "Characters/Avian0", tile: [0, 11]}
   HP: 2+2d4
   Speed: 8
+  SpawnWeight: 1
+  NativeDepth: 1
 
 Giant Rat:
   Sprite: {sheet: "Characters/Rodent0", tile: [0, 1]}
   HP: 2+2d4
+  SpawnWeight: 1
+  NativeDepth: 1
 
 Giant Spider:
   Sprite: {sheet: "Characters/Pest0", tile: [1, 2]}
   HP: 2+2d4
+  SpawnWeight: 1
+  NativeDepth: 2
 
 Jackal:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 0]}
   HP: 2+2d4
+  SpawnWeight: 1
+  NativeDepth: 1
 
 Wolf:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 1]}
   HP: 2+2d4
   Speed: 6
+  SpawnWeight: 1
+  NativeDepth: 2

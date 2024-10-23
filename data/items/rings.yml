@@ -1,13 +1,19 @@
-Commong Ring:
+Common Ring:
   Sprite: {sheet: "Items/Ring", tile: [0,0]}
   EquipSlot: Ring
+  SpawnWeight: 1
+  NativeDepth: 1
 
 Protection Ring:
   Sprite: {sheet: "Items/Ring", tile: [1,0]}
   ArmorClass: 1
   EquipSlot: Ring
+  SpawnWeight: 1
+  NativeDepth: 3
 
 Speed Ring:
   Sprite: {sheet: "Items/Ring", tile: [2,0]}
   Speed: 2
   EquipSlot: Ring
+  SpawnWeight: 1
+  NativeDepth: 5

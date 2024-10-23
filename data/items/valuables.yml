@@ -4,6 +4,8 @@ Copper Pieces:
   SpawnCount: 3+3d6+3*depth
   Price: 0.1
   tags: [Autopick, Currency]
+  SpawnWeight: 4
+  NativeDepth: 1
 
 Silver Pieces:
   Sprite: {sheet: "Items/Money", tile: [4, 1]}
@@ -11,6 +13,8 @@ Silver Pieces:
   SpawnCount: 2+2d6+4*depth
   Price: 1
   tags: [Autopick, Currency]
+  SpawnWeight: 3
+  NativeDepth: 3
 
 Gold Pieces:
   Sprite: {sheet: "Items/Money", tile: [1, 1]}
@@ -18,3 +22,5 @@ Gold Pieces:
   SpawnCount: 1+1d6+5*depth
   Price: 10
   tags: [Autopick, Currency]
+  SpawnWeight: 2
+  NativeDepth: 5
