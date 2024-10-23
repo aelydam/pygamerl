@@ -166,7 +166,12 @@ def update_entity_light(entity: ecs.Entity):
 
 def enemies_in_fov(actor: ecs.Entity) -> set[ecs.Entity]:
     map_ = actor.relation_tag[comp.Map]
-    if comp.Player not in actor.tags:
+    if comp.Trap in actor.tags:
+        query = actor.registry.Q.all_of(
+            components=[comp.Position, comp.HP],
+            relations=[(comp.Map, map_)],
+        )
+    elif comp.Player not in actor.tags:
         query = actor.registry.Q.all_of(
             components=[comp.Position, comp.HP],
             tags=[comp.Player],
@@ -177,7 +182,7 @@ def enemies_in_fov(actor: ecs.Entity) -> set[ecs.Entity]:
             components=[comp.Position, comp.HP],
             relations=[(comp.Map, map_)],
         ).none_of(tags=[comp.Player])
-    return {e for e in query if is_in_fov(actor, e)}
+    return {e for e in query if is_in_fov(actor, e) and is_alive(e)}
 
 
 def has_enemy_in_fov(actor: ecs.Entity) -> bool:
@@ -201,18 +206,19 @@ def can_act(actor: ecs.Entity) -> bool:
 def enemy_action(actor: ecs.Entity) -> actions.Action:
     if not is_alive(actor):
         return actions.WaitAction(actor)
-    player = actor.registry[comp.Player]
-    player_infov = is_alive(player) and is_in_fov(actor, player)
-    if player_infov:
-        actor.components[comp.AITarget] = player.components[comp.Position]
+    visible_enemies = enemies_in_fov(actor)
+    enemy_infov = len(visible_enemies) > 0
+    if enemy_infov:
+        enemy = next(iter(visible_enemies))
+        actor.components[comp.AITarget] = enemy.components[comp.Position]
 
     target = actor.components.get(comp.AITarget)
     if target is not None:
         d = dist(actor, target)
         # Attack player if in reach
         reach = actor.components.get(comp.Reach, 1.5)
-        if d <= reach and player_infov:
-            return actions.AttackAction(actor, player)
+        if d <= reach and enemy_infov:
+            return actions.AttackAction(actor, enemy)
         elif d == 0:
             actor.components.pop(comp.AITarget)
             dir = actor.components.get(comp.Direction)
