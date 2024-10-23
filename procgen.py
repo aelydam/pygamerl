@@ -522,6 +522,41 @@ def add_traps(
         )
 
 
+def add_boulders(
+    map_entity: ecs.Entity,
+    radius: int = consts.MIN_ROOM_SIZE,
+    max_count: int = 20,
+    condition: NDArray[np.bool_] | None = None,
+):
+    tiles = map_entity.components[comp.Tiles]
+    depth = map_entity.components[comp.Depth]
+    seed = map_entity.components[np.random.RandomState]
+    walkable = db.walkable[tiles]
+    bm = funcs.bitmask(walkable)
+    wmoore = funcs.moore(walkable)
+    available = walkable & (wmoore > 4) & ~np.isin(bm, (6, 9))
+    if condition is not None:
+        available &= condition
+    grid_x, grid_y = np.indices(tiles.shape)
+    for _ in range(max_count):
+        if np.sum(available) < 1:
+            break
+        all_x, all_y = np.where(available)
+        i = seed.randint(0, len(all_x))
+        x, y = all_x[i], all_y[i]
+        dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2
+        available[dist2 <= radius**2] = False
+        map_entity.registry.new_entity(
+            components={
+                comp.Name: "Boulder",
+                comp.Position: comp.Position((x, y), depth),
+                comp.Sprite: comp.Sprite("Items/Rock", (2, 1)),
+                comp.Interaction: actions.Boulder,
+            },
+            tags={comp.Obstacle},
+        )
+
+
 def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
     depth = map_entity.components[comp.Depth]
     seed = map_entity.components[np.random.RandomState]
@@ -649,6 +684,8 @@ def generate(map_entity: ecs.Entity):
     add_torches(map_entity, condition=funcs.moore(room_floor) > 0)
     # Add traps
     add_traps(map_entity)
+    # Add boulders
+    add_boulders(map_entity, condition=grid == db.tile_id["cavefloor"])
     # Stairs
     add_downstairs(map_entity, room_floor, max_count=1 + (depth > 0))
     # Spawn items

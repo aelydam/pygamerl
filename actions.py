@@ -629,6 +629,40 @@ class Ascend(Interaction):
         return self
 
 
+class Boulder(Interaction):
+    def get_direction(self) -> tuple[int, int]:
+        if self.target is None:
+            return (0, 0)
+        apos = self.actor.components[comp.Position].xy
+        tpos = self.target.components[comp.Position].xy
+        if self.bump:
+            return (int(tpos[0] - apos[0]), int(tpos[1] - apos[1]))
+        else:
+            return (int(apos[0] - tpos[0]), int(apos[1] - tpos[1]))
+
+    def can(self) -> bool:
+        if self.target is None or not super().can():
+            return False
+        if entities.dist(self.actor, self.target) > 1:
+            return False
+        direction = self.get_direction()
+        if self.bump:
+            check_pos = self.target.components[comp.Position] + direction
+        else:
+            check_pos = self.actor.components[comp.Position] + direction
+        return maps.is_walkable(self.actor.relation_tag[comp.Map], check_pos)
+
+    def perform(self) -> Action | None:
+        if self.target is None or not self.can():
+            return None
+        direction = self.get_direction()
+        self.target.components[comp.Position] += direction
+        if not self.bump:
+            self.actor.components[comp.Position] += direction
+        self.cost = 1
+        return self
+
+
 @dataclass
 class Heal(ActorAction):
     amount: int | str
