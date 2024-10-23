@@ -471,6 +471,9 @@ class InventoryState(game_interface.State):
             self.interface.logic.input_action = actions.Unequip(player, item)
         elif items.is_equippable(item):
             self.interface.logic.input_action = actions.Equip(player, item)
+        else:
+            self.interface.logic.input_action = actions.Use(player, item)
+            self.interface.pop()
 
 
 class LoadGameState(game_interface.State):

@@ -7,6 +7,7 @@ import tcod.ecs as ecs
 import yaml  # type: ignore
 from numpy.typing import NDArray
 
+import actions
 import comp
 import consts
 
@@ -82,6 +83,17 @@ def load_entity(
                 entity.components[comp.TempEquipment] = v
             elif isinstance(v, str):
                 entity.components[comp.TempEquipment] = [v]
+            continue
+        if k == "Effects":
+            if isinstance(v, dict):
+                effects = {getattr(actions, kk): vv for kk, vv in v.items()}
+            elif isinstance(v, list):
+                effects = {getattr(actions, kk): {} for kk in v}
+            elif isinstance(v, str):
+                effects = {getattr(actions, v): {}}
+            else:
+                continue
+            entity.components[comp.Effects] = effects
             continue
         if k == "HP":
             comp_key = comp.HPDice

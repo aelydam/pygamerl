@@ -24,6 +24,7 @@ Lit = "Lit"
 Bloodstain = "Bloodstain"
 Autopick = "Autopick"
 Currency = "Currency"
+Consumable = "Consumable"
 
 # Map components
 Seed = ("Seed", int)
@@ -122,3 +123,10 @@ class Interaction(Protocol):
     def __call__(
         self, actor: ecs.Entity, target: ecs.Entity, bump: bool = False
     ) -> actions.Interaction: ...
+
+
+class Effect(Protocol):
+    def __call__(self, actor: ecs.Entity, *args, **kwargs) -> actions.Action: ...
+
+
+Effects = ("Effects", dict[Effect, dict | list | str | int | None])

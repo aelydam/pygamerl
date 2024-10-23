@@ -1,0 +1,15 @@
+Healing Potion:
+  Sprite: {sheet: "Items/Potion", tile: [0, 0]}
+  SpawnWeight: 3
+  MaxStack: 4
+  Effects:
+    Heal: 2+1d6
+  tags: Consumable
+
+Poison:
+  Sprite: {sheet: "Items/Potion", tile: [4, 0]}
+  SpawnWeight: 200
+  MaxStack: 4
+  Effects:
+    Damage: 1d4
+  tags: Consumable

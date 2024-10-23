@@ -6,6 +6,7 @@ import tcod.ecs as ecs
 
 import comp
 import entities
+import game_logic
 
 
 def is_same_kind(item1: ecs.Entity, item2: ecs.Entity) -> bool:
@@ -147,3 +148,26 @@ def money(actor: ecs.Entity) -> float:
     return sum(
         e.components.get(comp.Count, 0) * e.components.get(comp.Price, 0) for e in query
     )
+
+
+def apply_effects(item: ecs.Entity, target: ecs.Entity) -> bool:
+    if comp.Effects not in item.components:
+        return False
+    effects = item.components[comp.Effects]
+    for effect, args in effects.items():
+        if isinstance(args, dict):
+            action = effect(target, **args)
+        elif isinstance(args, list):
+            action = effect(target, *args)
+        elif args is not None:
+            action = effect(target, args)
+        else:
+            action = effect(target)
+        game_logic.push_action(item.registry, action)
+    if comp.Consumable in item.tags:
+        count = item.components.get(comp.Count, 1) - 1
+        if count < 1:
+            item.clear()
+        else:
+            item.components[comp.Count] = count
+    return True

@@ -16,3 +16,8 @@ Lamp:
   EquipSlot: Offhand
   LightRadius: 6
   tags: Lit
+
+Map:
+  Sprite: {sheet: "Items/Scroll", tile: [0, 0]}
+  Effects: MagicMap
+  tags: Consumable

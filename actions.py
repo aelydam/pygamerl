@@ -440,6 +440,25 @@ class Drop(Interaction):
         return self
 
 
+class Use(Interaction):
+    def can(self) -> bool:
+        return (
+            self.target is not None
+            and self.target.relation_tag[comp.Inventory] == self.actor
+            and comp.Effects in self.target.components
+        )
+
+    def perform(self) -> Action | None:
+        if self.target is None or not self.can():
+            return None
+        aname = self.actor.components.get(comp.Name)
+        tname = self.target.components.get(comp.Name)
+        if aname is not None and tname is not None:
+            self.message = f"{aname} uses {tname}"
+        items.apply_effects(self.target, self.actor)
+        return self
+
+
 class Equip(Interaction):
     def can(self) -> bool:
         return (
