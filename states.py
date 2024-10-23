@@ -546,9 +546,14 @@ class LoadGameState(game_interface.State):
     def delete_file(self):
         filename = self.files[self.menu.selected_index]
         self.interface.logic.delete_game(filename)
-        self.interface.pop()
-        if len(self.interface.logic.list_savefiles()) > 0:
-            self.interface.push(self.__class__(self.parent))
+
+        self.files = self.interface.logic.list_savefiles()
+        text, icons = self.item_lists()
+        if len(self.files) < 1:
+            return self.interface.pop()
+        if self.menu.selected_index >= len(self.files):
+            self.menu.selected_index = len(self.files) - 1
+        self.menu.set_items(text, icons, True)
 
     def select(self):
         filename = self.files[self.menu.selected_index]
