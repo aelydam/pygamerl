@@ -39,7 +39,7 @@ class InGameState(game_interface.State):
                 "AC": lambda: entities.armor_class(self.logic.player),
                 "Hit": lambda: entities.attack_bonus(self.logic.player),
                 "Dmg": lambda: entities.damage_dice(self.logic.player),
-                "Money": lambda: f"${items.money(self.logic.player)}",
+                "Money": lambda: f"${items.money(self.logic.player):.1f}",
                 "Turn": lambda: self.logic.turn_count,
                 "Played": lambda: f"{self.logic.played_time // 3600:0.0f}:{self.logic.played_time // 60 % 60:0.0f}:{self.logic.played_time % 60:02.0f}",
                 "FPS": lambda: int(self.interface.clock.get_fps()),
