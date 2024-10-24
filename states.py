@@ -417,7 +417,7 @@ class InventoryState(game_interface.State):
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.menu = gui_elements.Menu(self.ui_group, [], 16, width=240)
         self.refresh()
-        self.menu.select(-1)
+        self.menu.select(0)
 
     @staticmethod
     def item_text(item: ecs.Entity) -> str:
@@ -479,13 +479,15 @@ class InventoryState(game_interface.State):
 
     def refresh(self):
         self.items = sorted(
-            items.inventory(self.interface.logic.player), key=self.item_sortkey
+            list(items.inventory(self.interface.logic.player)), key=self.item_sortkey
         )
         names = [self.item_text(i) for i in self.items]
         icons = [self.item_icon(i) for i in self.items]
         self.menu.set_items(names, icons, True)
 
     def drop(self):
+        if len(self.items) < 1:
+            return
         item = self.items[self.menu.selected_index]
         player = self.interface.logic.player
         if items.is_equipped(item):
@@ -494,6 +496,8 @@ class InventoryState(game_interface.State):
             self.interface.logic.input_action = actions.Drop(player, item)
 
     def select(self):
+        if len(self.items) < 1:
+            return
         item = self.items[self.menu.selected_index]
         player = self.interface.logic.player
         if items.is_equipped(item):
