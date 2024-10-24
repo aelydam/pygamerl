@@ -488,6 +488,7 @@ def add_traps(
     radius: int = consts.MAX_ROOM_SIZE,
     max_count: int = 10,
     condition: NDArray[np.bool_] | None = None,
+    bones_prob: float = 0.2,
 ):
     tiles = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
@@ -507,10 +508,11 @@ def add_traps(
         x, y = all_x[i], all_y[i]
         dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2
         available[dist2 <= radius**2] = False
+        pos_comp = comp.Position((x, y), depth)
         map_entity.registry.new_entity(
             components={
                 comp.Name: "Trap",
-                comp.Position: comp.Position((x, y), depth),
+                comp.Position: pos_comp,
                 comp.Sprite: comp.Sprite("Objects/Trap0", (3, 3)),
                 comp.Initiative: 0,
                 comp.Reach: 0,
@@ -520,6 +522,13 @@ def add_traps(
             },
             tags={comp.Trap, comp.HideSprite},
         )
+        if seed.randint(0, 100) <= 100 * bones_prob:
+            map_entity.registry.new_entity(
+                components={
+                    comp.Position: pos_comp,
+                    comp.Sprite: comp.Sprite("Objects/Decor0", (1, 12)),
+                }
+            )
 
 
 def add_boulders(
