@@ -33,7 +33,10 @@ def get_spawn_table(
     depth = map_entity.components[comp.Depth]
     kinds = list(
         map_entity.registry.Q.all_of(components=[comp.SpawnWeight], tags=tags)
-        .none_of(components=[comp.Position, comp.Initiative])
+        .none_of(
+            components=[comp.Position, comp.Initiative],
+            relations=[(comp.Inventory, ...), (comp.Map, ...)],
+        )
         .get_entities()
     )
     kinds = [
