@@ -713,7 +713,6 @@ class Eat(ActorAction):
         if isinstance(self.amount, str):
             seed = self.actor.registry[None].components[random.Random]
             self.amount = int(dice.dice_roll(self.amount, seed))
-        self.actor.components[comp.Hunger] -= self.amount
         new_hunger = self.actor.components[comp.Hunger] - self.amount
         self.actor.components[comp.Hunger] = max(0, new_hunger)
         apos = self.actor.components[comp.Position]
