@@ -11,7 +11,7 @@ Zombie:
   Speed: 4
   SpawnWeight: 1
   NativeDepth: 4
-  Inventory: {Mushroom: 1d4-3}
+  Inventory: {Mushroom: 1d4-3, Poison Mushroom: 1d4-3}
 
 Ghost:
   Sprite: {sheet: "Characters/Undead0", tile: [0, 4]}

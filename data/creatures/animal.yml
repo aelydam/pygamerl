@@ -11,14 +11,14 @@ Giant Rat:
   HP: 2+2d4
   SpawnWeight: 1
   NativeDepth: 1
-  Inventory: {Mushroom: 1d4-2, Apple: 1d4-3}
+  Inventory: {Mushroom: 1d4-3, Poison Mushroom: 1d4-3, Apple: 1d6-5}
 
 Giant Spider:
   Sprite: {sheet: "Characters/Pest0", tile: [1, 2]}
   HP: 2+2d4
   SpawnWeight: 1
   NativeDepth: 2
-  Inventory: {Mushroom: 1d4-3}
+  Inventory: {Mushroom: 1d4-3, Poison Mushroom: 1d4-3}
 
 Jackal:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 0]}

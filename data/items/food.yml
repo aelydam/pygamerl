@@ -1,11 +1,21 @@
 Mushroom:
-  Sprite: {sheet: Items/Food, tile: [0, 0]}
+  Unidentified: Mushroom
   UsesVerb: eats
   SpawnWeight: 2
   MaxStack: 10
   Effects:
     Eat: 1+1d2
   tags: Consumable
+Poisonous Mushroom:
+  Unidentified: Mushroom
+  UsesVerb: eats
+  SpawnWeight: 2
+  MaxStack: 10
+  Effects:
+    Eat: 1+1d2
+    Damage: 1d4
+  tags: Consumable
+
 Apple:
   Sprite: {sheet: Items/Food, tile: [0, 2]}
   UsesVerb: eats
