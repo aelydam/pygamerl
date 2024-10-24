@@ -156,6 +156,7 @@ class EntitySprite(pg.sprite.Sprite):
         pressed = pg.key.get_pressed()
         self.hovered = self.group.cursor == (self.x, self.y)
         show_tooltip = self.hovered or pressed[pg.K_RALT] or pressed[pg.K_LALT]
+        show_tooltip = show_tooltip and self.visible
         show_tooltip = show_tooltip and self.is_in_fov
         show_tooltip = show_tooltip and entities.is_alive(self.entity)
         show_tooltip = show_tooltip and comp.Name in self.entity.components
