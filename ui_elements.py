@@ -58,32 +58,56 @@ class MapHPBar(pg.sprite.Sprite):
         self.image.fill(tint, special_flags=pg.BLEND_MULT)
 
 
-class HPBar(pg.sprite.Sprite):
-    def __init__(self, group: pg.sprite.Group, game_logic: GameLogic, font: pg.Font):
+class Bar(pg.sprite.Sprite):
+    def __init__(
+        self,
+        group: pg.sprite.Group,
+        font: pg.Font,
+        current_fun: Callable[[], int],
+        max_fun: Callable[[], int],
+        width: int = 200,
+        height: int = 12,
+        x: int = 16,
+        y: int = 16,
+        bg_color: str = consts.HPBAR_BG_COLOR,
+        good_color: str = consts.HPBAR_GOOD_COLOR,
+        bad_color: str = consts.HPBAR_BAD_COLOR,
+        text_color: str = consts.HPBAR_TEXT_COLOR,
+        bad_ratio: float = 0.5,
+        label: str = "",
+    ):
         super().__init__(group)
-        self.game_logic = game_logic
         self.font: pg.font.Font = font
-        self.rect = pg.Rect(16, 16, 200, consts.FONTSIZE + 4)
+        self.rect: pg.Rect = pg.Rect(x, y, width, height)
         self.fill = None
         self.image = pg.Surface(self.rect.size).convert_alpha()
+        self.current_fun = current_fun
+        self.max_fun = max_fun
+        self.bg_color = bg_color
+        self.good_color = good_color
+        self.bad_color = bad_color
+        self.text_color = text_color
+        self.bad_ratio = bad_ratio
+        self.label = label
 
     def update(self):
-        player = self.game_logic.player
-        hp = player.components.get(comp.HP)
-        max_hp = player.components.get(comp.MaxHP)
-        fill = int(self.rect.width * hp / max_hp)
+        current = self.current_fun()
+        maximum = self.max_fun()
+        fill = int(self.rect.width * current / maximum)
         if fill == self.fill:
             return
         self.fill = fill
-        if self.fill >= self.rect.width // 2:
-            color = consts.HPBAR_GOOD_COLOR
+        if self.fill >= self.rect.width * self.bad_ratio:
+            color = self.good_color
         else:
-            color = consts.HPBAR_BAD_COLOR
-        self.image.fill(consts.HPBAR_BG_COLOR)
+            color = self.bad_color
+        self.image.fill(self.bg_color)
         pg.draw.rect(self.image, color, pg.Rect(0, 0, self.fill, self.rect.height))
-        surf = self.font.render(f"{hp}/{max_hp}", False, consts.HPBAR_TEXT_COLOR)
+        surf = self.font.render(" " + self.label, False, self.text_color)
+        self.image.blit(surf, surf.get_rect(midleft=(0, self.rect.height // 2)))
+        surf = self.font.render(f"{current}/{maximum} ", False, self.text_color)
         self.image.blit(
-            surf, surf.get_rect(center=(self.rect.width // 2, self.rect.height // 2))
+            surf, surf.get_rect(midright=(self.rect.width, self.rect.height // 2))
         )
 
 

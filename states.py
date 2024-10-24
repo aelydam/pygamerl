@@ -23,7 +23,12 @@ class InGameState(game_interface.State):
         self.logic = self.interface.logic
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         font = self.interface.font
-        self.hpbar = ui_elements.HPBar(self.ui_group, self.logic, font)
+        self.hpbar = ui_elements.Bar(
+            self.ui_group,
+            font,
+            current_fun=lambda: self.logic.player.components.get(comp.HP, 0),
+            max_fun=lambda: self.logic.player.components.get(comp.MaxHP, 0),
+        )
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, font)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
         self.map_renderer = map_renderer.MapRenderer(self.interface)
