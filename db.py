@@ -132,12 +132,13 @@ def load_data(reg: ecs.Registry, kind: str):
     else:
         files = [f"{dir_name}.yml"]
     for fn in files:
+        category = os.path.splitext(os.path.basename(fn))[0]
         with open(fn, "r") as file:
             data: dict = yaml.safe_load(file)
         for k, v in data.items():
             entity = reg[(kind, k)]
             load_entity(entity, k, v)
-            entity.tags |= {kind}
+            entity.tags |= {kind, category}
             if kind == "creatures":
                 entity.tags |= {comp.Obstacle}
                 if comp.Speed not in entity.components:
