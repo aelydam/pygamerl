@@ -4,18 +4,21 @@ Giant Bat:
   Speed: 8
   SpawnWeight: 1
   NativeDepth: 1
+  Inventory: {Mushroom: 1d4-3}
 
 Giant Rat:
   Sprite: {sheet: "Characters/Rodent0", tile: [0, 1]}
   HP: 2+2d4
   SpawnWeight: 1
   NativeDepth: 1
+  Inventory: {Mushroom: 1d4-2, Apple: 1d4-3}
 
 Giant Spider:
   Sprite: {sheet: "Characters/Pest0", tile: [1, 2]}
   HP: 2+2d4
   SpawnWeight: 1
   NativeDepth: 2
+  Inventory: {Mushroom: 1d4-3}
 
 Jackal:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 0]}
