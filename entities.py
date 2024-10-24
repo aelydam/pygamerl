@@ -58,7 +58,7 @@ def attack_bonus(actor: ecs.Entity, default: int = 2) -> int:
 
 def damage_dice(actor: ecs.Entity, default: str = "1") -> str:
     mainhand = items.equipment_at_slot(actor, comp.EquipSlot.Main_Hand)
-    dice = actor.components.get(comp.DamageDice, default)
+    dice = str(actor.components.get(comp.DamageDice, default))
     if mainhand is not None and comp.DamageDice in mainhand.components:
         dice = mainhand.components[comp.DamageDice]
     bonus = get_combined_component(actor, comp.DamageBonus, 0)
