@@ -21,4 +21,5 @@ Dummy Potion:
   UsesVerb: drinks
   SpawnWeight: 1
   MaxStack: 4
+  Effects: {}
   tags: Consumable
