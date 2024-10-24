@@ -275,18 +275,20 @@ class GameLogic:
         self.last_action = result
         if result is None:
             return True
-        if result.message != "":
-            self.log(result.message)
+        in_fov = False
+        if hasattr(result, "xy"):
+            xy: tuple[int, int] = result.xy
+            in_fov = entities.is_in_fov(self.player, xy)
         if hasattr(result, "actor"):
             actor: ecs.Entity = result.actor  # type: ignore
             entities.update_fov(actor)
             if comp.Initiative in actor.components:
                 actor.components[comp.Initiative] -= result.cost
-            in_fov = entities.is_in_fov(self.player, actor)
+            in_fov = in_fov or entities.is_in_fov(self.player, actor)
             if hasattr(result, "target") and result.target == self.player:
                 self.continuous_action = None
-        else:
-            in_fov = False
+        if in_fov and result.message != "":
+            self.log(result.message)
         return not in_fov
 
     def tick(self):
