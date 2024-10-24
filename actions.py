@@ -257,57 +257,63 @@ class AttackAction(ActorAction):
 
 
 class BumpAction(MoveAction):
-    def get_entity(self) -> ecs.Entity | None:
+    def get_action(self) -> Action | None:
         map_entity = self.actor.relation_tag[comp.Map]
         new_pos = self.actor.components[comp.Position] + self.direction
+        # Try to attack
         query = self.actor.registry.Q.all_of(
             [comp.Position, comp.HP],
             tags=[new_pos],
             relations=[(comp.Map, map_entity)],
         )
         for e in query:
-            if e != self.actor:
-                return e
-        query = self.actor.registry.Q.all_of(
-            [comp.Position, comp.Interaction],
-            tags=[new_pos],
-            relations=[(comp.Map, map_entity)],
-        )
-        for e in query:
-            if e != self.actor:
-                return e
+            if e == self.actor:
+                continue
+            action: Action = AttackAction(self.actor, e)
+            if action.can():
+                return action
+        # Try to pick item
         query = self.actor.registry.Q.all_of(
             [comp.Position],
             tags=[new_pos, "items", comp.Autopick],
             relations=[(comp.Map, map_entity)],
         )
         for e in query:
-            if e != self.actor:
-                return e
+            if e == self.actor:
+                continue
+            action = Pickup(self.actor, e, bump=True)
+            if action.can():
+                return action
+        # Try to interact
+        query = self.actor.registry.Q.all_of(
+            [comp.Position, comp.Interaction],
+            tags=[new_pos],
+            relations=[(comp.Map, map_entity)],
+        )
+        for e in sorted(query, key=lambda x: comp.Obstacle not in x.tags):
+            if e == self.actor:
+                continue
+            action_class = e.components[comp.Interaction]
+            action = action_class(self.actor, e, bump=True)
+            if action.can():
+                return action
         return None
 
     def can(self) -> bool:
         self.actor.components[comp.Direction] = self.direction
         if super().can():
             return True
-        return self.get_entity() is not None
+        action = self.get_action()
+        if action is not None:
+            return action.can()
+        return False
 
     def perform(self) -> Action | None:
         if not self.can():
             return None
-        entity = self.get_entity()
-        if entity is not None:
-            if comp.HP in entity.components:
-                return AttackAction(self.actor, entity).perform()
-            elif comp.Interaction in entity.components:
-                action_class = entity.components[comp.Interaction]
-                action = action_class(self.actor, entity, bump=True)
-                if action.can():
-                    return action.perform()
-            if comp.Autopick in entity.tags:
-                action = Pickup(self.actor, entity, bump=True)
-                if action.can():
-                    return action.perform()
+        action = self.get_action()
+        if action is not None and action.can():
+            return action.perform()
         return super().perform()
 
 
