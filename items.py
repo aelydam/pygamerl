@@ -39,30 +39,40 @@ def is_same_kind(item1: ecs.Entity, item2: ecs.Entity) -> bool:
     )
 
 
-def stack_item(item: ecs.Entity, stack: Iterable[ecs.Entity]):
+def stack_item(item: ecs.Entity, stack: Iterable[ecs.Entity]) -> int:
     count = item.components.get(comp.Count, 1)
     max_stack = item.components.get(comp.MaxStack, 1)
     if max_stack > 1:
+        stack = sorted(stack, key=lambda e: max_stack - e.components.get(comp.Count, 1))
         for e in stack:
             if e == item or not is_same_kind(item, e):
                 continue
-            count_i = min(count, max(0, max_stack - e.components.get(comp.Count, 1)))
-            e.components[comp.Count] += count_i
+            count_e = e.components.get(comp.Count, 1)
+            available = max(0, max_stack - count_e)
+            count_i = min(count, available)
+            if count_e >= max_stack or available < 1 or count_i < 1:
+                continue
+            e.components[comp.Count] = count_e + count_i
             count -= count_i
+            item.components[comp.Count] = count
             if count < 1:
+                if comp.Inventory in item.relation_tag:
+                    item.relation_tag.pop(comp.Inventory)
                 item.clear()
-                return
+                return 0
         item.components[comp.Count] = count
+    return count
 
 
 def pickup(actor: ecs.Entity, item: ecs.Entity):
     kind = item.relation_tag[ecs.IsA]
     query = actor.registry.Q.all_of(
-        relations=[(comp.Inventory, actor), (ecs.IsA, kind)]
+        relations=[(comp.Inventory, actor), (ecs.IsA, kind)], traverse=[]
     )
-    item.relation_tag[comp.Inventory] = actor
-    item.components.pop(comp.Position)
-    stack_item(item, query)
+    count = stack_item(item, query)
+    if count > 0:
+        item.relation_tag[comp.Inventory] = actor
+        item.components.pop(comp.Position)
 
 
 def drop(item: ecs.Entity):
@@ -71,10 +81,17 @@ def drop(item: ecs.Entity):
     actor = item.relation_tag[comp.Inventory]
     pos = actor.components[comp.Position]
     kind = item.relation_tag[ecs.IsA]
-    query = item.registry.Q.all_of(tags=[pos], relations=[(ecs.IsA, kind)])
+    map_entity = actor.relation_tag[comp.Map]
+    query = item.registry.Q.all_of(
+        components=[comp.Position],
+        tags=[pos],
+        relations=[(ecs.IsA, kind), (comp.Map, map_entity)],
+        traverse=[],
+    )
     item.relation_tag.pop(comp.Inventory)
-    item.components[comp.Position] = pos
-    stack_item(item, query)
+    count = stack_item(item, query)
+    if count > 0:
+        item.components[comp.Position] = pos
 
 
 def drop_all(actor: ecs.Entity):
