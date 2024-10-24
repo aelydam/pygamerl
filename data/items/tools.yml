@@ -19,5 +19,6 @@ Lamp:
 
 Map:
   Sprite: {sheet: "Items/Scroll", tile: [0, 0]}
+  UsesVerb: reads
   Effects: MagicMap
   tags: Consumable

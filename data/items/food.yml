@@ -1,5 +1,6 @@
 Mushroom:
   Sprite: {sheet: Items/Food, tile: [0, 0]}
+  UsesVerb: eats
   SpawnWeight: 2
   MaxStack: 10
   Effects:
@@ -7,6 +8,7 @@ Mushroom:
   tags: Consumable
 Apple:
   Sprite: {sheet: Items/Food, tile: [0, 2]}
+  UsesVerb: eats
   SpawnWeight: 1
   MaxStack: 10
   Effects:
@@ -14,6 +16,7 @@ Apple:
   tags: Consumable
 Banana:
   Sprite: {sheet: Items/Food, tile: [4, 2]}
+  UsesVerb: eats
   SpawnWeight: 1
   MaxStack: 10
   Effects:
@@ -21,6 +24,7 @@ Banana:
   tags: Consumable
 Bread:
   Sprite: {sheet: Items/Food, tile: [1, 4]}
+  UsesVerb: eats
   SpawnWeight: 1
   MaxStack: 10
   Effects:
@@ -28,6 +32,7 @@ Bread:
   tags: Consumable
 Rations:
   Sprite: {sheet: Items/Food, tile: [2, 4]}
+  UsesVerb: eats
   SpawnWeight: 1
   MaxStack: 10
   Effects:

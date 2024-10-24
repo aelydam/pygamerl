@@ -1,5 +1,6 @@
 Healing Potion:
   Unidentified: Potion
+  UsesVerb: drinks
   SpawnWeight: 1
   MaxStack: 4
   Effects:
@@ -8,6 +9,7 @@ Healing Potion:
 
 Poison:
   Unidentified: Potion
+  UsesVerb: drinks
   SpawnWeight: 1
   MaxStack: 4
   Effects:
@@ -16,6 +18,7 @@ Poison:
 
 Dummy Potion:
   Unidentified: Potion
+  UsesVerb: drinks
   SpawnWeight: 1
   MaxStack: 4
   tags: Consumable

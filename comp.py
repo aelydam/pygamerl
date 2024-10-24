@@ -59,6 +59,7 @@ MaxStack = ("MaxStack", int)
 Count = ("Count", int)
 Price = ("Price", float)
 UnidentifiedName = ("UnidentifiedName", str)
+UsesVerb = ("UsesVerb", str)
 
 # Spawn components
 SpawnWeight = ("SpawnWeight", int)

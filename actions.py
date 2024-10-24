@@ -468,7 +468,8 @@ class Use(Interaction):
         aname = self.actor.components.get(comp.Name)
         tname = items.display_name(self.target)
         if aname is not None and tname is not None:
-            self.message = f"{aname} uses {tname}"
+            verb = self.target.components.get(comp.UsesVerb, "uses")
+            self.message = f"{aname} {verb} {tname}"
         if not items.is_identified(self.target):
             items.identify(self.target)
             tname = items.display_name(self.target)
