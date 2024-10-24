@@ -39,9 +39,13 @@ class ActorAction(Action):
 class WaitAction(ActorAction):
     def perform(self) -> Action | None:
         initiative = self.actor.components.get(comp.Initiative, 0)
-        if initiative >= 1 and (
-            self.actor.components.get(comp.HP, 0)
-            < self.actor.components.get(comp.MaxHP, 0)
+        if (
+            initiative >= 1
+            and (
+                self.actor.components.get(comp.HP, 0)
+                < self.actor.components.get(comp.MaxHP, 0)
+            )
+            and not entities.is_hungry(self.actor)
         ):
             seed = self.actor.registry[None].components[random.Random]
             roll = dice.dice_roll("1d20", seed)
@@ -54,9 +58,13 @@ class WaitAction(ActorAction):
 
 class Rest(WaitAction):
     def can(self):
-        return super().can() and (
-            self.actor.components.get(comp.HP, 0)
-            < self.actor.components.get(comp.MaxHP, 0)
+        return (
+            super().can()
+            and (
+                self.actor.components.get(comp.HP, 0)
+                < self.actor.components.get(comp.MaxHP, 0)
+            )
+            and not entities.is_hungry(self.actor)
         )
 
 
@@ -687,6 +695,27 @@ class Heal(ActorAction):
         new_hp = min(max_hp, max(0, self.actor.components[comp.HP] + self.amount))
         self.cost = 0
         self.actor.components[comp.HP] = new_hp
+        apos = self.actor.components[comp.Position]
+        self.xy = apos.xy
+        return self
+
+
+@dataclass
+class Eat(ActorAction):
+    amount: int | str
+
+    def can(self) -> bool:
+        return comp.Hunger in self.actor.components
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        if isinstance(self.amount, str):
+            seed = self.actor.registry[None].components[random.Random]
+            self.amount = int(dice.dice_roll(self.amount, seed))
+        self.actor.components[comp.Hunger] -= self.amount
+        new_hunger = self.actor.components[comp.Hunger] - self.amount
+        self.actor.components[comp.Hunger] = max(0, new_hunger)
         apos = self.actor.components[comp.Position]
         self.xy = apos.xy
         return self

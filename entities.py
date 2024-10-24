@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from typing import Any, Never
 
 import numpy as np
@@ -11,6 +12,7 @@ import comp
 import consts
 import dice
 import funcs
+import game_logic
 import items
 import maps
 
@@ -265,3 +267,35 @@ def spawn_creature(
         for k in kind.components[comp.TempEquipment]:
             items.equip(entity, items.add_item(entity, k, 1))
     return entity
+
+
+def hunger(actor: ecs.Entity) -> int:
+    return actor.components.get(comp.Hunger, 0)
+
+
+def is_hungry(actor: ecs.Entity) -> bool:
+    return hunger(actor) >= consts.MAX_HUNGER
+
+
+def update_hunger(map_entity: ecs.Entity):
+    actors = map_entity.registry.Q.all_of(
+        components=[comp.Hunger],
+        relations=[(comp.Map, map_entity)],
+    )
+    seed = map_entity.registry[None].components[random.Random]
+    for e in actors:
+        roll = dice.dice_roll("d20", seed)
+        was_hungry = is_hungry(e)
+        if roll < 2:
+            if was_hungry:
+                dmg = actions.Damage(e, "1d4")
+                game_logic.push_action(e.registry, dmg)
+            else:
+                e.components[comp.Hunger] += 1
+                if (
+                    (not was_hungry or roll > 1)
+                    and comp.Player in e.tags
+                    and is_hungry(e)
+                ):
+                    name = e.components.get(comp.Name, "Player")
+                    game_logic.log(e.registry, f"{name} feels quite hungry")

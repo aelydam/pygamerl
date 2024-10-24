@@ -1,0 +1,35 @@
+Mushroom:
+  Sprite: {sheet: Items/Food, tile: [0, 0]}
+  SpawnWeight: 2
+  MaxStack: 10
+  Effects:
+    Eat: 1+1d2
+  tags: Consumable
+Apple:
+  Sprite: {sheet: Items/Food, tile: [0, 2]}
+  SpawnWeight: 1
+  MaxStack: 10
+  Effects:
+    Eat: 2+1d4
+  tags: Consumable
+Banana:
+  Sprite: {sheet: Items/Food, tile: [4, 2]}
+  SpawnWeight: 1
+  MaxStack: 10
+  Effects:
+    Eat: 2+1d4
+  tags: Consumable
+Bread:
+  Sprite: {sheet: Items/Food, tile: [1, 4]}
+  SpawnWeight: 1
+  MaxStack: 10
+  Effects:
+    Eat: 3+1d6
+  tags: Consumable
+Rations:
+  Sprite: {sheet: Items/Food, tile: [2, 4]}
+  SpawnWeight: 1
+  MaxStack: 10
+  Effects:
+    Eat: 4+2d6
+  tags: Consumable

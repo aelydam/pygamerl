@@ -27,6 +27,10 @@ def push_action(reg: ecs.Registry, action: actions.Action):
     reg[None].components[comp.ActionQueue].appendleft(action)
 
 
+def log(reg: ecs.Registry, message: str):
+    reg[None].components[comp.MessageLog].append(message)
+
+
 class GameLogic:
     def __init__(self) -> None:
         self.continuous_action: actions.Action | None
@@ -165,6 +169,7 @@ class GameLogic:
         player.components[comp.FOVRadius] = consts.DEFAULT_FOV_RADIUS
         player.components[comp.Speed] = consts.BASE_SPEED
         player.components[comp.Initiative] = 1
+        player.components[comp.Hunger] = 0
         player.tags |= {comp.Player, comp.Obstacle, comp.Lit}
         player.relation_tag[comp.Map] = map_entity
         entities.update_fov(player)
@@ -172,6 +177,9 @@ class GameLogic:
         items.add_item(player, "Speed Ring")
         items.add_item(player, "Map")
         items.add_item(player, "Healing Potion", 6)
+        items.add_item(player, "Rations", 2)
+        items.add_item(player, "Bread", 2)
+        items.add_item(player, "Apple", 2)
         items.equip(player, items.add_item(player, "Dagger"))
         items.equip(player, items.add_item(player, "Leather Armor"))
         items.equip(player, items.add_item(player, "Torch"))
@@ -203,13 +211,15 @@ class GameLogic:
         self.action_queue.appendleft(action)
 
     def next_turn(self):
+        map_entity = self.map
         self.reg[None].components[comp.TurnCount] += 1
         initiative = self.initiative
         initiative.clear()
-        procgen.respawn(self.map)
+        procgen.respawn(map_entity)
+        entities.update_hunger(map_entity)
         query = self.reg.Q.all_of(
             components=[comp.Position, comp.Initiative],
-            relations=[(comp.Map, self.map)],
+            relations=[(comp.Map, map_entity)],
         )
         for e in query:
             e.components[comp.Initiative] += 1

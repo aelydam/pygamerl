@@ -28,6 +28,18 @@ class InGameState(game_interface.State):
             font,
             current_fun=lambda: self.logic.player.components.get(comp.HP, 0),
             max_fun=lambda: self.logic.player.components.get(comp.MaxHP, 0),
+            label="HP",
+        )
+        self.hungerbar = ui_elements.Bar(
+            self.ui_group,
+            font,
+            current_fun=lambda: entities.hunger(self.logic.player),
+            max_fun=lambda: consts.MAX_HUNGER,
+            y=self.hpbar.rect.bottom,
+            good_color=consts.HPBAR_BAD_COLOR,
+            bad_color=consts.HPBAR_GOOD_COLOR,
+            bad_ratio=0.8,
+            label="Hunger",
         )
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, font)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
