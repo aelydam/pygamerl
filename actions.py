@@ -649,7 +649,7 @@ class Boulder(Interaction):
     def can(self) -> bool:
         if self.target is None or not super().can():
             return False
-        if entities.dist(self.actor, self.target) > 1:
+        if entities.dist(self.actor, self.target) > 1.5:
             return False
         direction = self.get_direction()
         if self.bump:
