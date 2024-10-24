@@ -10,6 +10,7 @@ import comp
 import consts
 import db
 import entities
+import items
 import map_renderer
 import maps
 from game_interface import GameInterface
@@ -257,7 +258,7 @@ class EntityTooltip(pg.sprite.Sprite):
         self.parent = parent
         self.group = parent.group
         self.entity = parent.entity
-        text = self.entity.components[comp.Name]
+        text = items.display_name(self.entity)
         self.image: pg.Surface = font.render(
             text, False, consts.TOOLTIP_TEXT_COLOR, None
         )
