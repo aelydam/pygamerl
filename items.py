@@ -78,7 +78,8 @@ def drop(item: ecs.Entity):
 
 
 def drop_all(actor: ecs.Entity):
-    for e in inventory(actor):
+    items = set(inventory(actor))
+    for e in items:
         drop(e)
 
 
