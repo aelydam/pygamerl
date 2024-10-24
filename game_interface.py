@@ -31,6 +31,7 @@ class GameInterface:
         pg.init()
         db.load_tiles()
         self.screen = pg.display.set_mode(consts.SCREEN_SHAPE, pg.SCALED)
+        pg.display.set_caption(consts.GAME_TITLE)
         self.clock = pg.time.Clock()
         self.font = assets.font(consts.FONTNAME, consts.FONTSIZE)
         self.logic = game_logic.GameLogic()
