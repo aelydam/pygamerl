@@ -51,7 +51,9 @@ def is_explored(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) ->
     return map_entity.components[comp.Explored][pos]
 
 
-def is_walkable(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) -> bool:
+def is_walkable(
+    map_entity: ecs.Entity, pos: comp.Position | tuple[int, int], entities: bool = True
+) -> bool:
     if not is_in_bounds(map_entity, pos):
         return False
     depth = map_entity.components[comp.Depth]
@@ -63,6 +65,8 @@ def is_walkable(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) ->
     grid = map_entity.components[comp.Tiles]
     if db.obstacle[grid[pos.xy]]:
         return False
+    if not entities:
+        return True
     query = map_entity.registry.Q.all_of(
         components=[comp.Position],
         tags=[comp.Obstacle, pos],
