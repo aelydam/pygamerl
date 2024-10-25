@@ -173,10 +173,6 @@ class GameLogic:
         player.tags |= {comp.Player, comp.Obstacle, comp.Lit}
         player.relation_tag[comp.Map] = map_entity
         entities.update_fov(player)
-        items.add_item(player, "Protection Ring")
-        items.add_item(player, "Speed Ring")
-        items.add_item(player, "Map")
-        items.add_item(player, "Healing Potion", 6)
         items.add_item(player, "Rations", 2)
         items.add_item(player, "Bread", 2)
         items.add_item(player, "Apple", 2)
