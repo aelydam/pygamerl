@@ -665,16 +665,31 @@ class Boulder(Interaction):
             check_pos = self.target.components[comp.Position] + direction
         else:
             check_pos = self.actor.components[comp.Position] + direction
-        return maps.is_walkable(self.actor.relation_tag[comp.Map], check_pos)
+        return maps.is_walkable(
+            self.actor.relation_tag[comp.Map], check_pos, not self.bump
+        )
 
     def perform(self) -> Action | None:
         if self.target is None or not self.can():
             return None
         direction = self.get_direction()
-        self.target.components[comp.Position] += direction
+        new_pos = self.target.components[comp.Position] + direction
+        self.cost = 1
         if not self.bump:
             self.actor.components[comp.Position] += direction
-        self.cost = 1
+        else:
+            # Check if there is someone at the position
+            map_entity = self.target.relation_tag[comp.Map]
+            query = self.actor.registry.Q.all_of(
+                components=[comp.Position, comp.HP],
+                tags=[new_pos],
+                relations=[(comp.Map, map_entity)],
+            )
+            for e in query:
+                attack = AttackAction(self.target, e)
+                game_logic.push_action(self.actor.registry, attack)
+                return self
+        self.target.components[comp.Position] = new_pos
         return self
 
 
