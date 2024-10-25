@@ -89,7 +89,7 @@ def lightlevel(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) -> 
     return int(light[pos[0], pos[1]])
 
 
-def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 2) -> NDArray[np.int8]:
+def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 10) -> NDArray[np.int8]:
     grid = map_entity.components[comp.Tiles]
     cost = 1 - db.obstacle[grid]
     if entity_cost != 0:
@@ -125,7 +125,7 @@ def transparency_matrix(
 def astar_path(
     actor: ecs.Entity,
     target: tuple[int, int] | comp.Position | ecs.Entity,
-    entity_cost: int = 2,
+    entity_cost: int = 10,
     cardinal: int = 5,
     diagonal: int = 7,
 ) -> list[tuple[int, int]]:
