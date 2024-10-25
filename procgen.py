@@ -565,7 +565,7 @@ def add_boulders(
                 comp.Sprite: comp.Sprite("Items/Rock", (2, 1)),
                 comp.Interaction: actions.Boulder,
             },
-            tags={comp.Obstacle, comp.Opaque},
+            tags={comp.Obstacle},
         )
 
 
