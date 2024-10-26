@@ -1,6 +1,7 @@
 Giant Bat:
   Sprite: {sheet: "Characters/Avian0", tile: [0, 11]}
   HP: 2+2d4
+  AttacksVerb: bites
   Speed: 8
   SpawnWeight: 1
   NativeDepth: 1
@@ -9,6 +10,7 @@ Giant Bat:
 Giant Rat:
   Sprite: {sheet: "Characters/Rodent0", tile: [0, 1]}
   HP: 2+2d4
+  AttacksVerb: bites
   SpawnWeight: 1
   NativeDepth: 1
   Inventory: {Mushroom: 1d4-3, Poison Mushroom: 1d4-3, Apple: 1d6-5}
@@ -16,6 +18,7 @@ Giant Rat:
 Giant Spider:
   Sprite: {sheet: "Characters/Pest0", tile: [1, 2]}
   HP: 2+2d4
+  AttacksVerb: bites
   SpawnWeight: 1
   NativeDepth: 2
   Inventory: {Mushroom: 1d4-3, Poison Mushroom: 1d4-3}
@@ -23,12 +26,14 @@ Giant Spider:
 Jackal:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 0]}
   HP: 2+2d4
+  AttacksVerb: bites
   SpawnWeight: 1
   NativeDepth: 1
 
 Wolf:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 1]}
   HP: 2+2d4
+  AttacksVerb: bites
   Speed: 6
   SpawnWeight: 1
   NativeDepth: 2

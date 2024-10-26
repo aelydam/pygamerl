@@ -239,7 +239,8 @@ class AttackAction(ActorAction):
 
         aname = self.actor.components.get(comp.Name, "Something")
         tname = self.target.components.get(comp.Name, "Something")
-        text = f"{aname} attacks {tname}: "
+        verb = self.actor.components.get(comp.AttacksVerb, "attacks")
+        text = f"{aname} {verb} {tname}: "
         if self.hit:
             dmg_dice = entities.damage_dice(self.actor)
             dmg_min = dice.dice_min(dmg_dice)

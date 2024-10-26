@@ -53,6 +53,7 @@ Speed = ("Speed", int)
 Reach = ("Reach", float)
 TempInventory = ("TempInventory", dict[str, str])
 TempEquipment = ("TempEquipment", list[str])
+AttacksVerb = ("AttacksVerb", str)
 
 # Item Components
 MaxStack = ("MaxStack", int)

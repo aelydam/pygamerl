@@ -8,6 +8,7 @@ Skeleton:
 Zombie:
   Sprite: {sheet: "Characters/Undead0", tile: [5, 0]}
   HP: 2+2d4
+  AttacksVerb: slams
   Speed: 4
   SpawnWeight: 1
   NativeDepth: 4
