@@ -409,7 +409,7 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
                 comp.Sprite: comp.Sprite("Objects/Door0", (0, 0)),
                 comp.Interaction: actions.ToggleDoor,
             },
-            tags=[comp.Opaque, comp.Obstacle],
+            tags=[comp.Opaque, comp.Obstacle, comp.Door],
         )
 
 
@@ -708,9 +708,7 @@ def generate(map_entity: ecs.Entity):
     # Save generated map
     map_entity.components[comp.Tiles] = grid
     # Add doors
-    add_doors(
-        map_entity, room_floor
-    )  # & (funcs.moore(room_floor, diagonals=False) > 2))
+    add_doors(map_entity, room_floor)
     # Add torches
     add_torches(map_entity, condition=funcs.moore(room_floor) > 0)
     # Add traps

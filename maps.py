@@ -93,7 +93,9 @@ def lightlevel(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) -> 
     return int(light[pos[0], pos[1]])
 
 
-def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 10) -> NDArray[np.int8]:
+def cost_matrix(
+    map_entity: ecs.Entity, entity_cost: int = 10, door_cost: int = 1
+) -> NDArray[np.int8]:
     grid = map_entity.components[comp.Tiles]
     cost = 1 - db.obstacle[grid]
     if entity_cost != 0:
@@ -104,7 +106,10 @@ def cost_matrix(map_entity: ecs.Entity, entity_cost: int = 10) -> NDArray[np.int
         )
         for e in query:
             xy = e.components[comp.Position].xy
-            cost[xy] += entity_cost
+            if comp.Door in e.tags:
+                cost[xy] += door_cost
+            else:
+                cost[xy] += entity_cost
     return cost.astype(np.int8)
 
 
