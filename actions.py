@@ -189,6 +189,8 @@ class ExploreAction(ActorAction):
         )
         for e in query:
             xy = e.components[comp.Position].xy
+            if not entities.is_in_fov(self.actor, xy):
+                continue
             dijkstra[xy] = 0
             cost[xy] = 0
             if xy == pos:
