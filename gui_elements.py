@@ -159,6 +159,8 @@ class Menu(Box):
         self.icons: list[pg.Surface | None] | None = None
         self.scroll_index = 0
         self.selected_index = 0
+        self.hovering_index = -1
+        self.select_on_hover = True
         self.disabled = False
         self.pressed_index = -1
         self.set_items(items, icons)
@@ -237,6 +239,9 @@ class Menu(Box):
         index = self.scroll_index + my // self.item_h
         pressed = hovering and mouse_pressed[0]
         clicked = not pressed and (index == self.pressed_index)
+        if self.select_on_hover and index != self.hovering_index:
+            clicked = True
+        self.hovering_index = index
         if not hovering or index < 0 or index >= len(self.items):
             self.pressed_index = -1
             return
