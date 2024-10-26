@@ -466,14 +466,31 @@ def add_downstairs(
 ):
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
+    seed = map_entity.components[np.random.RandomState]
     walkable = db.walkable[grid]
+    # Create dijkstra map to upstairs
+    cost = maps.cost_matrix(map_entity)
+    dijkstra = tcod.path.maxarray(grid.shape, dtype=np.int32)
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position],
+        tags=[comp.Upstairs],
+        relations=[(comp.Map, map_entity)],
+    )
+    for e in query:
+        pos = e.components[comp.Position]
+        dijkstra[pos.xy] = 0
+    tcod.path.dijkstra2d(dijkstra, cost, 2, 3, out=dijkstra)
+
     cond = walkable & (funcs.moore(walkable) >= 8)
     if condition is not None:
         cond &= condition
-    all_x, all_y = np.where(cond)
-    seed = map_entity.components[np.random.RandomState]
-    all_i = {seed.randint(0, len(all_x)) for _ in range(max_count)}
-    for i in all_i:
+
+    for _ in range(max_count + 1):
+        cutoff = (np.mean(dijkstra[cond]) + np.max(dijkstra[cond])) / 2
+        if np.sum(cond & (dijkstra >= cutoff)) < 1:
+            break
+        all_x, all_y = np.where(cond & (dijkstra >= cutoff))
+        i = seed.randint(0, len(all_x))
         xy = all_x[i], all_y[i]
         map_entity.registry.new_entity(
             components={
@@ -484,6 +501,8 @@ def add_downstairs(
             },
             tags=[comp.Downstairs],
         )
+        dijkstra[xy] = 0
+        tcod.path.dijkstra2d(dijkstra, cost, 2, 3, out=dijkstra)
 
 
 def add_traps(
