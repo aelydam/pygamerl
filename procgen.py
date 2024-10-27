@@ -697,6 +697,8 @@ def generate(map_entity: ecs.Entity):
     map_entity.components[comp.Seed] = seed_id
     map_entity.components[np.random.RandomState] = seed
     depth = map_entity.components[comp.Depth]
+    if depth > 0:
+        map_entity.components[comp.XPGain] = 5 * ((depth + 1) // 2)
     if depth < 0:
         grid = generate_forest(map_entity)
     else:

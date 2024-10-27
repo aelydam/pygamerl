@@ -623,7 +623,7 @@ class Descend(Interaction):
             return None
         pos = self.target.components[comp.Position]
         new_depth = pos.depth + 1
-        maps.get_map(self.actor.registry, new_depth)
+        map_entity = maps.get_map(self.actor.registry, new_depth)
         new_pos = comp.Position(pos.xy, new_depth)
         self.actor.components[comp.Position] = new_pos
         self.cost = 1
@@ -632,6 +632,13 @@ class Descend(Interaction):
         aname = self.actor.components.get(comp.Name)
         if aname is not None:
             self.message = f"{aname} descends the stairs"
+        if comp.XPGain in map_entity.components:
+            xp = map_entity.components[comp.XPGain]
+            if xp > 0:
+                game_logic.push_action(self.actor.registry, GainXP(self.actor, xp))
+                if comp.Player in self.actor.tags:
+                    self.message += f" ({xp}XP)"
+            map_entity.components.pop(comp.XPGain)
         return self
 
 
