@@ -260,7 +260,7 @@ class AttackAction(ActorAction):
         apos = self.actor.components[comp.Position].xy
         tpos = self.target.components[comp.Position].xy
         self.actor.components[comp.Direction] = (tpos[0] - apos[0], tpos[1] - apos[1])
-        damage = Damage(self.target, self.damage, self.crit)
+        damage = Damage(self.target, self.damage, self.crit, blame=self.actor)
         game_logic.push_action(self.target.registry, damage)
         self.message = text
         self.cost = 1
@@ -596,11 +596,21 @@ class DisarmTrap(Interaction):
     def perform(self) -> Action | None:
         if not self.can() or self.target is None:
             return None
+        xp = self.target.components.get(comp.XPGain)
         self.target.clear()
         self.cost = 1
         aname = self.actor.components.get(comp.Name)
         if aname is not None:
             self.message = f"{aname} disarms a trap"
+
+        if (
+            self.actor is not None
+            and xp is not None
+            and comp.XP in self.actor.components
+        ):
+            game_logic.push_action(self.actor.registry, GainXP(self.actor, xp))
+            if comp.Player in self.actor.tags:
+                self.message += f" ({xp}XP)"
         return self
 
 
@@ -743,6 +753,7 @@ class Eat(ActorAction):
 class Damage(ActorAction):
     amount: int | str
     critical: bool = False
+    blame: ecs.Entity | None = None
 
     def can(self) -> bool:
         return comp.HP in self.actor.components
@@ -759,7 +770,7 @@ class Damage(ActorAction):
         apos = self.actor.components[comp.Position]
         self.xy = apos.xy
         if new_hp < 1:
-            game_logic.push_action(self.actor.registry, Die(self.actor))
+            game_logic.push_action(self.actor.registry, Die(self.actor, self.blame))
         if self.amount > 0:
             map_entity = self.actor.relation_tag[comp.Map]
             query = self.actor.registry.Q.all_of(
@@ -779,10 +790,13 @@ class Damage(ActorAction):
 
 @dataclass
 class Die(ActorAction):
+    blame: ecs.Entity | None = None
+
     def perform(self) -> Action | None:
         aname = self.actor.components.get(comp.Name)
         apos = self.actor.components[comp.Position]
         self.xy = apos.xy
+        xp = self.actor.components.get(comp.XPGain)
         if comp.Player not in self.actor.tags:
             items.drop_all(self.actor)
             self.actor.clear()
@@ -794,4 +808,26 @@ class Die(ActorAction):
         )
         if aname is not None:
             self.message = f"{aname} dies!"
+        if (
+            self.blame is not None
+            and xp is not None
+            and comp.XP in self.blame.components
+        ):
+            game_logic.push_action(self.actor.registry, GainXP(self.blame, xp))
+            if comp.Player in self.blame.tags:
+                self.message += f" ({xp}XP)"
+        return self
+
+
+@dataclass
+class GainXP(ActorAction):
+    amount: int
+
+    def can(self) -> bool:
+        return self.amount > 0 and comp.XP in self.actor.components
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        self.actor.components[comp.XP] += self.amount
         return self

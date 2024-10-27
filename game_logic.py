@@ -170,6 +170,7 @@ class GameLogic:
         player.components[comp.Speed] = consts.BASE_SPEED
         player.components[comp.Initiative] = 1
         player.components[comp.Hunger] = 0
+        player.components[comp.XP] = 0
         player.tags |= {comp.Player, comp.Obstacle, comp.Lit}
         player.relation_tag[comp.Map] = map_entity
         entities.update_fov(player)

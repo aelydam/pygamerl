@@ -540,6 +540,7 @@ def add_traps(
                 comp.Reach: 0,
                 comp.DamageDice: "1d4",
                 comp.AttackBonus: 10,
+                comp.XPGain: 5,
                 comp.Interaction: actions.DisarmTrap,
             },
             tags={comp.Trap, comp.HideSprite},

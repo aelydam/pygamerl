@@ -37,6 +37,8 @@ Explored = ("Explored", NDArray[np.bool_])
 # Actor components
 Name = ("Name", str)
 Direction = ("Direction", tuple[int, int])
+XP = ("XP", int)
+XPGain = ("XPGain", int)
 ArmorClass = ("ArmorClass", int)
 AttackBonus = ("AttackBonus", int)
 DamageDice = ("DamageDice", str)

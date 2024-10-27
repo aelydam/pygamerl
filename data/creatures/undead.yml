@@ -3,6 +3,7 @@ Skeleton:
   HP: 2+2d4
   Equipment: [Shortsword, Shield]
   SpawnWeight: 1
+  XPGain: 5
   NativeDepth: 3
 
 Zombie:
@@ -12,6 +13,7 @@ Zombie:
   Speed: 4
   SpawnWeight: 1
   NativeDepth: 4
+  XPGain: 10
   Inventory: {Mushroom: 1d4-3, Poison Mushroom: 1d4-3}
 
 Ghost:
@@ -19,3 +21,4 @@ Ghost:
   HP: 2+2d4
   SpawnWeight: 1
   NativeDepth: 5
+  XPGain: 20

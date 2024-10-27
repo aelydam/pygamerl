@@ -4,6 +4,7 @@ Goblin:
   HP: 2+2d4
   Inventory: {Copper Pieces: 2+2d6, Silver Pieces: 1d8-4, Apple: 1d4-2}
   Equipment: [Dagger, Candle]
+  XPGain: 10
   SpawnWeight: 1
   NativeDepth: 2
 
@@ -12,5 +13,6 @@ Orc:
   HP: 2+2d4
   Inventory: {Copper Pieces: 4+3d6, Silver Pieces: 1d8-3, Apple: 1d4-2}
   Equipment: [Shortsword, Leather Armor, Torch]
+  XPGain: 20
   SpawnWeight: 1
   NativeDepth: 3
