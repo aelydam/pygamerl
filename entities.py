@@ -299,3 +299,30 @@ def update_hunger(map_entity: ecs.Entity):
                 ):
                     name = e.components.get(comp.Name, "Player")
                     game_logic.log(e.registry, f"{name} feels quite hungry")
+
+
+def xp_to_level(level: int) -> int:
+    # Based on code by ulf.astrom / HappyPonyLand
+    # https://roguebasin.com/index.php/Experience_table_generator
+    total = 0.0
+    tnl = float(consts.XP_LEVEL2)
+    for l in range(level - 1):
+        total += tnl
+        if total > 10000:
+            total = round(total / 1000) * 1000
+        elif total > 1000:
+            total = round(total / 100) * 100
+        else:
+            total = round(total / 10) * 10
+        tnl *= 1 + consts.XP_FACTOR**l
+    return int(total)
+
+
+def xp_to_next_level(actor: ecs.Entity) -> int:
+    level = actor.components.get(comp.Level, 1)
+    xp = actor.components.get(comp.XP, 0)
+    return xp_to_level(level + 1) - xp
+
+
+def can_level_up(actor: ecs.Entity) -> bool:
+    return xp_to_next_level(actor) <= 0

@@ -164,6 +164,7 @@ class GameLogic:
         player.components[comp.MaxHP] = 48
         player.components[comp.HP] = 48
         player.components[comp.AttackBonus] = 4
+        player.components[comp.DamageBonus] = 0
         player.components[comp.ArmorClass] = 10
         player.components[comp.DamageDice] = 1
         player.components[comp.FOVRadius] = consts.DEFAULT_FOV_RADIUS
@@ -171,6 +172,7 @@ class GameLogic:
         player.components[comp.Initiative] = 1
         player.components[comp.Hunger] = 0
         player.components[comp.XP] = 0
+        player.components[comp.Level] = 1
         player.tags |= {comp.Player, comp.Obstacle, comp.Lit}
         player.relation_tag[comp.Map] = map_entity
         entities.update_fov(player)

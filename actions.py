@@ -830,4 +830,34 @@ class GainXP(ActorAction):
         if not self.can():
             return None
         self.actor.components[comp.XP] += self.amount
+        if entities.can_level_up(self.actor):
+            game_logic.push_action(self.actor.registry, LevelUp(self.actor))
+
+        return self
+
+
+@dataclass
+class LevelUp(ActorAction):
+    def can(self) -> bool:
+        return entities.can_level_up(self.actor)
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        level = self.actor.components.get(comp.Level, 1)
+        new_level = level + 1
+        new_hp = 8
+        self.actor.components[comp.MaxHP] += new_hp
+        self.actor.components[comp.HP] += new_hp
+        if new_level % 2 == 0:
+            self.actor.components[comp.AttackBonus] += 1
+        if new_level % 4 == 0:
+            self.actor.components[comp.AttackBonus] += 1
+            self.actor.components[comp.DamageBonus] += 1
+        self.actor.components[comp.Level] = new_level
+        aname = self.actor.components.get(comp.Name)
+        if aname is not None:
+            self.message = f"{aname} advances to level {new_level}!"
+        if entities.can_level_up(self.actor):
+            game_logic.push_action(self.actor.registry, LevelUp(self.actor))
         return self
