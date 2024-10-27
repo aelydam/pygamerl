@@ -518,6 +518,8 @@ class LoadGameState(game_interface.State):
         self.menu = gui_elements.Menu(self.ui_group, text, 12, 224, icons)
         self.filename = ""
         self.background = pg.Surface(consts.SCREEN_SHAPE)
+        self.load_btn = gui_elements.Button(self.ui_group, "Load", 224 // 3)
+        self.delete_btn = gui_elements.Button(self.ui_group, "Delete", 224 // 3)
 
     def item_lists(self) -> tuple[list[str], list[pg.Surface | None]]:
         text_list: list[str] = []
@@ -548,6 +550,8 @@ class LoadGameState(game_interface.State):
             return
         shape = self.interface.screen.size
         self.menu.rect.midleft = (consts.TILE_SIZE, shape[1] // 2)
+        self.load_btn.rect.topleft = self.menu.rect.bottomleft
+        self.delete_btn.rect.topleft = self.load_btn.rect.topright
         filename = self.files[self.menu.selected_index]
         if filename != self.filename:
             self.metadata = self.interface.logic.file_metadata(filename)
@@ -574,10 +578,17 @@ class LoadGameState(game_interface.State):
                 self.menu.on_keyup(event.key)
 
         elif event.type == pg.MOUSEBUTTONUP:
-            if not self.menu.rect.collidepoint(event.pos):
+            if self.load_btn.rect.collidepoint(event.pos):
+                if event.button == 1:
+                    self.select()
+            if self.delete_btn.rect.collidepoint(event.pos):
+                if event.button == 1:
+                    self.delete_file()
+            elif self.menu.rect.collidepoint(event.pos):
+                if self.menu.pressed_index == self.menu.selected_index:
+                    self.select()
+            else:
                 self.interface.pop()
-            elif self.menu.pressed_index == self.menu.selected_index:
-                self.select()
 
     def delete_file(self):
         filename = self.files[self.menu.selected_index]
