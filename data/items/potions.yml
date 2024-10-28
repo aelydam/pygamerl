@@ -23,3 +23,12 @@ Dummy Potion:
   MaxStack: 4
   Effects: {}
   tags: Consumable
+
+Experience Potion:
+  Unidentified: Potion
+  UsesVerb: drinks
+  SpawnWeight: 1
+  MaxStack: 4
+  Effects:
+    GainXP: 10
+  tags: Consumable
