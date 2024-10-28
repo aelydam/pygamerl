@@ -804,9 +804,6 @@ class Die(ActorAction):
         apos = self.actor.components[comp.Position]
         self.xy = apos.xy
         xp = self.actor.components.get(comp.XPGain)
-        if comp.Player not in self.actor.tags:
-            items.drop_all(self.actor)
-            self.actor.clear()
         self.actor.registry.new_entity(
             components={
                 comp.Position: apos,
@@ -815,14 +812,24 @@ class Die(ActorAction):
         )
         if aname is not None:
             self.message = f"{aname} dies!"
-        if (
-            self.blame is not None
-            and xp is not None
-            and comp.XP in self.blame.components
-        ):
-            game_logic.push_action(self.actor.registry, GainXP(self.blame, xp))
-            if comp.Player in self.blame.tags:
-                self.message += f" ({xp}XP)"
+        if self.blame is not None:
+            if xp is not None and comp.XP in self.blame.components:
+                game_logic.push_action(self.actor.registry, GainXP(self.blame, xp))
+                if self.message != "" and comp.Player in self.blame.tags:
+                    self.message += f" ({xp}XP)"
+            if comp.Player in self.blame.tags and ecs.IsA in self.actor.relation_tag:
+                # Increase creature kind counter
+                kind = self.actor.relation_tag[ecs.IsA]
+                kills = kind.components.get(comp.PlayerKills, 0) + 1
+                kind.components[comp.PlayerKills] = kills
+                # Increase global counter
+                kills = (
+                    self.actor.registry[None].components.get(comp.PlayerKills, 0) + 1
+                )
+                self.actor.registry[None].components[comp.PlayerKills] = kills
+        if comp.Player not in self.actor.tags:
+            items.drop_all(self.actor)
+            self.actor.clear()
         return self
 
 

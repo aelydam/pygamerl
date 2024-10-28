@@ -59,6 +59,7 @@ Reach = ("Reach", float)
 TempInventory = ("TempInventory", dict[str, str])
 TempEquipment = ("TempEquipment", list[str])
 AttacksVerb = ("AttacksVerb", str)
+PlayerKills = ("PlayerKills", int)
 
 # Item Components
 MaxStack = ("MaxStack", int)
