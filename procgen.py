@@ -485,7 +485,7 @@ def add_downstairs(
     if condition is not None:
         cond &= condition
 
-    for _ in range(max_count + 1):
+    for _ in range(max_count):
         cutoff = (np.mean(dijkstra[cond]) + np.max(dijkstra[cond])) / 2
         if np.sum(cond & (dijkstra >= cutoff)) < 1:
             break
@@ -699,7 +699,7 @@ def generate(map_entity: ecs.Entity):
     depth = map_entity.components[comp.Depth]
     if depth > 0:
         map_entity.components[comp.XPGain] = 5 * ((depth + 1) // 2)
-    if depth < 0:
+    if depth <= 0:
         grid = generate_forest(map_entity)
     else:
         grid = generate_dungeon(map_entity)
