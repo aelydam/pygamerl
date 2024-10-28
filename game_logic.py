@@ -27,8 +27,12 @@ def push_action(reg: ecs.Registry, action: actions.Action):
     reg[None].components[comp.ActionQueue].appendleft(action)
 
 
-def log(reg: ecs.Registry, message: str):
-    reg[None].components[comp.MessageLog].append(message)
+def log(reg: ecs.Registry, message: str, append: bool = False):
+    log = reg[None].components[comp.MessageLog]
+    if append and len(log) > 0:
+        log[-1] += " " + message
+    else:
+        log.append(message)
 
 
 class GameLogic:
@@ -187,8 +191,11 @@ class GameLogic:
         items.equip(player, items.add_item(player, "Leather Armor"))
         items.equip(player, items.add_item(player, "Torch"))
 
-    def log(self, text: str):
-        self.message_log.append(text)
+    def log(self, text: str, append: bool = False):
+        if append and len(self.message_log) > 0:
+            self.message_log[-1] += " " + text
+        else:
+            self.message_log.append(text)
 
     @property
     def turn_count(self) -> int:
@@ -291,7 +298,7 @@ class GameLogic:
             if hasattr(result, "target") and result.target == self.player:
                 self.continuous_action = None
         if in_fov and result.message != "":
-            self.log(result.message)
+            self.log(result.message, result.append_message)
         return not in_fov
 
     def tick(self):

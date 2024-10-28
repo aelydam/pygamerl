@@ -22,6 +22,7 @@ import maps
 class Action:
     message: str = field(init=False, default="")
     cost: float = field(init=False, default=0)
+    append_message: bool = field(init=False, default=False)
 
     def can(self) -> bool:
         return True
@@ -249,9 +250,6 @@ class AttackAction(ActorAction):
             self.damage = int(dice.dice_roll(dmg_dice, seed))
             if self.crit:
                 self.damage += int(dice.dice_roll(dmg_dice, seed) - dmg_min + 1)
-            text += f"{self.damage} points of damage!"
-            if self.crit:
-                text += " (critical)"
         else:
             self.damage = 0
             text += "Miss!"
@@ -261,6 +259,7 @@ class AttackAction(ActorAction):
         tpos = self.target.components[comp.Position].xy
         self.actor.components[comp.Direction] = (tpos[0] - apos[0], tpos[1] - apos[1])
         damage = Damage(self.target, self.damage, self.crit, blame=self.actor)
+        damage.append_message = True
         game_logic.push_action(self.target.registry, damage)
         self.message = text
         self.cost = 1
@@ -608,9 +607,9 @@ class DisarmTrap(Interaction):
             and xp is not None
             and comp.XP in self.actor.components
         ):
-            game_logic.push_action(self.actor.registry, GainXP(self.actor, xp))
-            if comp.Player in self.actor.tags:
-                self.message += f" ({xp}XP)"
+            gainxp = GainXP(self.actor, xp)
+            gainxp.append_message = True
+            game_logic.push_action(self.actor.registry, gainxp)
         return self
 
 
@@ -635,9 +634,9 @@ class Descend(Interaction):
         if comp.XPGain in map_entity.components:
             xp = map_entity.components[comp.XPGain]
             if xp > 0:
-                game_logic.push_action(self.actor.registry, GainXP(self.actor, xp))
-                if comp.Player in self.actor.tags:
-                    self.message += f" ({xp}XP)"
+                gainxp = GainXP(self.actor, xp)
+                gainxp.append_message = True
+                game_logic.push_action(self.actor.registry, gainxp)
             map_entity.components.pop(comp.XPGain)
         return self
 
@@ -792,6 +791,13 @@ class Damage(ActorAction):
                         comp.Sprite: comp.Sprite("Objects/Ground0", (1, 5)),
                     }
                 )
+        if self.amount > 0:
+            aname = self.actor.components.get(comp.Name)
+            if not self.append_message and aname is not None:
+                self.message = f"{aname} takes "
+            self.message += f"{self.amount} points of damage!"
+            if self.critical:
+                self.message += " (critical)"
         return self
 
 
@@ -814,9 +820,9 @@ class Die(ActorAction):
             self.message = f"{aname} dies!"
         if self.blame is not None:
             if xp is not None and comp.XP in self.blame.components:
-                game_logic.push_action(self.actor.registry, GainXP(self.blame, xp))
-                if self.message != "" and comp.Player in self.blame.tags:
-                    self.message += f" ({xp}XP)"
+                gain = GainXP(self.blame, xp)
+                gain.append_message = True
+                game_logic.push_action(self.actor.registry, gain)
             if comp.Player in self.blame.tags and ecs.IsA in self.actor.relation_tag:
                 # Increase creature kind counter
                 kind = self.actor.relation_tag[ecs.IsA]
@@ -844,6 +850,11 @@ class GainXP(ActorAction):
         if not self.can():
             return None
         self.actor.components[comp.XP] += self.amount
+        if self.append_message:
+            self.message = f"({self.amount}XP)"
+        else:
+            aname = self.actor.components[comp.Name]
+            self.message = f"{aname} gains {self.amount} points of experience"
         if entities.can_level_up(self.actor):
             game_logic.push_action(self.actor.registry, LevelUp(self.actor))
 
