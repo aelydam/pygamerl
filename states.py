@@ -41,6 +41,17 @@ class InGameState(game_interface.State):
             bad_ratio=0.8,
             label="Hunger",
         )
+        self.xpbar = ui_elements.Bar(
+            self.ui_group,
+            font,
+            current_fun=lambda: entities.xp_in_current_level(self.logic.player),
+            max_fun=lambda: entities.xp_to_next_level(self.logic.player),
+            text_fun=lambda: str(self.logic.player.components.get(comp.Level, 1)),
+            y=self.hungerbar.rect.bottom,
+            good_color=consts.HPBAR_GOOD_COLOR,
+            bad_color=consts.HPBAR_GOOD_COLOR,
+            label="Level",
+        )
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, font)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
         self.map_renderer = map_renderer.MapRenderer(self.interface)

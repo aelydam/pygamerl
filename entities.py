@@ -320,9 +320,15 @@ def xp_to_level(level: int) -> int:
 
 def xp_to_next_level(actor: ecs.Entity) -> int:
     level = actor.components.get(comp.Level, 1)
-    xp = actor.components.get(comp.XP, 0)
-    return xp_to_level(level + 1) - xp
+    return xp_to_level(level + 1) - xp_to_level(level)
 
 
 def can_level_up(actor: ecs.Entity) -> bool:
-    return xp_to_next_level(actor) <= 0
+    xp = actor.components.get(comp.XP, 0)
+    return xp_in_current_level(actor) >= xp_to_next_level(actor)
+
+
+def xp_in_current_level(actor: ecs.Entity) -> int:
+    level = actor.components.get(comp.Level, 1)
+    xp = actor.components.get(comp.XP, 0)
+    return xp - xp_to_level(level)

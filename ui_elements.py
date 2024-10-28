@@ -66,6 +66,7 @@ class Bar(pg.sprite.Sprite):
         font: pg.Font,
         current_fun: Callable[[], int],
         max_fun: Callable[[], int],
+        text_fun: Callable[[], str] | None = None,
         width: int = 200,
         height: int = 12,
         x: int = 16,
@@ -84,6 +85,7 @@ class Bar(pg.sprite.Sprite):
         self.image = pg.Surface(self.rect.size).convert_alpha()
         self.current_fun = current_fun
         self.max_fun = max_fun
+        self.text_fun = text_fun
         self.bg_color = bg_color
         self.good_color = good_color
         self.bad_color = bad_color
@@ -95,9 +97,14 @@ class Bar(pg.sprite.Sprite):
         current = self.current_fun()
         maximum = self.max_fun()
         fill = int(self.rect.width * current / maximum)
-        if fill == self.fill:
+        if self.text_fun is None:
+            text = f"{current}/{maximum}"
+        else:
+            text = self.text_fun()
+        if fill == self.fill and text == self.text:
             return
         self.fill = fill
+        self.text = text
         if self.fill >= self.rect.width * self.bad_ratio:
             color = self.good_color
         else:
@@ -106,7 +113,7 @@ class Bar(pg.sprite.Sprite):
         pg.draw.rect(self.image, color, pg.Rect(0, 0, self.fill, self.rect.height))
         surf = self.font.render(" " + self.label, False, self.text_color)
         self.image.blit(surf, surf.get_rect(midleft=(0, self.rect.height // 2)))
-        surf = self.font.render(f"{current}/{maximum} ", False, self.text_color)
+        surf = self.font.render(text + " ", False, self.text_color)
         self.image.blit(
             surf, surf.get_rect(midright=(self.rect.width, self.rect.height // 2))
         )
