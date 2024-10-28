@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Never
 
 import numpy as np
 import tcod
@@ -324,7 +323,6 @@ def xp_to_next_level(actor: ecs.Entity) -> int:
 
 
 def can_level_up(actor: ecs.Entity) -> bool:
-    xp = actor.components.get(comp.XP, 0)
     return xp_in_current_level(actor) >= xp_to_next_level(actor)
 
 

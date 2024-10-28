@@ -9,13 +9,9 @@ import tcod.ecs as ecs
 from numpy.typing import NDArray
 
 import comp
-import consts
 import db
 import entities
 import procgen
-
-if TYPE_CHECKING:
-    import game_logic
 
 
 def get_map(reg: ecs.Registry, depth: int, generate: bool = True) -> ecs.Entity:

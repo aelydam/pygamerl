@@ -9,7 +9,6 @@ import actions
 import comp
 import consts
 import db
-import entities
 import items
 import map_renderer
 import maps
