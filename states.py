@@ -288,6 +288,12 @@ class TitleState(game_interface.State):
         )
         font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
         self.logo = font.render(consts.GAME_TITLE, False, "#FFFFFF").convert_alpha()
+        if len(self.interface.logic.list_savefiles()) > 0:
+            self.menu.select(1)
+        else:
+            self.menu.disabled_indexes = {1, 2}
+            self.menu.select(0)
+            self.menu.redraw()
 
     def update(self):
         super().update()
@@ -549,7 +555,7 @@ class LoadGameState(game_interface.State):
                 [
                     f"{last_played:%Y-%m-%d %H:%M}",
                     f"Lv:{level} Depth:{depth}",
-                    f"Turn:{turns} Money:{money}"
+                    f"Turn:{turns} Money:{money}",
                 ]
             )
             text_list.append(text)

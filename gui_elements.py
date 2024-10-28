@@ -11,6 +11,7 @@ BOX_BGCOLOR = "#4D494D"
 BOX_FGCOLOR = "#AAAAAA"
 FOCUS_BGCOLOR = "#6d696d"
 FOCUS_FGCOLOR = "#FFFFFF"
+DISABLED_COLOR = "#808080"
 SCROLLBAR_COLOR = "#DFEFD7"
 SCROLLBAR_SIZE = 2
 SCROLLBAR_PADDING = 1
@@ -48,6 +49,7 @@ class Box(pg.sprite.Sprite):
         self.scrollbar_color = SCROLLBAR_COLOR
         self.scrollbar_size = SCROLLBAR_SIZE
         self.scrollbar_padding = SCROLLBAR_PADDING
+        self.disabled_color = DISABLED_COLOR
         self.rect: pg.Rect = surface.get_rect(topleft=(0, 0))
         self.set_surface(surface)
 
@@ -162,6 +164,7 @@ class Menu(Box):
         self.selected_index = 0
         self.hovering_index = -1
         self.select_on_hover = True
+        self.disabled_indexes: set[int] = set()
         self.disabled = False
         self.pressed_index = -1
         self.lines_per_item = lines_per_item
@@ -202,6 +205,8 @@ class Menu(Box):
             else:
                 bgcolor = self.default_bgcolor
                 fgcolor = self.default_fgcolor
+            if self.disabled or index in self.disabled_indexes:
+                fgcolor = self.disabled_color
             rect = pg.Rect(0, i * item_h, w, item_h)
             surface.fill(bgcolor, rect)
             text_surf = font.render(text, False, fgcolor)
