@@ -145,6 +145,7 @@ class InGameState(game_interface.State):
             self.logic.last_action = None
 
     def render(self, screen: pg.Surface):
+        self.log.rect.bottomleft = (8, screen.height - 8)
         self.map_renderer.update()
         self.ui_group.update()
         screen.fill(consts.BACKGROUND_COLOR)

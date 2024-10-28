@@ -115,7 +115,9 @@ class Bar(pg.sprite.Sprite):
 class MessageLog(pg.sprite.Sprite):
     def __init__(self, group: pg.sprite.Group, game_logic: GameLogic, font: pg.Font):
         super().__init__(group)
-        self.rect = pg.Rect(16, 16 + 24, consts.SCREEN_SHAPE[0] * 3 // 4, 24 * 10)
+        self.rect: pg.Rect = pg.Rect(
+            16, 16 + 24, consts.SCREEN_SHAPE[0] * 3 // 4, 24 * 10
+        )
         self.image = pg.Surface(self.rect.size).convert_alpha()
         self.image.fill("#00000000")
         self.game_logic = game_logic
@@ -135,6 +137,7 @@ class MessageLog(pg.sprite.Sprite):
         self.image = self.font.render(
             text, False, consts.LOG_TEXT_COLOR, None
         ).convert_alpha()
+        self.rect.size = self.image.size
 
 
 class Popup(pg.sprite.Sprite):
