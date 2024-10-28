@@ -868,3 +868,25 @@ class LevelUp(ActorAction):
         if entities.can_level_up(self.actor):
             game_logic.push_action(self.actor.registry, LevelUp(self.actor))
         return self
+
+
+@dataclass
+class See(ActorAction):
+    target: ecs.Entity
+
+    def can(self) -> bool:
+        return entities.is_in_fov(self.actor, self.target)
+
+    def perform(self) -> Action | None:
+        aname = self.actor.components.get(comp.Name)
+        tname = self.target.components.get(comp.Name)
+        self.target.tags |= {comp.Seen}
+        if aname is not None and tname is not None:
+            self.message = f"{aname} sees {tname}"
+            wielding = items.equipment_at_slot(self.target, comp.EquipSlot.Main_Hand)
+            if wielding is not None:
+                self.message += ", wielding " + items.display_name(wielding)
+            wearing = items.equipment_at_slot(self.target, comp.EquipSlot.Chest)
+            if wearing is not None:
+                self.message += ", wearing " + items.display_name(wearing)
+        return self

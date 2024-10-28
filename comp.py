@@ -27,6 +27,7 @@ Autopick = "Autopick"
 Currency = "Currency"
 Consumable = "Consumable"
 Identified = "Identified"
+Seen = "Seen"
 
 # Map components
 Seed = ("Seed", int)

@@ -113,6 +113,11 @@ def update_fov(actor: ecs.Entity):
             map_entity.components[comp.Explored] = fov.copy()
         else:
             map_entity.components[comp.Explored] |= fov
+        creatures = enemies_in_fov(actor)
+        for e in creatures:
+            if comp.Seen not in e.tags:
+                spot = actions.See(actor, e)
+                game_logic.push_action(actor.registry, spot)
 
 
 def is_in_fov(
