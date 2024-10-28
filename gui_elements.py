@@ -149,6 +149,7 @@ class Menu(Box):
         max_rows: int = 0,
         width: int = 96,
         icons: list[pg.Surface | None] | None = None,
+        lines_per_item: int = 1,
     ):
         super().__init__(group, None)
         self.width = width
@@ -163,6 +164,7 @@ class Menu(Box):
         self.select_on_hover = True
         self.disabled = False
         self.pressed_index = -1
+        self.lines_per_item = lines_per_item
         self.set_items(items, icons)
         self.redraw()
 
@@ -183,7 +185,7 @@ class Menu(Box):
         if rows < 1:
             rows = len(self.items)
         font = assets.font()
-        item_h = font.size("Hg")[1] + 2 * self.padding
+        item_h = font.size("Hg")[1] * self.lines_per_item + 2 * self.padding
         self.item_h = item_h
         w = self.width - 2 * self.border
         surface = pg.Surface((w, item_h * rows)).convert_alpha()
@@ -206,7 +208,13 @@ class Menu(Box):
             x, y = rect.x + self.padding, rect.y + self.padding
             if has_icons and index < len(self.icons) and self.icons[index] is not None:
                 icon = self.icons[index]
-                surface.blit(icon, (x - self.padding, y - self.padding))
+                surface.blit(
+                    icon,
+                    (
+                        x - self.padding // 2,
+                        y - self.padding + (item_h - icon.height) // 2,
+                    ),
+                )
                 x += icon.width
             surface.blit(text_surf, (x, y))
         # Scrollbar
