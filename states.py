@@ -537,17 +537,11 @@ class LoadGameState(game_interface.State):
         text_list: list[str] = []
         surf_list: list[pg.Surface | None] = []
         for fn in self.files:
-            size = float(os.stat(consts.SAVE_PATH / f"{fn}.pickle").st_size)
-            size_text = f"{size} bytes"
-            for x in ["bytes", "KB", "MB", "GB", "TB"]:
-                if size < 1024.0:
-                    size_text = "%3.1f %s" % (size, x)
-                    break
-                size /= 1024.0
             metadata = self.interface.logic.file_metadata(fn)
             last_played = metadata["last_played"]
             depth = metadata["depth"]
-            text = f"{last_played:%Y-%m-%d} Depth:{depth} {size_text}"
+            level = metadata["player_level"]
+            text = f"{last_played:%Y-%m-%d} Lv:{level} Depth:{depth}"
             text_list.append(text)
             if "player_sprite" not in metadata:
                 surf_list.append(None)
