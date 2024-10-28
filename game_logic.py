@@ -96,6 +96,7 @@ class GameLogic:
             "last_played": self.reg[None].components[comp.LastPlayed],
             "played_time": self.played_time,
             "turns": self.turn_count,
+            "money": items.money(self.player),
             "depth": self.player.components[comp.Position].depth,
         }
 

@@ -527,7 +527,9 @@ class LoadGameState(game_interface.State):
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.files = self.interface.logic.list_savefiles()
         text, icons = self.item_lists()
-        self.menu = gui_elements.Menu(self.ui_group, text, 12, 224, icons)
+        self.menu = gui_elements.Menu(
+            self.ui_group, text, 6, 224, icons, lines_per_item=3
+        )
         self.filename = ""
         self.background = pg.Surface(consts.SCREEN_SHAPE)
         self.load_btn = gui_elements.Button(self.ui_group, "Load", 224 // 3)
@@ -541,7 +543,15 @@ class LoadGameState(game_interface.State):
             last_played = metadata["last_played"]
             depth = metadata["depth"]
             level = metadata["player_level"]
-            text = f"{last_played:%Y-%m-%d} Lv:{level} Depth:{depth}"
+            turns = metadata["turns"]
+            money = metadata["money"]
+            text = "\n".join(
+                [
+                    f"{last_played:%Y-%m-%d %H:%M}",
+                    f"Lv:{level} Depth:{depth}",
+                    f"Turn:{turns} Money:{money}"
+                ]
+            )
             text_list.append(text)
             if "player_sprite" not in metadata:
                 surf_list.append(None)
