@@ -6,7 +6,7 @@ import os
 import pickle
 import random
 from collections import deque
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import tcod.ecs as ecs
@@ -41,6 +41,9 @@ class GameLogic:
         self.continuous_action: actions.Action | None
         self.input_action: actions.Action | None
         self.last_action: actions.Action | None
+        self.callbacks: dict[
+            type[actions.Action], list[Callable[[actions.Action], None]]
+        ] = {}
         self.clear()
 
     def clear(self) -> None:
@@ -62,6 +65,14 @@ class GameLogic:
     @property
     def player(self) -> ecs.Entity:
         return self.reg[comp.Player]
+
+    def register_callback(
+        self, action: type[actions.Action], callback: Callable[[actions.Action], None]
+    ):
+        if action not in self.callbacks:
+            self.callbacks[action] = [callback]
+        else:
+            self.callbacks[action].append(callback)
 
     def new_world(self, seed: int | None = None) -> None:
         if seed is None:
@@ -304,6 +315,10 @@ class GameLogic:
                 self.continuous_action = None
         if in_fov and result.message != "":
             self.log(result.message, result.append_message)
+            for action_class, callbacks in self.callbacks.items():
+                if isinstance(result, action_class):
+                    for callback in callbacks:
+                        callback(result)
         return not in_fov
 
     def tick(self):

@@ -78,6 +78,7 @@ class InGameState(game_interface.State):
                 "FPS": lambda: int(self.interface.clock.get_fps()),
             },
         )
+        self.register_callbacks()
 
     def handle_event(self, event: pg.Event):
         action: actions.Action
@@ -153,13 +154,13 @@ class InGameState(game_interface.State):
         ):
             self.map_renderer.center = self.logic.player.components[comp.Position].xy
             self.map_renderer.cursor = None
-        if isinstance(self.logic.last_action, actions.Damage) or isinstance(
-            self.logic.last_action, actions.Heal
-        ):
-            ui_elements.Popup(
-                self.map_renderer, self.logic.last_action, self.interface.font
-            )
-            self.logic.last_action = None
+
+    def popup_callback(self, action: actions.Damage | actions.Heal):
+        ui_elements.Popup(self.map_renderer, action, self.interface.font)
+
+    def register_callbacks(self):
+        self.logic.register_callback(actions.Damage, self.popup_callback)
+        self.logic.register_callback(actions.Heal, self.popup_callback)
 
     def render(self, screen: pg.Surface):
         self.log.rect.bottomleft = (8, screen.height - 8)
