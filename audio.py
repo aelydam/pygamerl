@@ -11,3 +11,9 @@ ACTION_SFX: dict[type[actions.Action], str] = {
     actions.Pickup: "pickup",
     actions.LevelUp: "powerUp",
 }
+
+TITLE_BGM = "Morgana Rides"
+DEPTH_BGM = {
+    2: "Volatile Reaction",
+    0: "Myst on the Moor",
+}

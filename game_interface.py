@@ -37,7 +37,9 @@ class GameInterface:
         self.logic = game_logic.GameLogic()
         self.state_stack: list[State] = []
         self.sfx_volume = 60
+        self.bgm_volume = 60
         self.master_volume = 60
+        self.playing_bgm = ""
 
     def push(self, state: State):
         self.state_stack.append(state)
@@ -91,3 +93,12 @@ class GameInterface:
         obj = assets.sfx(sfx)
         obj.set_volume(self.sfx_volume * self.master_volume / 10000)
         obj.play()
+
+    def play_bgm(self, bgm: str):
+        if bgm == self.playing_bgm:
+            return
+        path = consts.GAME_PATH / "bgm" / f"{bgm}.ogg"
+        pg.mixer.music.load(path)
+        pg.mixer.music.play(-1)
+        pg.mixer.music.set_volume(self.bgm_volume * self.master_volume / 10000)
+        self.playing_bgm = bgm

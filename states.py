@@ -149,12 +149,20 @@ class InGameState(game_interface.State):
         if not entities.is_alive(self.logic.player):
             self.interface.push(GameOverState(self))
             return
+        self.update_bgm()
         if (
             isinstance(self.logic.last_action, actions.ActorAction)
             and self.logic.last_action.actor == self.logic.player
         ):
             self.map_renderer.center = self.logic.player.components[comp.Position].xy
             self.map_renderer.cursor = None
+
+    def update_bgm(self):
+        depth = self.logic.map.components[comp.Depth]
+        for i in range(depth, -1, -1):
+            if i in audio.DEPTH_BGM:
+                bgm = audio.DEPTH_BGM[i]
+                return self.interface.play_bgm(bgm)
 
     def popup_callback(self, action: actions.Damage | actions.Heal):
         ui_elements.Popup(self.map_renderer, action, self.interface.font)
@@ -312,6 +320,7 @@ class TitleState(game_interface.State):
             self.menu.disabled_indexes = {1, 2}
             self.menu.select(0)
             self.menu.redraw()
+        self.interface.play_bgm(audio.TITLE_BGM)
 
     def update(self):
         super().update()
