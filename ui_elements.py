@@ -7,6 +7,7 @@ import pygame as pg
 
 import actions
 import comp
+import conditions
 import consts
 import db
 import items
@@ -350,3 +351,31 @@ class MapCursor(pg.sprite.Sprite):
             self.image = self.red_image
         else:
             self.image = self.default_image
+
+
+class ConditionsHUD(pg.sprite.Sprite):
+    def __init__(
+        self,
+        group: pg.sprite.Group,
+        pos: tuple[int, int],
+        font: pg.Font,
+        logic: GameLogic,
+    ):
+        super().__init__(group)
+        self.rect = pg.Rect(*pos, 1, 1)
+        self.logic = logic
+        self.text = " "
+        self.image = None
+        self.font = font
+
+    def update(self):
+        text = "\n".join(
+            [
+                f"{k.components.get(comp.Name)}({v})"
+                for k, v in conditions.affecting(self.logic.player).items()
+            ]
+        )
+        if text == self.text and self.image is None:
+            return
+        self.image = self.font.render(text, False, "#FFFFFF")
+        self.rect = self.image.get_rect(topleft=self.rect.topleft)

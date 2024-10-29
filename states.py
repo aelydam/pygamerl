@@ -52,6 +52,12 @@ class InGameState(game_interface.State):
             bad_color=consts.HPBAR_GOOD_COLOR,
             label="Level",
         )
+        self.conditions = ui_elements.ConditionsHUD(
+            self.ui_group,
+            (self.xpbar.rect.x, self.xpbar.rect.bottom + 4),
+            font,
+            self.logic,
+        )
         self.log = ui_elements.MessageLog(self.ui_group, self.logic, font)
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
         self.map_renderer = map_renderer.MapRenderer(self.interface)
