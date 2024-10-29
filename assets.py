@@ -47,3 +47,9 @@ def frames(name: str, pos: tuple[int, int], max_count: int = 2) -> list[pg.Surfa
 def font(name: str = consts.FONTNAME, size: int = consts.FONTSIZE) -> pg.Font:
     path = consts.GAME_PATH / "fonts" / f"{name}.ttf"
     return pg.Font(path, size)
+
+
+@lru_cache
+def sfx(name: str) -> pg.mixer.Sound:
+    path = consts.GAME_PATH / "sfx" / f"{name}.ogg"
+    return pg.mixer.Sound(path)

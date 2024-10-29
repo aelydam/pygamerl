@@ -36,6 +36,8 @@ class GameInterface:
         self.font = assets.font(consts.FONTNAME, consts.FONTSIZE)
         self.logic = game_logic.GameLogic()
         self.state_stack: list[State] = []
+        self.sfx_volume = 60
+        self.master_volume = 60
 
     def push(self, state: State):
         self.state_stack.append(state)
@@ -84,3 +86,8 @@ class GameInterface:
             self.update()
             self.render()
         pg.quit()
+
+    def play_sfx(self, sfx: str):
+        obj = assets.sfx(sfx)
+        obj.set_volume(self.sfx_volume * self.master_volume / 10000)
+        obj.play()

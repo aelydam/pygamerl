@@ -5,6 +5,7 @@ import tcod.ecs as ecs
 
 import actions
 import assets
+import audio
 import comp
 import consts
 import entities
@@ -158,9 +159,19 @@ class InGameState(game_interface.State):
     def popup_callback(self, action: actions.Damage | actions.Heal):
         ui_elements.Popup(self.map_renderer, action, self.interface.font)
 
+    def sfx_callback(self, action: actions.Action):
+        if action.__class__ in audio.ACTION_SFX:
+            sfx = audio.ACTION_SFX[action.__class__]
+            return self.interface.play_sfx(sfx)
+        for a, sfx in audio.ACTION_SFX.items():
+            if isinstance(action, a):
+                return self.interface.play_sfx(sfx)
+
     def register_callbacks(self):
         self.logic.register_callback(actions.Damage, self.popup_callback)
         self.logic.register_callback(actions.Heal, self.popup_callback)
+        for action_class, sfx in audio.ACTION_SFX.items():
+            self.logic.register_callback(action_class, self.sfx_callback)
 
     def render(self, screen: pg.Surface):
         self.log.rect.bottomleft = (8, screen.height - 8)

@@ -313,8 +313,9 @@ class GameLogic:
             in_fov = in_fov or entities.is_in_fov(self.player, actor)
             if hasattr(result, "target") and result.target == self.player:
                 self.continuous_action = None
-        if in_fov and result.message != "":
-            self.log(result.message, result.append_message)
+        if in_fov:
+            if result.message != "":
+                self.log(result.message, result.append_message)
             for action_class, callbacks in self.callbacks.items():
                 if isinstance(result, action_class):
                     for callback in callbacks:
