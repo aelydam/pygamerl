@@ -80,6 +80,7 @@ class InGameState(game_interface.State):
             },
         )
         self.register_callbacks()
+        self.update_bgm()
 
     def handle_event(self, event: pg.Event):
         action: actions.Action
@@ -149,7 +150,6 @@ class InGameState(game_interface.State):
         if not entities.is_alive(self.logic.player):
             self.interface.push(GameOverState(self))
             return
-        self.update_bgm()
         if (
             isinstance(self.logic.last_action, actions.ActorAction)
             and self.logic.last_action.actor == self.logic.player
@@ -167,6 +167,9 @@ class InGameState(game_interface.State):
     def popup_callback(self, action: actions.Damage | actions.Heal):
         ui_elements.Popup(self.map_renderer, action, self.interface.font)
 
+    def stairs_callback(self, actions: actions.Descend | actions.Ascend):
+        self.update_bgm()
+
     def sfx_callback(self, action: actions.Action):
         if action.__class__ in audio.ACTION_SFX:
             sfx = audio.ACTION_SFX[action.__class__]
@@ -178,7 +181,7 @@ class InGameState(game_interface.State):
     def register_callbacks(self):
         self.logic.register_callback(actions.Damage, self.popup_callback)
         self.logic.register_callback(actions.Heal, self.popup_callback)
-        for action_class, sfx in audio.ACTION_SFX.items():
+        for action_class in audio.ACTION_SFX.keys():
             self.logic.register_callback(action_class, self.sfx_callback)
 
     def render(self, screen: pg.Surface):
