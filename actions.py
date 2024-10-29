@@ -102,6 +102,9 @@ class MoveAction(ActorAction):
         self.actor.components[comp.Direction] = self.direction
         if comp.MovementSFX in self.actor.components:
             self.sfx = self.actor.components[comp.MovementSFX]
+        if comp.Player in self.actor.tags:
+            steps = self.actor.registry[None].components.get(comp.PlayerSteps, 0)
+            self.actor.registry[None].components[comp.PlayerSteps] = steps + self.cost
         return self
 
     @classmethod

@@ -91,6 +91,7 @@ class GameLogic:
         self.reg[None].components[comp.LastPlayed] = datetime.datetime.now()
         self.reg[None].components[comp.PlayedTime] = 0
         self.reg[None].components[comp.PlayerKills] = 0
+        self.reg[None].components[comp.PlayerSteps] = 0
         self.reg[None].components[comp.Seed] = seed
         self.reg[None].components[random.Random] = random.Random(seed)
         self.reg[None].components[np.random.RandomState] = np.random.RandomState(seed)
@@ -112,6 +113,7 @@ class GameLogic:
             "player_sprite": self.player.components[comp.Sprite],
             "player_level": self.player.components[comp.Level],
             "player_kills": self.reg[None].components[comp.PlayerKills],
+            "player_steps": self.reg[None].components[comp.PlayerSteps],
             "last_played": self.reg[None].components[comp.LastPlayed],
             "played_time": self.played_time,
             "turns": self.turn_count,

@@ -92,6 +92,7 @@ TurnCount = ("TurnCount", int)
 LastPlayed = ("LastPlayed", datetime.datetime)
 PlayedTime = ("PlayedTime", float)
 MaxDepth = ("MaxDepth", int)
+PlayerSteps = ("PlayerSteps", float)
 
 
 class EquipSlot(Enum):

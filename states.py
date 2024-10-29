@@ -566,7 +566,7 @@ class LoadGameState(game_interface.State):
         self.files = self.interface.logic.list_savefiles()
         text, icons = self.item_lists()
         self.menu = gui_elements.Menu(
-            self.ui_group, text, 6, 224, icons, lines_per_item=3
+            self.ui_group, text, 6, 224, icons, lines_per_item=4
         )
         self.filename = ""
         self.background = pg.Surface(consts.SCREEN_SHAPE)
@@ -581,13 +581,15 @@ class LoadGameState(game_interface.State):
             last_played = metadata["last_played"]
             depth = metadata["depth"]
             level = metadata["player_level"]
+            steps = metadata["player_steps"]
             turns = metadata["turns"]
             money = metadata["money"]
             text = "\n".join(
                 [
                     f"{last_played:%Y-%m-%d %H:%M}",
                     f"Lv:{level} Depth:{depth}",
-                    f"Turn:{turns} Money:{money}",
+                    f"Turn:{turns} Steps:{steps:0.0f}",
+                    f"Money:{money}",
                 ]
             )
             text_list.append(text)
