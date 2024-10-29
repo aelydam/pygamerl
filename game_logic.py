@@ -12,6 +12,7 @@ import numpy as np
 import tcod.ecs as ecs
 
 import comp
+import conditions
 import consts
 import db
 import entities
@@ -83,6 +84,7 @@ class GameLogic:
         self.reg[None].components[random.Random] = random.Random(seed)
         self.reg[None].components[np.random.RandomState] = np.random.RandomState(seed)
         db.load_unknowns(self.reg)
+        db.load_data(self.reg, "conditions")
         db.load_data(self.reg, "items")
         db.load_data(self.reg, "creatures")
         maps.get_map(self.reg, 0)
@@ -227,12 +229,14 @@ class GameLogic:
         initiative.clear()
         procgen.respawn(map_entity)
         entities.update_hunger(map_entity)
+        conditions.update_conditions(map_entity)
         query = self.reg.Q.all_of(
             components=[comp.Position, comp.Initiative],
             relations=[(comp.Map, map_entity)],
         )
         for e in query:
-            e.components[comp.Initiative] += 1
+            gain = entities.initiative_multiplier(e)
+            e.components[comp.Initiative] += gain
             if e.components[comp.Initiative] > 0:
                 initiative.append(e)
 
@@ -293,7 +297,8 @@ class GameLogic:
             actor: ecs.Entity = result.actor  # type: ignore
             entities.update_fov(actor)
             if comp.Initiative in actor.components:
-                actor.components[comp.Initiative] -= result.cost
+                mult = entities.action_cost_multiplier(actor)
+                actor.components[comp.Initiative] -= result.cost * mult
             in_fov = in_fov or entities.is_in_fov(self.player, actor)
             if hasattr(result, "target") and result.target == self.player:
                 self.continuous_action = None

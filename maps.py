@@ -160,7 +160,7 @@ def update_map_light(map_entity: ecs.Entity, update_entities: bool = False):
         components=[comp.LightRadius, comp.Position],
         tags={comp.Lit},
         relations=[(comp.Map, map_entity)],
-        traverse=[slot for slot in comp.EquipSlot] + [ecs.IsA],
+        traverse=[slot for slot in comp.EquipSlot] + [ecs.IsA, comp.ConditionTurns],
     )
     for e in query:
         if update_entities or comp.Lightsource not in e.components:

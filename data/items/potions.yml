@@ -14,6 +14,7 @@ Poison:
   MaxStack: 4
   Effects:
     Damage: 1d4
+    AddCondition: {condition: Poison, turns: 10}
   tags: Consumable
 
 Dummy Potion:
@@ -31,4 +32,58 @@ Experience Potion:
   MaxStack: 4
   Effects:
     GainXP: 10
+  tags: Consumable
+
+Haste Potion:
+  Unidentified: Potion
+  UsesVerb: drinks
+  SpawnWeight: 1
+  MaxStack: 4
+  Effects:
+    AddCondition: {condition: Haste, turns: 1d6*10}
+  tags: Consumable
+
+Paralysis Potion:
+  Unidentified: Potion
+  UsesVerb: drinks
+  SpawnWeight: 1
+  MaxStack: 4
+  Effects:
+    AddCondition: {condition: Paralysis, turns: 3d6}
+  tags: Consumable
+
+Blindness Potion:
+  Unidentified: Potion
+  UsesVerb: drinks
+  SpawnWeight: 1
+  MaxStack: 4
+  Effects:
+    AddCondition: {condition: Blindness, turns: 3d6}
+  tags: Consumable
+
+Strength Elixir:
+  Unidentified: Potion
+  UsesVerb: drinks
+  SpawnWeight: 1
+  MaxStack: 4
+  Effects:
+    AddCondition: {condition: Strong, turns: 1d6*10}
+  tags: Consumable
+
+Regeneration Potion:
+  Unidentified: Potion
+  UsesVerb: drinks
+  SpawnWeight: 1
+  MaxStack: 4
+  Effects:
+    AddCondition: {condition: Regeneration, turns: 3d6}
+  tags: Consumable
+
+Light Potion:
+  Unidentified: Potion
+  UsesVerb: drinks
+  SpawnWeight: 1
+  MaxStack: 4
+  Effects:
+    AddCondition: {condition: Light, turns: 1d6*10}
   tags: Consumable

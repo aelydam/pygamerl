@@ -67,6 +67,11 @@ Count = ("Count", int)
 Price = ("Price", float)
 UnidentifiedName = ("UnidentifiedName", str)
 UsesVerb = ("UsesVerb", str)
+ActionCostMultiplier = ("ActionCostMultiplier", float)
+InitiativeMultiplier = ("InitiativeMultiplier", float)
+FOVLimit = ("FOVLimit", int)
+ConditionTurns = ("ConditionTurns", int)
+
 
 # Spawn components
 SpawnWeight = ("SpawnWeight", int)

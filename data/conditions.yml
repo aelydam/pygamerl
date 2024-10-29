@@ -1,0 +1,29 @@
+Haste:
+  ActionCostMultiplier: 0.5
+
+Slow:
+  ActionCostMultiplier: 2
+
+Strong:
+  AttackBonus: 2
+  ArmorClass: 2
+
+Poison:
+  Effects:
+    Damage: min(1d4,1d4)
+
+Regeneration:
+  Effects:
+    Heal: min(1d4,1d4)
+
+Paralysis:
+  Effects:
+    WaitAction: {}
+  ArmorClass: -2
+  InitiativeMultiplier: 0
+
+Blindness:
+  FOVLimit: 2
+
+Light:
+  LightRadius: 4

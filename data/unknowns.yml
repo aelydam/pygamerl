@@ -9,10 +9,24 @@ Potion:
     Sprite: {sheet: "Items/Potion", tile: [3, 0]}
   Green Potion:
     Sprite: {sheet: "Items/Potion", tile: [4, 0]}
-  Light Green Potion:
+  Dark Green Potion:
     Sprite: {sheet: "Items/Potion", tile: [5, 0]}
-  Blue Potion:
+  Light Blue Potion:
     Sprite: {sheet: "Items/Potion", tile: [6, 0]}
+  Blue Potion:
+    Sprite: {sheet: "Items/Potion", tile: [7, 0]}
+  Dark Blue Potion:
+    Sprite: {sheet: "Items/Potion", tile: [0, 1]}
+  Gray Potion:
+    Sprite: {sheet: "Items/Potion", tile: [7, 1]}
+  Black Potion:
+    Sprite: {sheet: "Items/Potion", tile: [2, 2]}
+  Brown Potion:
+    Sprite: {sheet: "Items/Potion", tile: [4, 2]}
+  Dark Gray Potion:
+    Sprite: {sheet: "Items/Potion", tile: [6, 2]}
+  White Potion:
+    Sprite: {sheet: "Items/Potion", tile: [7, 2]}
 
 Ring:
   Copper Ring:

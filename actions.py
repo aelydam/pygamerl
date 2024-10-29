@@ -8,6 +8,7 @@ import tcod
 import tcod.ecs as ecs
 
 import comp
+import conditions
 import consts
 import db
 import dice
@@ -907,4 +908,58 @@ class See(ActorAction):
             wearing = items.equipment_at_slot(self.target, comp.EquipSlot.Chest)
             if wearing is not None:
                 self.message += ", wearing " + items.display_name(wearing)
+        return self
+
+
+@dataclass
+class AddCondition(ActorAction):
+    condition: ecs.Entity | str
+    turns: int | str
+
+    def can(self) -> bool:
+        return True
+
+    def perform(self) -> Action | None:
+        if isinstance(self.condition, str):
+            condition = self.actor.registry[("conditions", self.condition)]
+        else:
+            condition = self.condition
+        if isinstance(self.turns, str):
+            seed = self.actor.registry[None].components[random.Random]
+            turns = int(dice.dice_roll(self.turns, seed))
+        else:
+            turns = self.turns
+        aname = self.actor.components.get(comp.Name)
+        cname = condition.components.get(comp.Name)
+        conditions.add_condition(self.actor, condition, turns)
+        if aname is not None and cname is not None:
+            self.message = f"{aname} gets condition {cname}"
+        conditions.apply_condition_effect(condition, self.actor)
+        return self
+
+
+@dataclass
+class RemoveCondition(ActorAction):
+    condition: ecs.Entity | str
+
+    def can(self) -> bool:
+        if isinstance(self.condition, str):
+            condition = self.actor.registry[("conditions", self.condition)]
+        else:
+            condition = self.condition
+        return (
+            comp.ConditionTurns in self.actor.relation_components
+            and condition in self.actor.relation_components[comp.ConditionTurns]
+        )
+
+    def perform(self) -> Action | None:
+        if isinstance(self.condition, str):
+            condition = self.actor.registry[("conditions", self.condition)]
+        else:
+            condition = self.condition
+        aname = self.actor.components.get(comp.Name)
+        cname = condition.components.get(comp.Name)
+        conditions.remove_condition(self.actor, condition)
+        if aname is not None and cname is not None:
+            self.message = f"{aname} loses condition {cname}"
         return self

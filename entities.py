@@ -8,6 +8,7 @@ import tcod.ecs as ecs
 
 import actions
 import comp
+import conditions
 import consts
 import dice
 import funcs
@@ -38,21 +39,29 @@ def dist(
 
 
 def get_combined_component(
-    actor: ecs.Entity, component: tuple[str, type[int]], default: int = 0, func=sum
-) -> int:
+    actor: ecs.Entity,
+    component: tuple[str, type[int | float]],
+    default: int | float = 0,
+    func=sum,
+) -> int | float:
     res = actor.components.get(component, default)
+    # Apply equipment modifiers
     for e in items.equipment(actor).values():
         if e is not None and component in e.components:
+            res = func([res, e.components[component]])
+    # Apply condition modifiers
+    for e in conditions.affecting(actor).keys():
+        if component in e.components:
             res = func([res, e.components[component]])
     return res
 
 
 def armor_class(actor: ecs.Entity, default: int = 10) -> int:
-    return get_combined_component(actor, comp.ArmorClass, default)
+    return int(get_combined_component(actor, comp.ArmorClass, default))
 
 
 def attack_bonus(actor: ecs.Entity, default: int = 2) -> int:
-    return get_combined_component(actor, comp.AttackBonus, default)
+    return int(get_combined_component(actor, comp.AttackBonus, default))
 
 
 def damage_dice(actor: ecs.Entity, default: str = "1") -> str:
@@ -69,15 +78,29 @@ def damage_dice(actor: ecs.Entity, default: str = "1") -> str:
 
 
 def speed(actor: ecs.Entity, default: int = consts.BASE_SPEED) -> int:
-    return get_combined_component(actor, comp.Speed, default)
+    return int(get_combined_component(actor, comp.Speed, default))
 
 
 def fov_radius(actor: ecs.Entity, default: int = consts.DEFAULT_FOV_RADIUS) -> int:
-    return get_combined_component(actor, comp.FOVRadius, default)
+    radius = get_combined_component(actor, comp.FOVRadius, default, max)
+    limit = get_combined_component(actor, comp.FOVLimit, default, min)
+    return int(min(limit, radius))
 
 
 def light_radius(actor: ecs.Entity, default: int = 0) -> int:
-    return get_combined_component(actor, comp.LightRadius, default, func=max)
+    return int(get_combined_component(actor, comp.LightRadius, default, func=max))
+
+
+def initiative_multiplier(actor: ecs.Entity, default: float = 1) -> float:
+    return get_combined_component(
+        actor, comp.InitiativeMultiplier, default, func=np.prod
+    )
+
+
+def action_cost_multiplier(actor: ecs.Entity, default: float = 1) -> float:
+    return get_combined_component(
+        actor, comp.ActionCostMultiplier, default, func=np.prod
+    )
 
 
 def update_fov(actor: ecs.Entity):
