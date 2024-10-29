@@ -171,6 +171,8 @@ class InGameState(game_interface.State):
         self.update_bgm()
 
     def sfx_callback(self, action: actions.Action):
+        if hasattr(action, "sfx") and action.sfx != "":
+            return self.interface.play_sfx(action.sfx)
         if action.__class__ in audio.ACTION_SFX:
             sfx = audio.ACTION_SFX[action.__class__]
             return self.interface.play_sfx(sfx)

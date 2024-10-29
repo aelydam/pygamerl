@@ -60,6 +60,8 @@ TempInventory = ("TempInventory", dict[str, str])
 TempEquipment = ("TempEquipment", list[str])
 AttacksVerb = ("AttacksVerb", str)
 PlayerKills = ("PlayerKills", int)
+AttackSFX = ("AttackSFX", str)
+MovementSFX = ("MovementSFX", str)
 
 # Item Components
 MaxStack = ("MaxStack", int)

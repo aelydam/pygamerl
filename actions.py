@@ -100,6 +100,8 @@ class MoveAction(ActorAction):
             return None
         self.actor.components[comp.Position] += self.direction
         self.actor.components[comp.Direction] = self.direction
+        if comp.MovementSFX in self.actor.components:
+            self.sfx = self.actor.components[comp.MovementSFX]
         return self
 
     @classmethod
@@ -264,6 +266,11 @@ class AttackAction(ActorAction):
         game_logic.push_action(self.target.registry, damage)
         self.message = text
         self.cost = 1
+        mainhand = items.equipment_at_slot(self.actor, comp.EquipSlot.Main_Hand)
+        if mainhand is not None and comp.AttackSFX in mainhand.components:
+            self.sfx = mainhand.components[comp.AttackSFX]
+        elif comp.AttackSFX in self.actor.components:
+            self.sfx = self.actor.components[comp.AttackSFX]
         return self
 
 
