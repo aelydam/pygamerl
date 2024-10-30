@@ -786,12 +786,25 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
     seed = map_entity.components[np.random.RandomState]
     # Create room for upstairs
     room_grid = add_upstairs_room(map_entity)
+    walls = funcs.moore(room_grid) > 0
+    # Create lake
+    lake = random_lake(~(room_grid | walls), seed)
+    lake |= random_lake(~(room_grid | walls | lake), seed)
+    # Add dirt around lake
+    cave_grid = ~lake & ~room_grid & (funcs.moore(lake) > 0)
+    rand = seed.random(grid.shape)
+    cave_grid |= ~lake & ~room_grid & (funcs.moore(cave_grid) > 0) & (rand <= 0.4)
+    cave_grid[0, :] = False
+    cave_grid[-1, :] = False
+    cave_grid[:, 0] = False
+    cave_grid[:, -1] = False
+
     # Create random rooms
     room_grid = room_grid | random_rooms(
-        ~room_grid, seed, max_rooms=consts.NUM_ROOMS - 1
+        ~(room_grid | lake | cave_grid), seed, max_rooms=consts.NUM_ROOMS - 1
     )
     # Create caves
-    cave_grid = prune(cellular_automata(~room_grid, seed))
+    cave_grid |= prune(cellular_automata(~(room_grid | lake | cave_grid), seed))
     # Create corridors
     area_list = disjoint_areas(cave_grid | room_grid)
     corridors = delaunay_corridors(
@@ -800,11 +813,12 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
     #
     floor = room_grid | cave_grid | corridors
     # Add walls
-    walls = get_walls(room_grid, ~floor)
+    walls = get_walls(room_grid, ~floor & ~lake)
     cave_walls = get_walls(cave_grid | corridors, ~floor & ~walls)
     # Set tiles
     grid[cave_walls] = db.tile_id["cavewall"]
     grid[walls] = db.tile_id["wall"]
+    grid[lake] = db.tile_id["water"]
     grid[cave_grid | corridors] = db.tile_id["cavefloor"]
     near_room = funcs.moore(room_grid) > 0
     grid[room_grid | (corridors & near_room)] = db.tile_id["floor"]
