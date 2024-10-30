@@ -15,6 +15,7 @@ tree:
   color: [109, 170, 44]
   sheet: "Objects/Tree0"
   tile: [3, 3]
+  bgtile: "grass"
 
 floor:
   obstacle: False

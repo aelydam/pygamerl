@@ -25,21 +25,27 @@ def load_tiles() -> None:
     with open(path, "r") as file:
         data = yaml.safe_load(file)
     tile_list = []
-    names = []
+    names: list[str] = []
     for k, v in data.items():
         obstacle_ = v["obstacle"] if "obstacle" in v else True
         opaque_ = v["opaque"] if "opaque" in v else True
         color = tuple(v["color"]) if "color" in v else (0, 0, 0)
         sprite = v["tile"] if "tile" in v else (0, 0)
         sheet = v["sheet"] if "sheet" in v else ""
-        tile = np.asarray((obstacle_, opaque_, color, sprite, sheet), consts.TILE_DTYPE)
+        bgtile = 0
+        if "bgtile" in v and v["bgtile"] in names:
+            bgtile = names.index(v["bgtile"])
+        tile = np.asarray(
+            (obstacle_, opaque_, color, sprite, sheet, bgtile), consts.TILE_DTYPE
+        )
         tile_list.append(tile)
         names.append(k)
         if "sheet" != "" and "bitmask" in v:
             for bm, sprite in v["bitmask"].items():
                 names.append(f"{k}{bm}")
                 tile = np.asarray(
-                    (obstacle_, opaque_, color, sprite, sheet), consts.TILE_DTYPE
+                    (obstacle_, opaque_, color, sprite, sheet, bgtile),
+                    consts.TILE_DTYPE,
                 )
                 tile_list.append(tile)
     global tiles, tile_names, tile_id, opaque, obstacle, transparency, walkable

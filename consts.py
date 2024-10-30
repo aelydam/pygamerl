@@ -57,5 +57,6 @@ TILE_DTYPE = np.dtype(
         ("color", "3B"),
         ("sprite", "2B"),
         ("sheet", "U24"),
+        ("bgtile", "B"),
     ]
 )

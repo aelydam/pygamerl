@@ -247,6 +247,9 @@ class MapRenderer(pg.sprite.LayeredUpdates):
             sheet = tile[4]
             surf = pg.Surface((consts.TILE_SIZE, consts.TILE_SIZE)).convert_alpha()
             surf.fill(color)
+            if tile[5] > 0:
+                bgtile = tile[5]
+                surf.blit(self.tile_surfaces[bgtile][0], (0, 0))
             if sheet != "":
                 src = assets.tile(sheet, (int(sprite[0]), int(sprite[1])))
                 surf.blit(src, (0, 0))
