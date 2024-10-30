@@ -543,7 +543,7 @@ def add_traps(
                 comp.XPGain: 5,
                 comp.Interaction: actions.DisarmTrap,
             },
-            tags={comp.Trap, comp.HideSprite},
+            tags={comp.Trap, comp.Hidden},
         )
         if seed.randint(0, 100) <= 100 * bones_prob:
             map_entity.registry.new_entity(

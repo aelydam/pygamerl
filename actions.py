@@ -261,8 +261,8 @@ class AttackAction(ActorAction):
         else:
             self.damage = 0
             text += "Miss!"
-        if comp.Trap in self.actor.tags and comp.HideSprite in self.actor.tags:
-            self.actor.tags.discard(comp.HideSprite)
+        if comp.Trap in self.actor.tags and comp.Hidden in self.actor.tags:
+            self.actor.tags.discard(comp.Hidden)
         apos = self.actor.components[comp.Position].xy
         tpos = self.target.components[comp.Position].xy
         self.actor.components[comp.Direction] = (tpos[0] - apos[0], tpos[1] - apos[1])
@@ -403,7 +403,7 @@ class Search(ActorAction):
                 continue
             query = self.actor.registry.Q.all_of(
                 components=[comp.Position],
-                tags=[comp.HideSprite, pos],
+                tags=[comp.Hidden, pos],
                 relations=[(comp.Map, map_entity)],
             )
             for e in query:
@@ -627,7 +627,7 @@ class DisarmTrap(Interaction):
             not self.bump
             and self.target is not None
             and comp.Trap in self.target.tags
-            and comp.HideSprite not in self.target.tags
+            and comp.Hidden not in self.target.tags
             and super().can()
         )
 
@@ -940,8 +940,8 @@ class See(ActorAction):
         aname = self.actor.components.get(comp.Name)
         tname = self.target.components.get(comp.Name)
         self.target.tags |= {comp.Seen}
-        if comp.HideSprite in self.target.tags:
-            self.target.tags.discard(comp.HideSprite)
+        if comp.Hidden in self.target.tags:
+            self.target.tags.discard(comp.Hidden)
         if aname is not None and tname is not None:
             self.message = f"{aname} sees {tname}"
             wielding = items.equipment_at_slot(self.target, comp.EquipSlot.Main_Hand)

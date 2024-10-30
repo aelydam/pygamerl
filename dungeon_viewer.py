@@ -55,11 +55,11 @@ class DungeonViewerState(game_interface.State):
             # Show hidden entities
             query = map_entity.registry.Q.all_of(
                 components=[comp.Position, comp.Sprite],
-                tags=[comp.HideSprite],
+                tags=[comp.Hidden],
                 relations=[(comp.Map, map_entity)],
             )
             for e in query:
-                e.tags.discard(comp.HideSprite)
+                e.tags.discard(comp.Hidden)
             # Identify entities
             query = map_entity.registry.Q.all_of(
                 components=[comp.Position, comp.Sprite, comp.UnidentifiedName],

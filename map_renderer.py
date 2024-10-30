@@ -112,6 +112,7 @@ class EntitySprite(pg.sprite.Sprite):
             self.group.explored[pos.xy]
             and (is_in_fov or comp.HP not in self.entity.components)
             and not comp.HideSprite in self.entity.tags
+            and not comp.Hidden in self.entity.tags
         )
         dx, dy = self.entity.components.get(comp.Direction, (0, 0))
         flip = (dx > 0) or (dx >= 0 and dy > 0)
