@@ -23,7 +23,7 @@ Giant Spider:
   XPGain: 5
   SpawnWeight: 1
   NativeDepth: 2
-  OnAttack: { AddCondition: {condition: Poison, turns: 3d6} }
+  OnAttack: { AddCondition: {condition: Poison, turns: 2d6} }
 
 Snake:
   Sprite: {sheet: "Characters/Reptile0", tile: [0, 4]}
@@ -32,7 +32,7 @@ Snake:
   XPGain: 5
   SpawnWeight: 1
   NativeDepth: 2
-  OnAttack: { AddCondition: {condition: Poison, turns: 3d6} }
+  OnAttack: { AddCondition: {condition: Poison, turns: 2d6} }
 
 Jackal:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 0]}

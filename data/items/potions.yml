@@ -49,7 +49,7 @@ Paralysis Potion:
   SpawnWeight: 1
   MaxStack: 4
   Effects:
-    AddCondition: {condition: Paralysis, turns: 3d6}
+    AddCondition: {condition: Paralysis, turns: 2d6}
   tags: Consumable
 
 Blindness Potion:
@@ -58,7 +58,7 @@ Blindness Potion:
   SpawnWeight: 1
   MaxStack: 4
   Effects:
-    AddCondition: {condition: Blindness, turns: 3d6}
+    AddCondition: {condition: Blindness, turns: 2d6}
   tags: Consumable
 
 Strength Elixir:
@@ -76,7 +76,7 @@ Regeneration Potion:
   SpawnWeight: 1
   MaxStack: 4
   Effects:
-    AddCondition: {condition: Regeneration, turns: 3d6}
+    AddCondition: {condition: Regeneration, turns: 2d6}
   tags: Consumable
 
 Light Potion:
