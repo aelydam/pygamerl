@@ -33,7 +33,7 @@ Ring:
     Sprite: {sheet: "Items/Ring", tile: [0, 0]}
   Iron Ring:
     Sprite: {sheet: "Items/Ring", tile: [1, 0]}
-  Diamong Ring:
+  Diamond Ring:
     Sprite: {sheet: "Items/Ring", tile: [2, 0]}
   Blue Ring:
     Sprite: {sheet: "Items/Ring", tile: [3, 0]}
