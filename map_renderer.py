@@ -94,6 +94,7 @@ class EntitySprite(pg.sprite.Sprite):
             not comp.Position in self.entity.components
             or not comp.Sprite in self.entity.components
             or self.entity.components[comp.Position].depth != self.group.depth
+            or self.entity.registry != self.group.logic.reg
         ):
             self.kill()
             self.group.entity_sprites.pop(self.entity)
