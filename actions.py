@@ -391,6 +391,32 @@ class Interact(ActorAction):
         return None
 
 
+class Search(ActorAction):
+    def perform(self) -> Action | None:
+        apos = self.actor.components[comp.Position]
+        map_entity = self.actor.relation_tag[comp.Map]
+        found_something = False
+        directions = {(dx, dy) for dx in range(-2, 3) for dy in range(-2, 3)}
+        for d in directions:
+            pos = apos + d
+            if not entities.is_in_fov(self.actor, pos):
+                continue
+            query = self.actor.registry.Q.all_of(
+                components=[comp.Position],
+                tags=[comp.HideSprite, pos],
+                relations=[(comp.Map, map_entity)],
+            )
+            for e in query:
+                see = See(self.actor, e)
+                game_logic.push_action(self.actor.registry, see)
+                self.actor.components[comp.Direction] = d
+                found_something = True
+        aname = self.actor.components.get(comp.Name)
+        if not found_something and aname is not None:
+            self.message = f"{aname} sees nothing"
+        return self
+
+
 @dataclass
 class MagicMap(ActorAction):
     def can(self) -> bool:
@@ -914,6 +940,8 @@ class See(ActorAction):
         aname = self.actor.components.get(comp.Name)
         tname = self.target.components.get(comp.Name)
         self.target.tags |= {comp.Seen}
+        if comp.HideSprite in self.target.tags:
+            self.target.tags.discard(comp.HideSprite)
         if aname is not None and tname is not None:
             self.message = f"{aname} sees {tname}"
             wielding = items.equipment_at_slot(self.target, comp.EquipSlot.Main_Hand)
