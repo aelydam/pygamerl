@@ -43,17 +43,7 @@ def apply_condition_effect(condition: ecs.Entity, actor: ecs.Entity):
         game_logic.push_action(actor.registry, remove_action)
     if comp.Effects not in condition.components:
         return
-    effects = condition.components[comp.Effects]
-    for effect, args in effects.items():
-        if isinstance(args, dict):
-            action = effect(actor, **args)
-        elif isinstance(args, list):
-            action = effect(actor, *args)
-        elif args is not None:
-            action = effect(actor, args)
-        else:
-            action = effect(actor)
-        game_logic.push_action(actor.registry, action)
+    actions.apply_effects(actor, condition.components[comp.Effects])
 
 
 def update_actor_conditions(actor: ecs.Entity):
