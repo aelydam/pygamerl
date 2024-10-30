@@ -84,7 +84,7 @@ def load_entity(
             elif isinstance(v, str):
                 entity.components[comp.TempEquipment] = [v]
             continue
-        if k == "Effects":
+        if k == "Effects" or k[:2] == "On":
             if isinstance(v, dict):
                 effects = {getattr(actions, kk): vv for kk, vv in v.items()}
             elif isinstance(v, list):
@@ -93,7 +93,8 @@ def load_entity(
                 effects = {getattr(actions, v): {}}
             else:
                 continue
-            entity.components[comp.Effects] = effects
+            comp_key = getattr(comp, k)
+            entity.components[comp_key] = effects
             continue
         if k == "Unidentified":
             if not isinstance(v, str):

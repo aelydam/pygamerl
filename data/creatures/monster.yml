@@ -1,0 +1,9 @@
+Slime:
+  Sprite: {sheet: "Characters/Slime0", tile: [3, 0]}
+  HP: 10
+  AttacksVerb: slams
+  XPGain: 5
+  Speed: 2
+  SpawnWeight: 1
+  NativeDepth: 2
+  OnDamage: { Split: 2 }

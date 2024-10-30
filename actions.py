@@ -809,6 +809,17 @@ class Damage(ActorAction):
             self.message += f"{self.amount} points of damage!"
             if self.critical:
                 self.message += " (critical)"
+        if new_hp > 0 and self.amount > 0 and comp.OnDamage in self.actor.components:
+            for effect, args in self.actor.components[comp.OnDamage].items():
+                if isinstance(args, dict):
+                    action = effect(self.actor, **args)
+                elif isinstance(args, list):
+                    action = effect(self.actor, *args)
+                elif args is not None:
+                    action = effect(self.actor, args)
+                else:
+                    action = effect(self.actor)
+                game_logic.push_action(self.actor.registry, action)
         return self
 
 
@@ -972,4 +983,31 @@ class RemoveCondition(ActorAction):
         conditions.remove_condition(self.actor, condition)
         if aname is not None and cname is not None:
             self.message = f"{aname} loses condition {cname}"
+        return self
+
+
+@dataclass
+class Split(ActorAction):
+    minimum_hp: int = 3
+
+    def can(self) -> bool:
+        return (
+            self.actor.components.get(comp.HP, 0) >= max(2, self.minimum_hp)
+            and ecs.IsA in self.actor.relation_tag
+            and comp.Map in self.actor.relation_tag
+            and comp.Position in self.actor.components
+        )
+
+    def perform(self) -> Action | None:
+        hp = self.actor.components[comp.HP]
+        new_hp = hp // 2
+        kind = self.actor.relation_tag[ecs.IsA]
+        map_entity = self.actor.relation_tag[comp.Map]
+        pos = self.actor.components[comp.Position]
+        copy = entities.spawn_creature(map_entity, pos.xy, kind)
+        copy.components[comp.HP] = new_hp
+        MoveAction.random(copy).perform()
+        copy.components[comp.Initiative] = max(
+            1, self.actor.components[comp.Initiative]
+        )
         return self
