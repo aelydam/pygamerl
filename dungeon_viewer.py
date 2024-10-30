@@ -42,6 +42,7 @@ class DungeonViewerState(game_interface.State):
         self.logic.map.components[comp.Explored] |= True
         self.logic.map.components[comp.Lightsource] += 10
         self.logic.player.components[comp.FOV] |= True
+        self.logic.active = False
 
     def set_depth(self, depth: int):
         if depth < 0:
