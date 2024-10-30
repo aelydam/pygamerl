@@ -8,6 +8,7 @@ import comp
 import consts
 import entities
 import game_interface
+import items
 import keybinds
 import map_renderer
 import maps
@@ -35,6 +36,8 @@ class DungeonViewerState(game_interface.State):
                 "Depth": lambda: self.map_renderer.depth,
                 "Pos": lambda: ",".join(str(i) for i in self.map_renderer.center),
                 "FPS": lambda: int(self.interface.clock.get_fps()),
+                "Global Seed": lambda: self.logic.reg[None].components[comp.Seed],
+                "Map Seed": lambda: self.logic.map.components[comp.Seed],
             },
         )
 
@@ -46,13 +49,22 @@ class DungeonViewerState(game_interface.State):
                 self.map_renderer.center, depth
             )
             map_entity = maps.get_map(self.logic.reg, depth)
-            hidden = map_entity.registry.Q.all_of(
+            # Show hidden entities
+            query = map_entity.registry.Q.all_of(
                 components=[comp.Position, comp.Sprite],
                 tags=[comp.HideSprite],
                 relations=[(comp.Map, map_entity)],
             )
-            for e in hidden:
+            for e in query:
                 e.tags.discard(comp.HideSprite)
+            # Identify entities
+            query = map_entity.registry.Q.all_of(
+                components=[comp.Position, comp.Sprite, comp.UnidentifiedName],
+                relations=[(comp.Map, map_entity)],
+            )
+            for e in query:
+                items.identify(e)
+        # Display everything at full light
         entities.update_fov(self.logic.player)
         self.logic.map.components[comp.Explored] |= True
         self.logic.map.components[comp.Lightsource] += 10
