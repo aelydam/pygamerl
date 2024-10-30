@@ -1022,6 +1022,8 @@ class Split(ActorAction):
     def perform(self) -> Action | None:
         hp = self.actor.components[comp.HP]
         new_hp = hp // 2
+        if new_hp < 1:
+            return None
         kind = self.actor.relation_tag[ecs.IsA]
         map_entity = self.actor.relation_tag[comp.Map]
         pos = self.actor.components[comp.Position]
