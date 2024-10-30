@@ -19,11 +19,7 @@ class DungeonViewerState(game_interface.State):
     def __init__(self, parent: game_interface.GameInterface | game_interface.State):
         super().__init__(parent)
         self.logic = self.interface.logic
-        self.logic.new_game()
-        self.logic.map.components[comp.Explored] |= True
-        self.logic.map.components[comp.Lightsource] += 10
-        self.logic.player.components[comp.FOV] |= True
-
+        self.new_world()
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
         self.map_renderer = map_renderer.MapRenderer(self.interface)
@@ -40,6 +36,12 @@ class DungeonViewerState(game_interface.State):
                 "Map Seed": lambda: self.logic.map.components[comp.Seed],
             },
         )
+
+    def new_world(self):
+        self.logic.new_game()
+        self.logic.map.components[comp.Explored] |= True
+        self.logic.map.components[comp.Lightsource] += 10
+        self.logic.player.components[comp.FOV] |= True
 
     def set_depth(self, depth: int):
         if depth < 0:
@@ -92,6 +94,8 @@ class DungeonViewerState(game_interface.State):
                 self.set_depth(self.map_renderer.depth + 1)
             elif event.key == pg.K_PAGEUP:
                 self.set_depth(self.map_renderer.depth - 1)
+            elif event.key == pg.K_F5:
+                self.new_world()
 
         elif event.type == pg.MOUSEBUTTONUP and event.button == 1:
             self.map_renderer.center = self.map_renderer.screen_to_grid(*event.pos)
