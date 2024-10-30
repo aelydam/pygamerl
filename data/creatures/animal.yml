@@ -6,7 +6,6 @@ Giant Bat:
   Speed: 8
   SpawnWeight: 1
   NativeDepth: 1
-  Inventory: {Mushroom: 1d4-3}
 
 Giant Rat:
   Sprite: {sheet: "Characters/Rodent0", tile: [0, 1]}
@@ -24,7 +23,16 @@ Giant Spider:
   XPGain: 5
   SpawnWeight: 1
   NativeDepth: 2
-  Inventory: {Mushroom: 1d4-3, Poison Mushroom: 1d4-3}
+  OnAttack: { AddCondition: {condition: Poison, turns: 3d6} }
+
+Snake:
+  Sprite: {sheet: "Characters/Reptile0", tile: [0, 4]}
+  HP: 2+2d4
+  AttacksVerb: bites
+  XPGain: 5
+  SpawnWeight: 1
+  NativeDepth: 2
+  OnAttack: { AddCondition: {condition: Poison, turns: 3d6} }
 
 Jackal:
   Sprite: {sheet: "Characters/Dog0", tile: [0, 0]}

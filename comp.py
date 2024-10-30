@@ -150,3 +150,4 @@ class Effect(Protocol):
 
 Effects = ("Effects", dict[Effect, dict | list | str | int | None])
 OnDamage = ("OnDamage", dict[Effect, dict | list | str | int | None])
+OnAttack = ("OnAttack", dict[Effect, dict | list | str | int | None])

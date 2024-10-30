@@ -256,6 +256,8 @@ class AttackAction(ActorAction):
             self.damage = int(dice.dice_roll(dmg_dice, seed))
             if self.crit:
                 self.damage += int(dice.dice_roll(dmg_dice, seed) - dmg_min + 1)
+            if comp.OnAttack in self.actor.components:
+                apply_effects(self.target, self.actor.components[comp.OnAttack])
         else:
             self.damage = 0
             text += "Miss!"
@@ -810,16 +812,7 @@ class Damage(ActorAction):
             if self.critical:
                 self.message += " (critical)"
         if new_hp > 0 and self.amount > 0 and comp.OnDamage in self.actor.components:
-            for effect, args in self.actor.components[comp.OnDamage].items():
-                if isinstance(args, dict):
-                    action = effect(self.actor, **args)
-                elif isinstance(args, list):
-                    action = effect(self.actor, *args)
-                elif args is not None:
-                    action = effect(self.actor, args)
-                else:
-                    action = effect(self.actor)
-                game_logic.push_action(self.actor.registry, action)
+            apply_effects(self.actor, self.actor.components[comp.OnDamage])
         return self
 
 
@@ -1011,3 +1004,18 @@ class Split(ActorAction):
             1, self.actor.components[comp.Initiative]
         )
         return self
+
+
+def apply_effects(
+    actor: ecs.Entity, effects: dict[comp.Effect, dict | list | str | int | None]
+):
+    for effect, args in effects.items():
+        if isinstance(args, dict):
+            action = effect(actor, **args)
+        elif isinstance(args, list):
+            action = effect(actor, *args)
+        elif args is not None:
+            action = effect(actor, args)
+        else:
+            action = effect(actor)
+        game_logic.push_action(actor.registry, action)
