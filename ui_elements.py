@@ -222,6 +222,7 @@ class Minimap(pg.sprite.Sprite):
             self.rect.center = ((self.x + screen[0]) // 2, (self.y + screen[1]) // 2)
         grid = map_.components[comp.Tiles]
         walkable = db.walkable[grid]
+        transparent = db.transparency[grid]
         explored = map_.components[comp.Explored]
         shape = grid.shape
         if comp.FOV in player.components and self.depth == pdepth:
@@ -230,10 +231,12 @@ class Minimap(pg.sprite.Sprite):
             fov = np.full(shape, False)
         grid = np.ones((shape[0], shape[1], 3))
         for k in range(3):
-            grid[:, :, k] += 120 * explored * walkable
-            grid[:, :, k] += 120 * explored * walkable * fov
-            grid[:, :, k] += 40 * explored * (~walkable)
-            grid[:, :, k] += 40 * explored * (~walkable) * fov
+            grid[:, :, k] += 100 * explored * walkable
+            grid[:, :, k] += 100 * explored * walkable * fov
+            grid[:, :, k] += 40 * explored * transparent * (1 - walkable)
+            grid[:, :, k] += 40 * explored * transparent * (1 - walkable) * fov
+            grid[:, :, k] += 30 * explored * (~walkable)
+            grid[:, :, k] += 30 * explored * (~walkable) * fov
         #
         query = (
             map_.registry.Q.all_of(
