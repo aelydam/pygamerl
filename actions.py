@@ -414,6 +414,7 @@ class Search(ActorAction):
         aname = self.actor.components.get(comp.Name)
         if not found_something and aname is not None:
             self.message = f"{aname} sees nothing"
+        self.cost = 1
         return self
 
 
