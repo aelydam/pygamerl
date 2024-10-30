@@ -726,6 +726,18 @@ def generate(map_entity: ecs.Entity):
     spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
 
 
+def random_lake(
+    condition: NDArray[np.bool_],
+    seed: np.random.RandomState,
+    min_size: int = consts.MAX_ROOM_SIZE,
+    max_size: int = consts.MAX_ROOM_SIZE * 2,
+) -> NDArray[np.bool_]:
+    area = random_rect_room(~condition, seed, min_size, max_size)
+    if area is None:
+        return np.full(condition.shape, False)
+    return cellular_automata(area, seed)
+
+
 def generate_forest(map_entity: ecs.Entity) -> NDArray[np.int8]:
     grid = np.zeros(consts.MAP_SHAPE, np.int8)
     seed = map_entity.components[np.random.RandomState]
@@ -734,26 +746,36 @@ def generate_forest(map_entity: ecs.Entity) -> NDArray[np.int8]:
     if ruins is None:
         ruins = rect_room(grid.shape, 2, 2, 8, 6)
     walls = ~ruins & (funcs.moore(ruins) > 0)
+    # Create lake
+    lake = random_lake(~(ruins | walls), seed)
+    lake |= random_lake(~(ruins | walls | lake), seed)
+    lake |= random_lake(~(ruins | walls | lake), seed)
+    # Add grass around lake
+    grass = (~lake) & (funcs.moore(lake) > 0)
+    rand = seed.random(grid.shape)
+    grass |= (~lake) & (funcs.moore(grass) > 0) & (rand <= 0.6)
     # Create forest
-    grass = prune(cellular_automata(~(ruins | walls), seed, density=0.5))
+    grass |= cellular_automata(~(ruins | walls | lake), seed, density=0.5)
     # Combine areas
     areas = disjoint_areas(grass | ruins)
     if len(areas) > 2:
-        conn = delaunay_corridors(grass | ruins, areas, seed, 10, 0.9)
+        conn = delaunay_corridors(grass | ruins | lake, areas, seed, 10, 0.4)
     elif len(areas) == 2:
-        conn = corridor(grass | ruins, areas[0], areas[1], seed, 10)
+        conn = corridor(grass | ruins | lake, areas[0], areas[1], seed, 10)
     #
     grass |= conn & ~walls
     ruins |= conn & walls
     walls &= ~conn
+    lake &= ~conn
     #
     rand = seed.random(grid.shape)
-    trees = ~(grass | ruins | walls) | (
+    trees = ~(grass | ruins | walls | lake) | (
         grass & (funcs.moore(grass) >= 8) & (rand < 0.25)
     )
     #
     grid[grass] = db.tile_id["grass"]
     grid[trees] = db.tile_id["tree"]
+    grid[lake] = db.tile_id["water"]
     grid[walls] = db.tile_id["wall"]
     grid[ruins] = db.tile_id["floor"]
     return grid
