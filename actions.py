@@ -999,6 +999,7 @@ class Split(ActorAction):
         pos = self.actor.components[comp.Position]
         copy = entities.spawn_creature(map_entity, pos.xy, kind)
         copy.components[comp.HP] = new_hp
+        self.actor.components[comp.HP] = new_hp
         MoveAction.random(copy).perform()
         copy.components[comp.Initiative] = max(
             1, self.actor.components[comp.Initiative]
