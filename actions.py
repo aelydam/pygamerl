@@ -139,6 +139,33 @@ class MoveToAction(ActorAction):
 
 
 @dataclass
+class Projectile(ActorAction):
+    target: tuple[int, int]
+
+    def can(self) -> bool:
+        return (
+            comp.Position in self.actor.components
+            and entities.dist(self.actor, self.target) > 0
+        )
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        pos = self.actor.components[comp.Position]
+        path = tcod.los.bresenham(pos.xy, self.target).tolist()
+        if len(path) < 2:
+            return None
+        direction = (path[1][0] - path[0][0], path[1][1] - path[0][1])
+        self.actor.components[comp.Position] += direction
+        if entities.dist(self.actor, self.target) >= 1:
+            game_logic.push_action(self.actor.registry, self)
+        else:
+            self.actor.clear()
+        self.cost = 0
+        return self
+
+
+@dataclass
 class ExploreAction(ActorAction):
     cost: int = field(init=False, default=1)
 
@@ -287,6 +314,16 @@ class AttackAction(ActorAction):
             ammo = items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver)
             assert ammo is not None
             ammo.components[comp.Count] -= 1
+            # Add projectile
+            pos0 = self.actor.components[comp.Position]
+            proj_entity = ammo.registry.new_entity(
+                components={
+                    comp.Sprite: ammo.components[comp.Sprite],
+                    comp.Position: pos0,
+                }
+            )
+            proj_action = Projectile(proj_entity, tpos)
+            game_logic.push_action(proj_entity.registry, proj_action)
             if ammo.components[comp.Count] < 1:
                 ammo.clear()
         # Sound effect
