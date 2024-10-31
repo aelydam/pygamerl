@@ -28,5 +28,6 @@ Arrow:
   EquipSlot: Quiver
   DamageBonus: 1
   SpawnWeight: 2
+  SpawnCount: 8+3d4
   NativeDepth: 2
   MaxStack: 20
