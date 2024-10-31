@@ -258,9 +258,9 @@ class AttackAction(ActorAction):
         weapon_range = entities.attack_range(self.actor)
         if dist > weapon_range:
             return False
-        if (
-            weapon_range > 2
-            and items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver) is None
+        ammo = items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver)
+        if weapon_range > 2 and (
+            ammo is None or ammo.components.get(comp.Count, 1) < 1
         ):
             return False
         if dist >= 1.5 and not entities.is_in_fov(self.actor, self.target):
@@ -310,22 +310,24 @@ class AttackAction(ActorAction):
         self.cost = 1
         # Remove ammo
         weapon_range = entities.attack_range(self.actor)
-        if weapon_range > 2:
-            ammo = items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver)
-            assert ammo is not None
+        ammo = items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver)
+        if weapon_range > 2 and ammo is not None:
             ammo.components[comp.Count] -= 1
             # Add projectile
-            pos0 = self.actor.components[comp.Position]
-            proj_entity = ammo.registry.new_entity(
-                components={
-                    comp.Sprite: ammo.components[comp.Sprite],
-                    comp.Position: pos0,
-                }
-            )
-            proj_action = Projectile(proj_entity, tpos)
-            game_logic.push_action(proj_entity.registry, proj_action)
-            if ammo.components[comp.Count] < 1:
+            if comp.Sprite in ammo.components:
+                pos0 = self.actor.components[comp.Position]
+                proj_entity = ammo.registry.new_entity(
+                    components={
+                        comp.Sprite: ammo.components[comp.Sprite],
+                        comp.Position: pos0,
+                    }
+                )
+                proj_action = Projectile(proj_entity, tpos)
+                game_logic.push_action(proj_entity.registry, proj_action)
+            if ammo.components.get(comp.Count, 1) < 1:
                 ammo.clear()
+                if comp.EquipSlot.Quiver in self.actor.relation_tag:
+                    self.actor.relation_tag.pop(comp.EquipSlot.Quiver)
         # Sound effect
         mainhand = items.equipment_at_slot(self.actor, comp.EquipSlot.Main_Hand)
         if mainhand is not None and comp.AttackSFX in mainhand.components:
