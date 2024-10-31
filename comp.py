@@ -62,6 +62,7 @@ AttacksVerb = ("AttacksVerb", str)
 PlayerKills = ("PlayerKills", int)
 AttackSFX = ("AttackSFX", str)
 MovementSFX = ("MovementSFX", str)
+AIMorale = ("AIMorale", float)
 
 # Item Components
 MaxStack = ("MaxStack", int)

@@ -5,6 +5,7 @@ Skeleton:
   SpawnWeight: 1
   XPGain: 5
   NativeDepth: 3
+  AIMorale: 0
 
 Skeleton Archer:
   Name: Skeleton
@@ -14,6 +15,7 @@ Skeleton Archer:
   SpawnWeight: 1
   XPGain: 5
   NativeDepth: 4
+  AIMorale: 0
 
 Zombie:
   Sprite: {sheet: "Characters/Undead0", tile: [5, 0]}
@@ -24,6 +26,7 @@ Zombie:
   NativeDepth: 4
   XPGain: 10
   Inventory: {Mushroom: 1d4-3, Poison Mushroom: 1d4-3}
+  AIMorale: 0
 
 Ghost:
   Sprite: {sheet: "Characters/Undead0", tile: [0, 4]}
@@ -31,3 +34,4 @@ Ghost:
   SpawnWeight: 1
   NativeDepth: 5
   XPGain: 20
+  AIMorale: 0

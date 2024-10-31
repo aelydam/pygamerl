@@ -121,6 +121,37 @@ class MoveAction(ActorAction):
         dy = path[1][1] - path[0][1]
         return cls(actor, (dx, dy))
 
+    @classmethod
+    def flee(cls, actor: ecs.Entity) -> MoveAction | None:
+        map_entity = actor.relation_tag[comp.Map]
+        a_pos = actor.components[comp.Position].xy
+        cost = maps.cost_matrix(map_entity)
+        # Increase the cost near walls
+        cost[(cost > 0) & (funcs.moore(cost == 0) > 0)] += 1
+        cost[a_pos] = 1
+        #
+        dijkstra = tcod.path.maxarray(cost.shape, dtype=np.int32)
+        enemies = entities.enemies_in_fov(actor)
+        if len(enemies) < 1 and comp.AITarget not in actor.components:
+            return None
+        # Set "targets"
+        for e in enemies:
+            e_pos = e.components[comp.Position].xy
+            dijkstra[e_pos] = 0
+        if comp.AITarget in actor.components:
+            e_pos = actor.components[comp.AITarget].xy
+            dijkstra[e_pos] = 0
+        # Create Dijkstra map
+        tcod.path.dijkstra2d(dijkstra, cost, 2, 3, out=dijkstra)
+        # Invert dijkstra map
+        dijkstra = np.where(dijkstra <= 256, 256 - dijkstra, dijkstra)
+        #
+        path = tcod.path.hillclimb2d(dijkstra, a_pos, True, True).tolist()
+        if len(path) < 2:
+            return None
+        dx, dy = path[1][0] - path[0][0], path[1][1] - path[0][1]
+        return MoveAction(actor, (dx, dy))
+
 
 @dataclass
 class MoveToAction(ActorAction):

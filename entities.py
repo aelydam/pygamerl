@@ -264,6 +264,21 @@ def enemy_action(actor: ecs.Entity) -> actions.Action:
         enemy = next(iter(visible_enemies))
         actor.components[comp.AITarget] = enemy.components[comp.Position]
 
+    # Flee if low morale
+    if comp.MaxHP in actor.components:
+        hp_ratio = actor.components.get(comp.HP, 1) / actor.components.get(
+            comp.MaxHP, 1
+        )
+        if hp_ratio <= actor.components.get(comp.AIMorale, 0.5):
+            flee = actions.BumpAction.flee(actor)
+            if flee is not None and flee.can():
+                return flee
+            else:
+                move = actions.MoveAction.random(actor)
+                if move.can():
+                    return move
+                else:
+                    return actions.WaitAction(actor)
     # Switch weapon if has no ammo
     if not has_ammo(actor):
         toggle = actions.ToggleMainHand(actor)

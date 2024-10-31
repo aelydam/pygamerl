@@ -7,3 +7,4 @@ Slime:
   SpawnWeight: 1
   NativeDepth: 2
   OnDamage: { Split: 2 }
+  AIMorale: 0
