@@ -247,6 +247,14 @@ def can_act(actor: ecs.Entity) -> bool:
     )
 
 
+def has_ammo(actor: ecs.Entity) -> bool:
+    mainhand = items.equipment_at_slot(actor, comp.EquipSlot.Main_Hand)
+    if mainhand is None or comp.Range not in mainhand.components:
+        return True
+    ammo = items.equipment_at_slot(actor, comp.EquipSlot.Quiver)
+    return ammo is not None and ammo.components.get(comp.Count, 1) >= 1
+
+
 def enemy_action(actor: ecs.Entity) -> actions.Action:
     if not is_alive(actor):
         return actions.WaitAction(actor)
@@ -307,7 +315,12 @@ def spawn_creature(
                 items.add_item(entity, k, q)
     if comp.TempEquipment in kind.components:
         for k in kind.components[comp.TempEquipment]:
-            items.equip(entity, items.add_item(entity, k, 1))
+            item = items.add_item(entity, k, 1)
+            if comp.SpawnCount in item.components:
+                count = dice.dice_roll(item.components[comp.SpawnCount], seed)
+                print(count)
+                item.components[comp.Count] = count
+            items.equip(entity, item)
     return entity
 
 

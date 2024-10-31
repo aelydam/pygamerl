@@ -258,10 +258,7 @@ class AttackAction(ActorAction):
         weapon_range = entities.attack_range(self.actor)
         if dist > weapon_range:
             return False
-        ammo = items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver)
-        if weapon_range > 2 and (
-            ammo is None or ammo.components.get(comp.Count, 1) < 1
-        ):
+        if weapon_range > 2 and not entities.has_ammo(self.actor):
             return False
         if dist >= 1.5 and not entities.is_in_fov(self.actor, self.target):
             return False
@@ -310,8 +307,9 @@ class AttackAction(ActorAction):
         self.cost = 1
         # Remove ammo
         weapon_range = entities.attack_range(self.actor)
-        ammo = items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver)
-        if weapon_range > 2 and ammo is not None:
+        if weapon_range > 2 and entities.has_ammo(self.actor):
+            ammo = items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver)
+            assert ammo is not None
             ammo.components[comp.Count] -= 1
             # Add projectile
             if comp.Sprite in ammo.components:
