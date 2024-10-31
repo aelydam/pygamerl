@@ -272,6 +272,9 @@ class EntityTooltip(pg.sprite.Sprite):
         self.group = parent.group
         self.entity = parent.entity
         text = items.display_name(self.entity)
+        count = self.entity.components.get(comp.Count, 1)
+        if count > 1:
+            text = f"{count}x {text}"
         self.image: pg.Surface = font.render(
             text, False, consts.TOOLTIP_TEXT_COLOR, None
         )
