@@ -19,7 +19,7 @@ Poisonous Mushroom:
 Apple:
   Sprite: {sheet: Items/Food, tile: [0, 2]}
   UsesVerb: eats
-  SpawnWeight: 1
+  SpawnWeight: 2
   MaxStack: 10
   Effects:
     Eat: 2+1d4
@@ -27,7 +27,7 @@ Apple:
 Banana:
   Sprite: {sheet: Items/Food, tile: [4, 2]}
   UsesVerb: eats
-  SpawnWeight: 1
+  SpawnWeight: 2
   MaxStack: 10
   Effects:
     Eat: 2+1d4
@@ -35,7 +35,7 @@ Banana:
 Bread:
   Sprite: {sheet: Items/Food, tile: [1, 4]}
   UsesVerb: eats
-  SpawnWeight: 1
+  SpawnWeight: 2
   MaxStack: 10
   Effects:
     Eat: 3+1d6
@@ -43,7 +43,7 @@ Bread:
 Rations:
   Sprite: {sheet: Items/Food, tile: [2, 4]}
   UsesVerb: eats
-  SpawnWeight: 1
+  SpawnWeight: 2
   MaxStack: 10
   Effects:
     Eat: 4+2d6

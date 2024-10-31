@@ -1,7 +1,7 @@
 Healing Potion:
   Unidentified: Potion
   UsesVerb: drinks
-  SpawnWeight: 1
+  SpawnWeight: 2
   MaxStack: 4
   Effects:
     Heal: 2+1d6
@@ -73,7 +73,7 @@ Strength Elixir:
 Regeneration Potion:
   Unidentified: Potion
   UsesVerb: drinks
-  SpawnWeight: 1
+  SpawnWeight: 2
   MaxStack: 4
   Effects:
     AddCondition: {condition: Regeneration, turns: 2d6}
