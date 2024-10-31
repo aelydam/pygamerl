@@ -264,6 +264,11 @@ def enemy_action(actor: ecs.Entity) -> actions.Action:
         enemy = next(iter(visible_enemies))
         actor.components[comp.AITarget] = enemy.components[comp.Position]
 
+    # Switch weapon if has no ammo
+    if not has_ammo(actor):
+        toggle = actions.ToggleMainHand(actor)
+        if toggle.can():
+            return toggle
     target = actor.components.get(comp.AITarget)
     if target is not None:
         d = dist(actor, target)
@@ -318,7 +323,6 @@ def spawn_creature(
             item = items.add_item(entity, k, 1)
             if comp.SpawnCount in item.components:
                 count = dice.dice_roll(item.components[comp.SpawnCount], seed)
-                print(count)
                 item.components[comp.Count] = count
             items.equip(entity, item)
     return entity

@@ -10,10 +10,10 @@ Skeleton Archer:
   Name: Skeleton
   Sprite: {sheet: "Characters/Undead0", tile: [0, 2]}
   HP: 2+2d4
-  Equipment: [Shortbow, Arrow]
+  Equipment: [Shortsword, Shortbow, Arrow]
   SpawnWeight: 1
   XPGain: 5
-  NativeDepth: 3
+  NativeDepth: 4
 
 Zombie:
   Sprite: {sheet: "Characters/Undead0", tile: [5, 0]}
