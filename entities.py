@@ -260,8 +260,8 @@ def enemy_action(actor: ecs.Entity) -> actions.Action:
     if target is not None:
         d = dist(actor, target)
         # Attack player if in reach
-        reach = actor.components.get(comp.Reach, 1.5)
-        if d <= reach and enemy_infov:
+        range = attack_range(actor)
+        if d <= range and enemy_infov:
             return actions.AttackAction(actor, enemy)
         elif d == 0:
             actor.components.pop(comp.AITarget)
@@ -270,7 +270,7 @@ def enemy_action(actor: ecs.Entity) -> actions.Action:
                 move = actions.MoveAction(actor, dir)
                 if move.can():
                     return move
-        elif d > reach:
+        elif d > range:
             # Move towards target
             move_to = actions.MoveAction.to(actor, target.xy)
             if move_to is not None and move_to.can():

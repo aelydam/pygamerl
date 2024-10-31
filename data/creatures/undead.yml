@@ -6,6 +6,15 @@ Skeleton:
   XPGain: 5
   NativeDepth: 3
 
+Skeleton Archer:
+  Name: Skeleton
+  Sprite: {sheet: "Characters/Undead0", tile: [0, 2]}
+  HP: 2+2d4
+  Equipment: [Shortbow, Arrow]
+  SpawnWeight: 1
+  XPGain: 5
+  NativeDepth: 3
+
 Zombie:
   Sprite: {sheet: "Characters/Undead0", tile: [5, 0]}
   HP: 2+2d4

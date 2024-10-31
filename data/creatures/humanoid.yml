@@ -8,11 +8,31 @@ Goblin:
   SpawnWeight: 1
   NativeDepth: 2
 
+Goblin Archer:
+  Name: Goblin
+  Sprite: {sheet: "Characters/Player0", tile: [0, 13]}
+  HP: 2+2d4
+  Inventory: {Copper Pieces: 2+2d6, Silver Pieces: 1d8-4, Apple: 1d4-2}
+  Equipment: [Shortbow, Candle, Arrow]
+  XPGain: 10
+  SpawnWeight: 1
+  NativeDepth: 2
+
 Orc:
   Sprite: {sheet: "Characters/Player0", tile: [0, 12]}
   HP: 2+2d4
   Inventory: {Copper Pieces: 4+3d6, Silver Pieces: 1d8-3, Apple: 1d4-2}
   Equipment: [Shortsword, Leather Armor, Torch]
+  XPGain: 20
+  SpawnWeight: 1
+  NativeDepth: 3
+
+Orc Archer:
+  Name: Orc
+  Sprite: {sheet: "Characters/Player0", tile: [0, 12]}
+  HP: 2+2d4
+  Inventory: {Copper Pieces: 4+3d6, Silver Pieces: 1d8-3, Apple: 1d4-2}
+  Equipment: [Longbow, Arrow, Leather Armor, Torch]
   XPGain: 20
   SpawnWeight: 1
   NativeDepth: 3
