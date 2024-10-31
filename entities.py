@@ -79,7 +79,7 @@ def damage_dice(actor: ecs.Entity, default: str = "1") -> str:
 
 def attack_range(actor: ecs.Entity, default=1.5) -> float:
     mainhand = items.equipment_at_slot(actor, comp.EquipSlot.Main_Hand)
-    res = max(default, actor.components.get(comp.Range, default))
+    res = actor.components.get(comp.Range, default)
     if mainhand is not None and comp.Range in mainhand.components:
         res = max(res, mainhand.components[comp.Range])
     return res

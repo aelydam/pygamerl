@@ -537,7 +537,7 @@ def add_traps(
                 comp.Position: pos_comp,
                 comp.Sprite: comp.Sprite("Objects/Trap0", (3, 3)),
                 comp.Initiative: 0,
-                comp.Reach: 0,
+                comp.Range: 0,
                 comp.DamageDice: "1d4",
                 comp.AttackBonus: 10,
                 comp.XPGain: 5,
