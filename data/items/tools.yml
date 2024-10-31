@@ -22,3 +22,11 @@ Map:
   UsesVerb: reads
   Effects: MagicMap
   tags: Consumable
+
+Arrow:
+  Sprite: {sheet: "Items/Ammo", tile: [0,2]}
+  EquipSlot: Quiver
+  DamageBonus: 1
+  SpawnWeight: 2
+  NativeDepth: 2
+  MaxStack: 20

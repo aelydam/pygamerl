@@ -68,6 +68,7 @@ MovementSFX = ("MovementSFX", str)
 MaxStack = ("MaxStack", int)
 Count = ("Count", int)
 Price = ("Price", float)
+Range = ("Range", int)
 UnidentifiedName = ("UnidentifiedName", str)
 UsesVerb = ("UsesVerb", str)
 ActionCostMultiplier = ("ActionCostMultiplier", float)
@@ -100,6 +101,7 @@ class EquipSlot(Enum):
     Main_Hand = auto()
     Offhand = auto()
     Chest = auto()
+    Quiver = auto()
     Ring = auto()
 
 

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Callable
+
 import pygame as pg
+import tcod.ecs as ecs
 
 import actions
 import game_interface
@@ -34,8 +37,12 @@ CONTINUOUS_ACTION_KEYS: dict[int, type[actions.ActorAction]] = {
     pg.K_COMMA: actions.Rest,
 }
 
-ACTION_SHIFT_KEYS: dict[int, type[actions.ActorAction]] = {
+ACTION_SHIFT_KEYS: dict[
+    int,
+    type[actions.ActorAction] | Callable[[ecs.Entity], actions.Action | None],
+] = {
     pg.K_x: actions.MagicMap,
+    pg.K_f: actions.AttackAction.nearest,
 }
 
 STATE_KEYS: dict[int, type[game_interface.State]] = {

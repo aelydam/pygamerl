@@ -225,11 +225,18 @@ class AttackAction(ActorAction):
     def can(self) -> bool:
         if self.actor == self.target:
             return False
-        dist = entities.dist(self.actor, self.target)
-        reach = self.actor.components.get(comp.Reach, 1.5)
-        if dist > reach:
-            return False
         if not entities.is_alive(self.target):
+            return False
+        dist = entities.dist(self.actor, self.target)
+        weapon_range = entities.attack_range(self.actor)
+        if dist > weapon_range:
+            return False
+        if (
+            weapon_range > 2
+            and items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver) is None
+        ):
+            return False
+        if dist >= 1.5 and not entities.is_in_fov(self.actor, self.target):
             return False
         return True
 
@@ -261,22 +268,41 @@ class AttackAction(ActorAction):
         else:
             self.damage = 0
             text += "Miss!"
+        # Reveal trap
         if comp.Trap in self.actor.tags and comp.Hidden in self.actor.tags:
             self.actor.tags.discard(comp.Hidden)
+        # Change player direction
         apos = self.actor.components[comp.Position].xy
         tpos = self.target.components[comp.Position].xy
         self.actor.components[comp.Direction] = (tpos[0] - apos[0], tpos[1] - apos[1])
+        # Push damage to action queue
         damage = Damage(self.target, self.damage, self.crit, blame=self.actor)
         damage.append_message = True
         game_logic.push_action(self.target.registry, damage)
         self.message = text
         self.cost = 1
+        # Remove ammo
+        weapon_range = entities.attack_range(self.actor)
+        if weapon_range > 2:
+            ammo = items.equipment_at_slot(self.actor, comp.EquipSlot.Quiver)
+            assert ammo is not None
+            ammo.components[comp.Count] -= 1
+            if ammo.components[comp.Count] < 1:
+                ammo.clear()
+        # Sound effect
         mainhand = items.equipment_at_slot(self.actor, comp.EquipSlot.Main_Hand)
         if mainhand is not None and comp.AttackSFX in mainhand.components:
             self.sfx = mainhand.components[comp.AttackSFX]
         elif comp.AttackSFX in self.actor.components:
             self.sfx = self.actor.components[comp.AttackSFX]
         return self
+
+    @classmethod
+    def nearest(cls, actor: ecs.Entity) -> AttackAction | None:
+        target = entities.nearest_enemy(actor)
+        if target is None:
+            return None
+        return cls(actor, target)
 
 
 class BumpAction(MoveAction):

@@ -77,6 +77,14 @@ def damage_dice(actor: ecs.Entity, default: str = "1") -> str:
     return dice
 
 
+def attack_range(actor: ecs.Entity, default=1.5) -> float:
+    mainhand = items.equipment_at_slot(actor, comp.EquipSlot.Main_Hand)
+    res = max(default, actor.components.get(comp.Range, default))
+    if mainhand is not None and comp.Range in mainhand.components:
+        res = max(res, mainhand.components[comp.Range])
+    return res
+
+
 def speed(actor: ecs.Entity, default: int = consts.BASE_SPEED) -> int:
     return int(get_combined_component(actor, comp.Speed, default))
 
@@ -216,6 +224,13 @@ def enemies_in_fov(actor: ecs.Entity) -> set[ecs.Entity]:
 
 def has_enemy_in_fov(actor: ecs.Entity) -> bool:
     return len(enemies_in_fov(actor)) > 0
+
+
+def nearest_enemy(actor: ecs.Entity) -> ecs.Entity | None:
+    enemies = enemies_in_fov(actor)
+    if len(enemies) < 1:
+        return None
+    return sorted(enemies, key=lambda e: dist(actor, e))[0]
 
 
 def is_alive(actor: ecs.Entity) -> bool:

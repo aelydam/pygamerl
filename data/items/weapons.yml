@@ -18,3 +18,19 @@ Longsword:
   EquipSlot: Main_Hand
   SpawnWeight: 1
   NativeDepth: 5
+
+Shortbow:
+  Sprite: {sheet: "Items/Ammo", tile: [2,1]}
+  Range: 12
+  DamageDice: 1d4
+  EquipSlot: Main_Hand
+  SpawnWeight: 1
+  NativeDepth: 1
+
+Longbow:
+  Sprite: {sheet: "Items/Ammo", tile: [0,1]}
+  Range: 12
+  DamageDice: 1d4
+  EquipSlot: Main_Hand
+  SpawnWeight: 1
+  NativeDepth: 4
