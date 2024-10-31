@@ -99,6 +99,7 @@ PlayerSteps = ("PlayerSteps", float)
 
 class EquipSlot(Enum):
     Main_Hand = auto()
+    Ready = auto()
     Offhand = auto()
     Chest = auto()
     Quiver = auto()

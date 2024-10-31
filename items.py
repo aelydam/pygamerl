@@ -146,6 +146,14 @@ def is_equipped(item: ecs.Entity) -> bool:
     return in_slot == item
 
 
+def is_ready(item: ecs.Entity) -> bool:
+    if comp.EquipSlot not in item.components or comp.Inventory not in item.relation_tag:
+        return False
+    actor = item.relation_tag[comp.Inventory]
+    ready = equipment_at_slot(actor, comp.EquipSlot.Ready)
+    return ready == item
+
+
 def equipment_at_slot(actor: ecs.Entity, slot: comp.EquipSlot) -> ecs.Entity | None:
     if slot in actor.relation_tag:
         return actor.relation_tag[slot]
@@ -168,7 +176,11 @@ def equip(actor: ecs.Entity, item: ecs.Entity):
     if item.relation_tag[comp.Inventory] != actor:
         return
     slot = item.components[comp.EquipSlot]
-    unequip_slot(actor, slot)
+    prev_in_slot = equipment_at_slot(actor, slot)
+    if prev_in_slot is not None:
+        unequip_slot(actor, slot)
+        if slot == comp.EquipSlot.Main_Hand:
+            actor.relation_tag[comp.EquipSlot.Ready] = prev_in_slot
     actor.relation_tag[slot] = item
     if comp.LightRadius in item.components:
         actor.tags |= {comp.Lit}

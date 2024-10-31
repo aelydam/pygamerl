@@ -30,6 +30,7 @@ ACTION_KEYS: dict[int, type[actions.ActorAction]] = {
     pg.K_SPACE: actions.WaitAction,
     pg.K_l: actions.ToggleTorch,
     pg.K_k: actions.Search,
+    pg.K_r: actions.ToggleMainHand,
 }
 
 CONTINUOUS_ACTION_KEYS: dict[int, type[actions.ActorAction]] = {

@@ -522,6 +522,21 @@ class Drop(Interaction):
         return self
 
 
+class ToggleMainHand(ActorAction):
+    def can(self):
+        return (
+            entities.is_alive(self.actor)
+            and items.equipment_at_slot(self.actor, comp.EquipSlot.Ready) is not None
+        )
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        ready = items.equipment_at_slot(self.actor, comp.EquipSlot.Ready)
+        assert ready is not None
+        return Equip(self.actor, ready).perform()
+
+
 class Use(Interaction):
     def can(self) -> bool:
         return (

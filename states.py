@@ -474,6 +474,7 @@ class InventoryState(game_interface.State):
         count = item.components.get(comp.Count, 1)
         name = items.display_name(item)
         equipped = " [E]" if items.is_equipped(item) else ""
+        equipped = " [R]" if items.is_ready(item) else equipped
         return f"{count}x {name}{equipped}"
 
     @staticmethod
