@@ -19,6 +19,17 @@ def display_name(item: ecs.Entity) -> str:
     return item.components[comp.Name]
 
 
+def slot_name(slot: comp.EquipSlot | ecs.Entity) -> str:
+    if isinstance(slot, ecs.Entity):
+        if is_ready(slot):
+            slot = comp.EquipSlot.Ready
+        elif comp.EquipSlot in slot.components:
+            slot = slot.components[comp.EquipSlot]
+        else:
+            return ""
+    return slot.name.replace("_", " ")
+
+
 def identify(item: ecs.Entity):
     if is_identified(item):
         return

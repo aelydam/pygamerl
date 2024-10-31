@@ -471,11 +471,17 @@ class InventoryState(game_interface.State):
 
     @staticmethod
     def item_text(item: ecs.Entity) -> str:
-        count = item.components.get(comp.Count, 1)
+        count_i = item.components.get(comp.Count, 1)
+        if count_i > 1:
+            count_s = f"{count_i}x "
+        else:
+            count_s = ""
         name = items.display_name(item)
-        equipped = " [E]" if items.is_equipped(item) else ""
-        equipped = " [R]" if items.is_ready(item) else equipped
-        return f"{count}x {name}{equipped}"
+        if items.is_equipped(item) or items.is_ready(item):
+            slot = items.slot_name(item) + ": "
+        else:
+            slot = ""
+        return f"{slot}{count_s}{name}"
 
     @staticmethod
     def item_icon(item: ecs.Entity) -> pg.Surface | None:
