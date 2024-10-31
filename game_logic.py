@@ -204,8 +204,8 @@ class GameLogic:
         items.add_item(player, "Apple", 2)
         items.add_item(player, "Arrow", 20)
         items.equip(player, items.add_item(player, "Arrow", 20))
-        items.equip(player, items.add_item(player, "Dagger"))
         items.equip(player, items.add_item(player, "Shortbow"))
+        items.equip(player, items.add_item(player, "Dagger"))
         items.equip(player, items.add_item(player, "Leather Armor"))
         items.equip(player, items.add_item(player, "Torch"))
 
