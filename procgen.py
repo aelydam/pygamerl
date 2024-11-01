@@ -471,10 +471,17 @@ def add_downstairs(
     # Create dijkstra map to upstairs
     cost = maps.cost_matrix(map_entity)
     dijkstra = tcod.path.maxarray(grid.shape, dtype=np.int32)
-    query = map_entity.registry.Q.all_of(
-        components=[comp.Position],
-        tags=[comp.Upstairs],
-        relations=[(comp.Map, map_entity)],
+    query = (
+        map_entity.registry.Q.all_of(
+            components=[comp.Position],
+            tags=[comp.Upstairs],
+            relations=[(comp.Map, map_entity)],
+        ).get_entities()
+        | map_entity.registry.Q.all_of(
+            components=[comp.Position],
+            tags=[comp.Chest],
+            relations=[(comp.Map, map_entity)],
+        ).get_entities()
     )
     for e in query:
         pos = e.components[comp.Position]
@@ -689,6 +696,41 @@ def player_spawn(map_entity: ecs.Entity) -> comp.Position:
     return comp.Position((all_x[i], all_y[i]), depth)
 
 
+def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
+    grid = map_entity.components[comp.Tiles]
+    seed = map_entity.components[np.random.RandomState]
+    depth = map_entity.components[comp.Depth]
+    walkable = db.walkable[grid]
+    # Separate rooms
+    rmoore = funcs.moore(room_grid)
+    inroom = room_grid & (funcs.moore(rmoore == 8) > 0)
+    room_list = disjoint_areas(inroom)
+    # Count the connections of each room
+    room_connections = [
+        # Walkable tiles that are not in the room but are next to the room
+        np.sum(walkable & ~r & (funcs.moore(r) > 0))
+        for r in room_list
+    ]
+    # Find rooms with only one connection
+    room_list = [r for r, c in zip(room_list, room_connections) if c == 1]
+    for room in room_list:
+        door_tile = walkable & ~room & (funcs.moore(room) > 0)
+        available = room & (funcs.moore(door_tile) == 0)
+        if np.sum(available) < 1:
+            continue
+        all_x, all_y = np.where(available)
+        i = seed.randint(0, len(all_x))
+        pos = (all_x[i], all_y[i])
+        map_entity.registry.new_entity(
+            components={
+                comp.Name: "Chest",
+                comp.Position: comp.Position(pos, depth),
+                comp.Sprite: comp.Sprite("Items/Chest0", (1, 0)),
+            },
+            tags={comp.Obstacle, comp.Chest},
+        )
+
+
 def generate(map_entity: ecs.Entity):
     # Generate map
     world_seed = map_entity.registry[None].components[np.random.RandomState]
@@ -710,19 +752,14 @@ def generate(map_entity: ecs.Entity):
     grid = update_bitmasks(grid)
     # Save generated map
     map_entity.components[comp.Tiles] = grid
-    # Add doors
+    # Add props
     add_doors(map_entity, room_floor)
-    # Add torches
     add_torches(map_entity, condition=funcs.moore(room_floor) > 0)
-    # Add traps
     add_traps(map_entity)
-    # Add boulders
     add_boulders(map_entity, condition=grid == db.tile_id["cavefloor"])
-    # Stairs
+    add_chests(map_entity, room_floor)
     add_downstairs(map_entity, room_floor, max_count=1 + (depth > 0))
-    # Spawn items
     spawn_items(map_entity)
-    # Spawn enemies
     spawn_enemies(map_entity, consts.ENEMY_RADIUS, consts.N_ENEMIES)
 
 
