@@ -635,7 +635,7 @@ class ContainerState(game_interface.State):
         if event.type == pg.KEYUP:
             if event.key == pg.K_ESCAPE:
                 self.interface.pop()
-            if event.key in (pg.K_LEFT, pg.K_RIGHT):
+            elif event.key in (pg.K_LEFT, pg.K_RIGHT):
                 self.menu.disabled = not self.menu.disabled
                 self.inventory.disabled = not self.menu.disabled
                 self.menu.refresh()
