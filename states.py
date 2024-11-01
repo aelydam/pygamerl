@@ -170,6 +170,10 @@ class InGameState(game_interface.State):
     def stairs_callback(self, actions: actions.Descend | actions.Ascend):
         self.update_bgm()
 
+    def container_callback(self, action: actions.OpenContainer):
+        if action.target is not None and len(list(items.inventory(action.target))) > 0:
+            self.interface.push(ContainerState(self, action.target))
+
     def sfx_callback(self, action: actions.Action):
         if hasattr(action, "sfx") and action.sfx != "":
             return self.interface.play_sfx(action.sfx)
@@ -183,6 +187,7 @@ class InGameState(game_interface.State):
     def register_callbacks(self):
         self.logic.register_callback(actions.Damage, self.popup_callback)
         self.logic.register_callback(actions.Heal, self.popup_callback)
+        self.logic.register_callback(actions.OpenContainer, self.container_callback)
         for action_class in audio.ACTION_SFX.keys():
             self.logic.register_callback(action_class, self.sfx_callback)
 
@@ -564,6 +569,69 @@ class InventoryState(game_interface.State):
         else:
             self.interface.logic.input_action = actions.Use(player, item)
             self.interface.pop()
+
+
+class ContainerState(game_interface.State):
+    def __init__(self, parent: InGameState, container: ecs.Entity):
+        super().__init__(parent)
+        self.container = container
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        self.menu = gui_elements.Menu(self.ui_group, [], 16, width=240)
+        self.refresh()
+        self.menu.select(0)
+        self.update()
+
+    def refresh(self):
+        self.items = sorted(
+            list(items.inventory(self.container)), key=lambda x: items.display_name(x)
+        )
+        names = [InventoryState.item_text(i) for i in self.items]
+        icons = [InventoryState.item_icon(i) for i in self.items]
+        self.menu.set_items(names, icons, True)
+
+    def update(self):
+        super().update()
+        logic = self.interface.logic
+        if (
+            len(logic.initiative) < 1
+            or logic.current_entity != logic.player
+            or len(logic.action_queue) > 0
+            or logic.input_action is not None
+        ):
+            logic.update()
+            self.refresh()
+        w, h = self.interface.screen.size
+        self.menu.rect.center = (w // 2, h // 2)
+        self.ui_group.update()
+
+    def render(self, screen: pg.Surface):
+        super().render(screen)
+        self.parent.render(screen)
+        self.ui_group.draw(screen)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key == pg.K_ESCAPE:
+                self.interface.pop()
+            elif event.key == pg.K_RETURN:
+                self.select()
+            else:
+                self.menu.on_keyup(event.key)
+        elif event.type == pg.MOUSEBUTTONUP:
+            if not self.menu.rect.collidepoint(*event.pos):
+                self.interface.pop()
+            elif self.menu.pressed_index == self.menu.selected_index:
+                self.select()
+
+    def select(self):
+        if len(self.items) < 1:
+            return
+        item = self.items[self.menu.selected_index]
+        player = self.interface.logic.player
+        self.interface.logic.input_action = actions.Pickup(player, item)
+        self.refresh()
+        if self.menu.selected_index >= len(self.items):
+            self.menu.selected_index -= 1
 
 
 class LoadGameState(game_interface.State):

@@ -83,7 +83,8 @@ def pickup(actor: ecs.Entity, item: ecs.Entity):
     count = stack_item(item, query)
     if count > 0:
         item.relation_tag[comp.Inventory] = actor
-        item.components.pop(comp.Position)
+        if comp.Position in item.components:
+            item.components.pop(comp.Position)
 
 
 def drop(item: ecs.Entity):

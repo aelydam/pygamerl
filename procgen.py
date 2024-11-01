@@ -721,14 +721,20 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
         all_x, all_y = np.where(available)
         i = seed.randint(0, len(all_x))
         pos = (all_x[i], all_y[i])
-        map_entity.registry.new_entity(
+        chest = map_entity.registry.new_entity(
             components={
                 comp.Name: "Chest",
                 comp.Position: comp.Position(pos, depth),
                 comp.Sprite: comp.Sprite("Items/Chest0", (1, 0)),
+                comp.Interaction: actions.OpenContainer,
             },
             tags={comp.Obstacle, comp.Chest},
         )
+        n_items = (seed.randint(1, 6) + seed.randint(1, 6)) // 2
+        for _ in range(n_items):
+            kind = pick_item_kind(map_entity)
+            count = pick_item_count(map_entity, kind)
+            items.add_item(chest, kind, count)
 
 
 def generate(map_entity: ecs.Entity):

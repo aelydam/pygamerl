@@ -555,6 +555,10 @@ class Pickup(Interaction):
             self.target is not None
             and (not self.bump or comp.Autopick in self.target.tags)
             and "items" in self.target.tags
+            and (
+                comp.Position in self.target.components
+                or comp.Inventory in self.target.relation_tag
+            )
             and super().can()
         )
 
@@ -858,6 +862,28 @@ class Boulder(Interaction):
                 game_logic.push_action(self.actor.registry, attack)
                 return self
         self.target.components[comp.Position] = new_pos
+        return self
+
+
+class OpenContainer(Interaction):
+    def can(self) -> bool:
+        return (
+            self.target is not None
+            and entities.dist(self.actor, self.target) < 1.5
+            and entities.is_alive(self.actor)
+        )
+
+    def perform(self) -> Action | None:
+        if self.target is None or not self.can():
+            return None
+        # this is just a dummy action
+        # it is intended to trigger a callback in interface side
+        aname = self.actor.components.get(comp.Name)
+        tname = self.target.components.get(comp.Name)
+        if aname is not None and tname is not None:
+            self.message = f"{aname} opens {tname}"
+            if len(list(items.inventory(self.target))) < 1:
+                self.message += ": empty"
         return self
 
 
