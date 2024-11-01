@@ -398,7 +398,7 @@ class InventoryMenu(gui_elements.Menu):
         max_rows: int = 16,
         width: int = 240,
         lines_per_item: int = 1,
-        show_equipped: bool = True,
+        show_equipped: bool = False,
         sort_by_slot: bool = True,
     ):
         self.entity = entity
@@ -422,11 +422,7 @@ class InventoryMenu(gui_elements.Menu):
         else:
             count_s = ""
         name = items.display_name(item)
-        if items.is_equipped(item) or items.is_ready(item):
-            slot = items.slot_name(item) + ": "
-        else:
-            slot = ""
-        return f"{slot}{count_s}{name}"
+        return f"{count_s}{name}"
 
     @staticmethod
     def item_icon(item: ecs.Entity) -> pg.Surface | None:
@@ -460,6 +456,54 @@ class InventoryMenu(gui_elements.Menu):
         )
         names = [self.item_text(i) for i in self.entities]
         icons = [self.item_icon(i) for i in self.entities]
+        return names, icons
+
+    def refresh(self):
+        names, icons = self.text_and_icons()
+        self.set_items(names, icons, True)
+
+
+class EquipmentMenu(gui_elements.Menu):
+    def __init__(
+        self,
+        group: pg.sprite.Group,
+        entity: ecs.Entity,
+        width: int = 240,
+        lines_per_item: int = 1,
+    ):
+        self.entity = entity
+        names, icons = self.text_and_icons()
+        max_rows = len(comp.EquipSlot)
+        super().__init__(
+            group,
+            names,
+            icons=icons,
+            max_rows=max_rows,
+            width=width,
+            lines_per_item=lines_per_item,
+        )
+
+    def item_text(self, slot: comp.EquipSlot) -> str:
+        slot_name = slot.name.replace("_", " ")
+        item = items.equipment_at_slot(self.entity, slot)
+        if item is not None:
+            item_name = InventoryMenu.item_text(item)
+        else:
+            item_name = "[empty]"
+        return f"{slot_name}: {item_name}"
+
+    def item_icon(self, slot: comp.EquipSlot) -> pg.Surface | None:
+        item = items.equipment_at_slot(self.entity, slot)
+        if item is None:
+            return None
+        return InventoryMenu.item_icon(item)
+
+    def text_and_icons(self) -> tuple[list[str], list[pg.Surface | None]]:
+        self.entities = [
+            items.equipment_at_slot(self.entity, s) for s in comp.EquipSlot
+        ]
+        names = [self.item_text(s) for s in comp.EquipSlot]
+        icons = [self.item_icon(s) for s in comp.EquipSlot]
         return names, icons
 
     def refresh(self):

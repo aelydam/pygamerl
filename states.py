@@ -480,9 +480,13 @@ class InventoryState(game_interface.State):
         self.parent = parent
         super().__init__(parent.interface)
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        player = self.interface.logic.player
         self.menu = ui_elements.InventoryMenu(
-            self.ui_group, self.interface.logic.player
+            self.ui_group, player, show_equipped=False
         )
+        self.equip = ui_elements.EquipmentMenu(self.ui_group, player)
+        self.equip.disabled = True
+        self.equip.refresh()
         self.menu.refresh()
         self.menu.select(0)
 
@@ -497,8 +501,10 @@ class InventoryState(game_interface.State):
         ):
             logic.update()
             self.menu.refresh()
+            self.equip.refresh()
         w, h = self.interface.screen.size
-        self.menu.rect.center = (w // 2, h // 2)
+        self.menu.rect.midleft = (w // 2 - self.menu.rect.width, h // 2)
+        self.equip.rect.topleft = self.menu.rect.topright
         self.ui_group.update()
 
     def render(self, screen: pg.Surface):
@@ -510,17 +516,56 @@ class InventoryState(game_interface.State):
         if event.type == pg.KEYUP:
             if event.key == pg.K_ESCAPE:
                 self.interface.pop()
-            elif event.key == pg.K_RETURN:
-                self.select()
-            elif event.key == pg.K_DELETE:
-                self.drop()
-            else:
-                self.menu.on_keyup(event.key)
+            if event.key in (pg.K_LEFT, pg.K_RIGHT):
+                self.menu.disabled = not self.menu.disabled
+                self.equip.disabled = not self.menu.disabled
+                self.menu.refresh()
+                self.equip.refresh()
+            elif not self.menu.disabled:
+                if event.key == pg.K_RETURN:
+                    self.select_inventory()
+                elif event.key == pg.K_DELETE:
+                    self.drop()
+                else:
+                    self.menu.on_keyup(event.key)
+            elif not self.equip.disabled:
+                if event.key == pg.K_RETURN:
+                    self.equip.update()
+                    self.select_equipment()
+                else:
+                    self.equip.on_keyup(event.key)
+
+        elif event.type == pg.MOUSEMOTION:
+            if self.menu.disabled and self.menu.rect.collidepoint(*event.pos):
+                self.menu.disabled = False
+                self.equip.disabled = True
+                self.menu.refresh()
+                self.equip.refresh()
+                self.menu.update()
+                self.menu.select(self.menu.hovering_index)
+            elif self.equip.disabled and self.equip.rect.collidepoint(*event.pos):
+                self.menu.disabled = True
+                self.equip.disabled = False
+                self.menu.refresh()
+                self.equip.refresh()
+                self.menu.update()
+                self.equip.select(self.equip.hovering_index)
+
         elif event.type == pg.MOUSEBUTTONUP:
-            if not self.menu.rect.collidepoint(*event.pos):
+            if (
+                not self.menu.disabled
+                and self.menu.pressed_index == self.menu.selected_index
+                and self.menu.rect.collidepoint(*event.pos)
+            ):
+                self.select_inventory()
+            elif (
+                not self.equip.disabled
+                and self.equip.pressed_index == self.equip.selected_index
+                and self.equip.rect.collidepoint(*event.pos)
+            ):
+                self.select_equipment()
+            else:
                 self.interface.pop()
-            elif self.menu.pressed_index == self.menu.selected_index:
-                self.select()
 
     def drop(self):
         if len(self.menu.entities) < 1:
@@ -532,18 +577,23 @@ class InventoryState(game_interface.State):
         else:
             self.interface.logic.input_action = actions.Drop(player, item)
 
-    def select(self):
+    def select_inventory(self):
         if len(self.menu.entities) < 1:
             return
         item = self.menu.entities[self.menu.selected_index]
         player = self.interface.logic.player
-        if items.is_equipped(item):
-            self.interface.logic.input_action = actions.Unequip(player, item)
-        elif items.is_equippable(item):
+        if items.is_equippable(item):
             self.interface.logic.input_action = actions.Equip(player, item)
         else:
             self.interface.logic.input_action = actions.Use(player, item)
             self.interface.pop()
+
+    def select_equipment(self):
+        item = self.equip.entities[self.equip.selected_index]
+        if item is None:
+            return
+        player = self.interface.logic.player
+        self.interface.logic.input_action = actions.Unequip(player, item)
 
 
 class ContainerState(game_interface.State):
