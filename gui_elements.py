@@ -199,7 +199,7 @@ class Menu(Box):
             if index < 0 or index >= len(self.items):
                 break
             text = self.items[index]
-            if index == self.selected_index:
+            if not self.disabled and index == self.selected_index:
                 bgcolor = self.focus_bgcolor
                 fgcolor = self.focus_fgcolor
             else:
