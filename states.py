@@ -137,9 +137,19 @@ class InGameState(game_interface.State):
                 else:
                     self.logic.input_action = actions.WaitAction(player)
                 return
-            if (x - px) ** 2 + (y - py) ** 2 <= 2:
+            dist2 = (x - px) ** 2 + (y - py) ** 2
+            if dist2 <= 1.5:
                 self.logic.input_action = actions.BumpAction.to(player, (x, y))
             else:
+                range = entities.attack_range(player)
+                if dist2 <= range**2:
+                    enemies = self.logic.reg.Q.all_of(
+                        components=[comp.Position, comp.HP, comp.Initiative],
+                        tags=[comp.Position((x, y), self.map_renderer.depth)],
+                    )
+                    for e in enemies:
+                        self.logic.input_action = actions.AttackAction(player, e)
+                        return
                 self.logic.continuous_action = actions.MoveToAction(player, (x, y))
 
         elif event.type == pg.MOUSEMOTION:
