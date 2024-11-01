@@ -480,40 +480,13 @@ class InventoryState(game_interface.State):
         self.parent = parent
         super().__init__(parent.interface)
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
-        self.menu = gui_elements.Menu(self.ui_group, [], 16, width=240)
-        self.refresh()
+        self.menu = ui_elements.InventoryMenu(
+            self.ui_group, self.interface.logic.player
+        )
+        self.menu.refresh()
         self.menu.select(0)
 
-    @staticmethod
-    def item_text(item: ecs.Entity) -> str:
-        count_i = item.components.get(comp.Count, 1)
-        if count_i > 1:
-            count_s = f"{count_i}x "
-        else:
-            count_s = ""
-        name = items.display_name(item)
-        if items.is_equipped(item) or items.is_ready(item):
-            slot = items.slot_name(item) + ": "
-        else:
-            slot = ""
-        return f"{slot}{count_s}{name}"
-
-    @staticmethod
-    def item_icon(item: ecs.Entity) -> pg.Surface | None:
-        if comp.Sprite not in item.components:
-            return None
-        spr = item.components[comp.Sprite]
-        return assets.tile(spr.sheet, tuple(spr.tile))
-
-    @staticmethod
-    def item_sortkey(item: ecs.Entity) -> tuple:
-        return (
-            str(item.components.get(comp.EquipSlot, "Z")),
-            items.display_name(item),
-            100 - item.components.get(comp.Count, 1),
-        )
-
-    def update(self):
+    def update(self) -> None:
         super().update()
         logic = self.interface.logic
         if (
@@ -523,7 +496,7 @@ class InventoryState(game_interface.State):
             or logic.input_action is not None
         ):
             logic.update()
-            self.refresh()
+            self.menu.refresh()
         w, h = self.interface.screen.size
         self.menu.rect.center = (w // 2, h // 2)
         self.ui_group.update()
@@ -549,18 +522,10 @@ class InventoryState(game_interface.State):
             elif self.menu.pressed_index == self.menu.selected_index:
                 self.select()
 
-    def refresh(self):
-        self.items = sorted(
-            list(items.inventory(self.interface.logic.player)), key=self.item_sortkey
-        )
-        names = [self.item_text(i) for i in self.items]
-        icons = [self.item_icon(i) for i in self.items]
-        self.menu.set_items(names, icons, True)
-
     def drop(self):
-        if len(self.items) < 1:
+        if len(self.menu.entities) < 1:
             return
-        item = self.items[self.menu.selected_index]
+        item = self.menu.entities[self.menu.selected_index]
         player = self.interface.logic.player
         if items.is_equipped(item):
             self.interface.logic.input_action = actions.Unequip(player, item)
@@ -568,9 +533,9 @@ class InventoryState(game_interface.State):
             self.interface.logic.input_action = actions.Drop(player, item)
 
     def select(self):
-        if len(self.items) < 1:
+        if len(self.menu.entities) < 1:
             return
-        item = self.items[self.menu.selected_index]
+        item = self.menu.entities[self.menu.selected_index]
         player = self.interface.logic.player
         if items.is_equipped(item):
             self.interface.logic.input_action = actions.Unequip(player, item)
@@ -586,18 +551,9 @@ class ContainerState(game_interface.State):
         super().__init__(parent)
         self.container = container
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
-        self.menu = gui_elements.Menu(self.ui_group, [], 16, width=240)
-        self.refresh()
+        self.menu = ui_elements.InventoryMenu(self.ui_group, container)
         self.menu.select(0)
         self.update()
-
-    def refresh(self):
-        self.items = sorted(
-            list(items.inventory(self.container)), key=lambda x: items.display_name(x)
-        )
-        names = [InventoryState.item_text(i) for i in self.items]
-        icons = [InventoryState.item_icon(i) for i in self.items]
-        self.menu.set_items(names, icons, True)
 
     def update(self):
         super().update()
@@ -609,7 +565,7 @@ class ContainerState(game_interface.State):
             or logic.input_action is not None
         ):
             logic.update()
-            self.refresh()
+            self.menu.refresh()
         w, h = self.interface.screen.size
         self.menu.rect.center = (w // 2, h // 2)
         self.ui_group.update()
@@ -634,13 +590,13 @@ class ContainerState(game_interface.State):
                 self.select()
 
     def select(self):
-        if len(self.items) < 1:
+        if len(self.menu.entities) < 1:
             return
-        item = self.items[self.menu.selected_index]
+        item = self.menu.entities[self.menu.selected_index]
         player = self.interface.logic.player
         self.interface.logic.input_action = actions.Pickup(player, item)
-        self.refresh()
-        if self.menu.selected_index >= len(self.items):
+        self.menu.refresh()
+        if self.menu.selected_index >= len(self.menu.entities):
             self.menu.selected_index -= 1
 
 

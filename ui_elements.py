@@ -4,12 +4,15 @@ from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import pygame as pg
+import tcod.ecs as ecs
 
 import actions
+import assets
 import comp
 import conditions
 import consts
 import db
+import gui_elements
 import items
 import map_renderer
 import maps
@@ -385,3 +388,80 @@ class ConditionsHUD(pg.sprite.Sprite):
             return
         self.image = self.font.render(text, False, "#FFFFFF")
         self.rect = self.image.get_rect(topleft=self.rect.topleft)
+
+
+class InventoryMenu(gui_elements.Menu):
+    def __init__(
+        self,
+        group: pg.sprite.Group,
+        entity: ecs.Entity,
+        max_rows: int = 16,
+        width: int = 240,
+        lines_per_item: int = 1,
+        show_equipped: bool = True,
+        sort_by_slot: bool = True,
+    ):
+        self.entity = entity
+        self.sort_by_slot = sort_by_slot
+        self.show_equipped = show_equipped
+        names, icons = self.text_and_icons()
+        super().__init__(
+            group,
+            names,
+            icons=icons,
+            max_rows=max_rows,
+            width=width,
+            lines_per_item=lines_per_item,
+        )
+
+    @staticmethod
+    def item_text(item: ecs.Entity) -> str:
+        count_i = item.components.get(comp.Count, 1)
+        if count_i > 1:
+            count_s = f"{count_i}x "
+        else:
+            count_s = ""
+        name = items.display_name(item)
+        if items.is_equipped(item) or items.is_ready(item):
+            slot = items.slot_name(item) + ": "
+        else:
+            slot = ""
+        return f"{slot}{count_s}{name}"
+
+    @staticmethod
+    def item_icon(item: ecs.Entity) -> pg.Surface | None:
+        if comp.Sprite not in item.components:
+            return None
+        spr = item.components[comp.Sprite]
+        return assets.tile(spr.sheet, tuple(spr.tile))
+
+    def item_sortkey(self, item: ecs.Entity) -> tuple:
+        if self.sort_by_slot:
+            return (
+                str(item.components.get(comp.EquipSlot, "Z")),
+                items.display_name(item),
+                100 - item.components.get(comp.Count, 1),
+            )
+        else:
+            return (
+                items.display_name(item),
+                100 - item.components.get(comp.Count, 1),
+            )
+
+    def text_and_icons(self) -> tuple[list[str], list[pg.Surface | None]]:
+        self.entities = sorted(
+            [
+                i
+                for i in items.inventory(self.entity)
+                if self.show_equipped
+                or (not items.is_equipped(i) and not items.is_ready(i))
+            ],
+            key=self.item_sortkey,
+        )
+        names = [self.item_text(i) for i in self.entities]
+        icons = [self.item_icon(i) for i in self.entities]
+        return names, icons
+
+    def refresh(self):
+        names, icons = self.text_and_icons()
+        self.set_items(names, icons, True)
