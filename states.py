@@ -181,7 +181,7 @@ class InGameState(game_interface.State):
         self.update_bgm()
 
     def container_callback(self, action: actions.OpenContainer):
-        if action.target is not None and len(list(items.inventory(action.target))) > 0:
+        if action.target is not None:
             self.interface.push(ContainerState(self, action.target))
 
     def sfx_callback(self, action: actions.Action):
@@ -602,7 +602,11 @@ class ContainerState(game_interface.State):
         self.container = container
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         self.menu = ui_elements.InventoryMenu(self.ui_group, container)
+        player = self.interface.logic.player
+        self.inventory = ui_elements.InventoryMenu(self.ui_group, player)
+        self.inventory.disabled = True
         self.menu.select(0)
+        self.inventory.refresh()
         self.update()
 
     def update(self):
@@ -616,8 +620,10 @@ class ContainerState(game_interface.State):
         ):
             logic.update()
             self.menu.refresh()
+            self.inventory.refresh()
         w, h = self.interface.screen.size
-        self.menu.rect.center = (w // 2, h // 2)
+        self.menu.rect.midleft = (w // 2 - self.menu.rect.width, h // 2)
+        self.inventory.rect.topleft = self.menu.rect.topright
         self.ui_group.update()
 
     def render(self, screen: pg.Surface):
@@ -629,25 +635,80 @@ class ContainerState(game_interface.State):
         if event.type == pg.KEYUP:
             if event.key == pg.K_ESCAPE:
                 self.interface.pop()
-            elif event.key == pg.K_RETURN:
-                self.select()
-            else:
-                self.menu.on_keyup(event.key)
-        elif event.type == pg.MOUSEBUTTONUP:
-            if not self.menu.rect.collidepoint(*event.pos):
-                self.interface.pop()
-            elif self.menu.pressed_index == self.menu.selected_index:
-                self.select()
+            if event.key in (pg.K_LEFT, pg.K_RIGHT):
+                self.menu.disabled = not self.menu.disabled
+                self.inventory.disabled = not self.menu.disabled
+                self.menu.refresh()
+                self.inventory.refresh()
+            elif not self.menu.disabled:
+                if event.key == pg.K_RETURN:
+                    self.select_container()
+                else:
+                    self.menu.on_keyup(event.key)
+            elif not self.inventory.disabled:
+                if event.key == pg.K_RETURN:
+                    self.inventory.update()
+                    self.select_inventory()
+                else:
+                    self.inventory.on_keyup(event.key)
 
-    def select(self):
+        elif event.type == pg.MOUSEMOTION:
+            if self.menu.disabled and self.menu.rect.collidepoint(*event.pos):
+                self.menu.disabled = False
+                self.inventory.disabled = True
+                self.menu.refresh()
+                self.inventory.refresh()
+                self.menu.update()
+                self.menu.select(self.menu.hovering_index)
+            elif self.inventory.disabled and self.inventory.rect.collidepoint(
+                *event.pos
+            ):
+                self.menu.disabled = True
+                self.inventory.disabled = False
+                self.menu.refresh()
+                self.inventory.refresh()
+                self.menu.update()
+                self.inventory.select(self.inventory.hovering_index)
+
+        elif event.type == pg.MOUSEBUTTONUP:
+            if (
+                not self.menu.disabled
+                and self.menu.rect.collidepoint(*event.pos)
+                and self.menu.pressed_index == self.menu.selected_index
+            ):
+                self.select_container()
+            elif (
+                not self.inventory.disabled
+                and self.inventory.rect.collidepoint(*event.pos)
+                and self.inventory.pressed_index == self.inventory.selected_index
+            ):
+                self.inventory.update()
+                self.select_inventory()
+            else:
+                self.interface.pop()
+
+    def select_container(self):
         if len(self.menu.entities) < 1:
             return
         item = self.menu.entities[self.menu.selected_index]
         player = self.interface.logic.player
         self.interface.logic.input_action = actions.Pickup(player, item)
         self.menu.refresh()
+        self.inventory.refresh()
         if self.menu.selected_index >= len(self.menu.entities):
             self.menu.selected_index -= 1
+
+    def select_inventory(self):
+        if len(self.inventory.entities) < 1:
+            return
+        item = self.inventory.entities[self.inventory.selected_index]
+        item.relation_tag[comp.Inventory] = self.container
+        self.menu.refresh()
+        self.inventory.refresh()
+        if self.inventory.selected_index >= len(self.menu.entities):
+            self.inventory.selected_index -= 1
+
+        player = self.interface.logic.player
 
 
 class LoadGameState(game_interface.State):
