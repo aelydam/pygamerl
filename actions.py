@@ -662,7 +662,7 @@ class Unequip(Interaction):
         return (
             self.target is not None
             and self.target.relation_tag[comp.Inventory] == self.actor
-            and items.is_equipped(self.target)
+            and (items.is_equipped(self.target) or items.is_ready(self.target))
         )
 
     def perform(self) -> Action | None:

@@ -178,10 +178,18 @@ def unequip_slot(actor: ecs.Entity, slot: comp.EquipSlot):
 
 
 def unequip_item(item: ecs.Entity):
+    if is_ready(item):
+        actor = item.relation_tag[comp.Inventory]
+        unequip_slot(actor, comp.EquipSlot.Ready)
     if is_equipped(item):
         actor = item.relation_tag[comp.Inventory]
         slot = item.components[comp.EquipSlot]
         unequip_slot(actor, slot)
+        if slot == comp.EquipSlot.Main_Hand:
+            ready = equipment_at_slot(actor, comp.EquipSlot.Ready)
+            if ready is not None:
+                unequip_slot(actor, comp.EquipSlot.Ready)
+                equip(actor, ready)
 
 
 def equip(actor: ecs.Entity, item: ecs.Entity):
