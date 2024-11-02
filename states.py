@@ -450,7 +450,9 @@ class MessageLogState(game_interface.State):
         super().__init__(parent.interface)
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         messages = self.interface.logic.message_log
-        self.menu = gui_elements.Menu(self.ui_group, messages, 20, width=460)
+        self.menu = gui_elements.Menu(
+            self.ui_group, messages, 20, width=460, title="Message Log"
+        )
         self.menu.select(-1)
 
     def update(self):
@@ -601,7 +603,11 @@ class ContainerState(game_interface.State):
         super().__init__(parent)
         self.container = container
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
-        self.menu = ui_elements.InventoryMenu(self.ui_group, container)
+        self.menu = ui_elements.InventoryMenu(
+            self.ui_group,
+            container,
+            title=container.components.get(comp.Name, "Container"),
+        )
         player = self.interface.logic.player
         self.inventory = ui_elements.InventoryMenu(self.ui_group, player)
         self.inventory.disabled = True

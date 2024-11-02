@@ -15,6 +15,7 @@ DISABLED_COLOR = "#808080"
 SCROLLBAR_COLOR = "#DFEFD7"
 SCROLLBAR_SIZE = 2
 SCROLLBAR_PADDING = 1
+TITLE_FGCOLOR = "#FFFFFF"
 
 
 def get_screen_scale() -> int:
@@ -30,7 +31,9 @@ def scaled_mouse_pos() -> tuple[int, int]:
 
 
 class Box(pg.sprite.Sprite):
-    def __init__(self, group: pg.sprite.Group, surface: pg.Surface | None):
+    def __init__(
+        self, group: pg.sprite.Group, surface: pg.Surface | None, title: str = ""
+    ):
         if surface is None:
             surface = pg.Surface((1, 1))
         self.group = group
@@ -50,7 +53,9 @@ class Box(pg.sprite.Sprite):
         self.scrollbar_size = SCROLLBAR_SIZE
         self.scrollbar_padding = SCROLLBAR_PADDING
         self.disabled_color = DISABLED_COLOR
+        self.title_fgcolor = TITLE_FGCOLOR
         self.rect: pg.Rect = surface.get_rect(topleft=(0, 0))
+        self.title = title
         self.set_surface(surface)
 
     def set_surface(self, surface: pg.Surface):
@@ -59,35 +64,48 @@ class Box(pg.sprite.Sprite):
         h = self._surface.height + 2 * (
             self.border + self.padding + self.border_padding
         )
+        if self.title != "":
+            font = assets.font()
+            self.title_surf = font.render(self.title, False, self.title_fgcolor)
+            self.title_height = self.title_surf.height
+            h += self.title_height
+        else:
+            self.title_height = 0
         self.rect = pg.Rect(self.rect.x, self.rect.y, w, h)
         self.image = pg.Surface((w, h)).convert_alpha()
         self.image.fill("#00000000")
+        if self.title_height > 0:
+            self.image.blit(
+                self.title_surf, (self.border + self.padding + self.border_padding, 0)
+            )
         pg.draw.rect(
             self.image,
             self.bgcolor,
-            (0, 0, w, h),
+            (0, self.title_height, w, h - self.title_height),
             0,
             self.border_radius + self.border_padding,
         )
         rect = (
             self.border_padding,
-            self.border_padding,
+            self.border_padding + self.title_height,
             w - 2 * self.border_padding,
-            h - 2 * self.border_padding,
+            h - 2 * self.border_padding - self.title_height,
         )
         pg.draw.rect(
             self.image, self.border_color, rect, self.border, self.border_radius
         )
         pos = (
             self.border_padding + self.border + self.padding,
-            self.border_padding + self.border + self.padding,
+            self.border_padding + self.border + self.padding + self.title_height,
         )
         self.image.blit(surface, pos)
 
 
 class Textbox(Box):
-    def __init__(self, group: pg.sprite.Group, text: str, width: int = 96):
-        super().__init__(group, None)
+    def __init__(
+        self, group: pg.sprite.Group, text: str, width: int = 96, title: str = ""
+    ):
+        super().__init__(group, None, title=title)
         self.width = width
         self.text: str | None = None
         self.set_text(text)
@@ -152,8 +170,9 @@ class Menu(Box):
         width: int = 96,
         icons: list[pg.Surface | None] | None = None,
         lines_per_item: int = 1,
+        title: str = "",
     ):
-        super().__init__(group, None)
+        super().__init__(group, None, title=title)
         self.width = width
         if max_rows < 1:
             max_rows = len(items)

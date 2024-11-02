@@ -400,6 +400,7 @@ class InventoryMenu(gui_elements.Menu):
         lines_per_item: int = 1,
         show_equipped: bool = False,
         sort_by_slot: bool = True,
+        title: str = "Inventory",
     ):
         self.entity = entity
         self.sort_by_slot = sort_by_slot
@@ -412,6 +413,7 @@ class InventoryMenu(gui_elements.Menu):
             max_rows=max_rows,
             width=width,
             lines_per_item=lines_per_item,
+            title=title,
         )
 
     @staticmethod
@@ -470,6 +472,7 @@ class EquipmentMenu(gui_elements.Menu):
         entity: ecs.Entity,
         width: int = 240,
         lines_per_item: int = 1,
+        title: str = "Equipment",
     ):
         self.entity = entity
         names, icons = self.text_and_icons()
@@ -481,6 +484,7 @@ class EquipmentMenu(gui_elements.Menu):
             max_rows=max_rows,
             width=width,
             lines_per_item=lines_per_item,
+            title=title,
         )
 
     def item_text(self, slot: comp.EquipSlot) -> str:
