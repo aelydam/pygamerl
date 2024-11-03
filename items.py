@@ -193,7 +193,10 @@ def unequip_item(item: ecs.Entity):
 
 
 def equip(actor: ecs.Entity, item: ecs.Entity):
-    if item.relation_tag[comp.Inventory] != actor:
+    if (
+        comp.Inventory not in item.relation_tag
+        or item.relation_tag[comp.Inventory] != actor
+    ):
         return
     slot = item.components[comp.EquipSlot]
     prev_in_slot = equipment_at_slot(actor, slot)
