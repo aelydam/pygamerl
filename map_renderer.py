@@ -63,19 +63,31 @@ class EntitySprite(pg.sprite.Sprite):
         self.blank_surface.fill("#00000000")
         self.rect: pg.Rect
         self.frame = 0
+        self.angle = -1
         self.frame_offset = random.randint(0, consts.FPS)
         self.prepare_surfaces()
 
     def prepare_surfaces(self) -> None:
         spr = self.entity.components[comp.Sprite]
-        if spr == self.spr and self.tiles is not None and len(self.tiles) > 0:
+        angle = (
+            self.entity.components.get(comp.SpriteRotation, spr.angle) - spr.angle
+        ) % 360
+        if (
+            spr == self.spr
+            and angle == self.angle
+            and self.tiles is not None
+            and len(self.tiles) > 0
+        ):
             return
+        self.angle = angle
         self.spr = spr
         if comp.HP in self.entity.components:
             max_frames = 2
         else:
             max_frames = 1
         frames = assets.frames(spr.sheet, tuple(spr.tile), max_frames)
+        if angle != 0:
+            frames = [pg.transform.rotate(f, angle) for f in frames]
         self.tiles = [frames]
         for j in range(consts.MAX_LIGHT_RADIUS + 1):
             tint = light_tint(consts.MAX_LIGHT_RADIUS - j)
@@ -99,13 +111,7 @@ class EntitySprite(pg.sprite.Sprite):
             self.kill()
             self.group.entity_sprites.pop(self.entity)
             return
-        self.prepare_surfaces()
         pos = self.entity.components[comp.Position]
-        self.x, self.y = pos.xy
-        x, y = self.group.grid_to_screen(*pos.xy)
-        if comp.HP in self.entity.components:
-            y -= consts.ENTITY_YOFFSET
-        rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
         is_in_fov = self.group.fov[pos.xy]
         light = self.group.light[pos.xy]
         visible = (
@@ -114,8 +120,19 @@ class EntitySprite(pg.sprite.Sprite):
             and not comp.HideSprite in self.entity.tags
             and not comp.Hidden in self.entity.tags
         )
+        if visible:
+            self.prepare_surfaces()
+        self.x, self.y = pos.xy
+        x, y = self.group.grid_to_screen(*pos.xy)
+        if comp.HP in self.entity.components:
+            y -= consts.ENTITY_YOFFSET
+        rect = pg.Rect(x, y, consts.TILE_SIZE, consts.TILE_SIZE)
+        if self.image is not None:
+            rect = self.image.get_rect(
+                center=(x + consts.TILE_SIZE // 2, y + consts.TILE_SIZE // 2)
+            )
         dx, dy = self.entity.components.get(comp.Direction, (0, 0))
-        flip = (dx > 0) or (dx >= 0 and dy > 0)
+        flip = ((dx > 0) or (dx >= 0 and dy > 0)) and (self.angle != 0)
         frame = ((self.group.frame_counter + self.frame_offset) // 30) % len(
             self.tiles[0]
         )

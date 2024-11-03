@@ -40,6 +40,7 @@ Explored = ("Explored", NDArray[np.bool_])
 # Actor components
 Name = ("Name", str)
 Direction = ("Direction", tuple[int, int])
+SpriteRotation = ("SpriteRotation", int)
 Level = ("Level", int)
 XP = ("XP", int)
 XPGain = ("XPGain", int)
@@ -141,6 +142,7 @@ def on_position_changed(
 class Sprite:
     sheet: str
     tile: tuple[int, int]
+    angle: int = 0
 
 
 class Interaction(Protocol):

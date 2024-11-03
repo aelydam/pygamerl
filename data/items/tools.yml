@@ -24,7 +24,7 @@ Map:
   tags: Consumable
 
 Arrow:
-  Sprite: {sheet: "Items/Ammo", tile: [0,2]}
+  Sprite: {sheet: "Items/Ammo", tile: [0,2], angle: 225}
   EquipSlot: Quiver
   DamageBonus: 1
   SpawnWeight: 2

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import random
 from dataclasses import dataclass, field
 
@@ -345,10 +346,13 @@ class AttackAction(ActorAction):
             # Add projectile
             if comp.Sprite in ammo.components:
                 pos0 = self.actor.components[comp.Position]
+                dx, dy = tpos[0] - apos[0], tpos[1] - apos[1]
+                angle = math.degrees(math.atan2(-dy, dx))
                 proj_entity = ammo.registry.new_entity(
                     components={
                         comp.Sprite: ammo.components[comp.Sprite],
                         comp.Position: pos0,
+                        comp.SpriteRotation: angle,
                     }
                 )
                 proj_action = Projectile(proj_entity, tpos)
