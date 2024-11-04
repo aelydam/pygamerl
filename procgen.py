@@ -946,8 +946,11 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
 def decorate_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
     seed = map_entity.components[np.random.RandomState]
     # TODO more room types
-    if seed.randint(0, 100) < 50:
+    roll = seed.randint(0, 100)
+    if roll <= 15:
         dining_room(map_entity, room)
+    elif roll <= 30:
+        library_room(map_entity, room)
 
 
 def dining_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
@@ -980,4 +983,34 @@ def dining_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
                 comp.Sprite: comp.Sprite("Objects/Decor0", (3, 7)),
             },
             tags={comp.Obstacle},
+        )
+
+
+def library_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
+    depth = map_entity.components[comp.Depth]
+    seed = map_entity.components[np.random.RandomState]
+    w, h = int(room.sum(axis=0).max()), int(room.sum(axis=1).max())
+    cx, cy = area_centroid(room)
+    rmoore = funcs.moore(room)
+    x_grid, y_grid = np.indices(room.shape)
+    shelf = room & (rmoore == 8)
+    if w > h:
+        shelf &= np.abs(x_grid - int(cx)) % 2 == 0
+        if h >= 7:
+            shelf &= y_grid != int(cy)
+    else:
+        shelf &= np.abs(y_grid - int(cy)) % 2 == 0
+        if w >= 7:
+            shelf &= x_grid != int(cx)
+    all_x, all_y = np.where(shelf)
+    for i in range(len(all_x)):
+        k = seed.randint(4, 7)
+        if k == 4:
+            k = 0
+        map_entity.registry.new_entity(
+            components={
+                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
+                comp.Sprite: comp.Sprite("Objects/Decor0", (k, 4)),
+            },
+            tags={comp.Obstacle, comp.Opaque},
         )
