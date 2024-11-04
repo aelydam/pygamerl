@@ -713,14 +713,22 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
     ]
     # Find rooms with only one connection
     room_list = [r for r, c in zip(room_list, room_connections) if c == 1]
+    if len(room_list) < 1:
+        return
+    # Create a matrix with all locked rooms
+    locked_room_grid = room_list[0]
+    # Iterate over rooms
     for room in room_list:
+        locked_room_grid |= room
         door_tile = walkable & ~room & (funcs.moore(room) > 0)
         available = room & (funcs.moore(door_tile) == 0)
         if np.sum(available) < 1:
             continue
+        # Randomize position
         all_x, all_y = np.where(available)
         i = seed.randint(0, len(all_x))
         pos = (all_x[i], all_y[i])
+        # Spawn chest
         chest = map_entity.registry.new_entity(
             components={
                 comp.Name: "Chest",
@@ -730,11 +738,28 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
             },
             tags={comp.Obstacle, comp.Chest},
         )
+        # Populate chest with items
         n_items = (seed.randint(1, 6) + seed.randint(1, 6)) // 2
         for _ in range(n_items):
             kind = pick_item_kind(map_entity)
             count = pick_item_count(map_entity, kind)
             items.add_item(chest, kind, count)
+        # Spawn key somewhere else
+        all_x, all_y = np.where(walkable & ~locked_room_grid)
+        i = seed.randint(0, len(all_x))
+        key_pos = (all_x[i], all_y[i])
+        key_entity = items.spawn_item(map_entity, key_pos, "Key")
+
+        # Find door entity
+        door_xy = tuple(np.argwhere(door_tile).tolist()[0])
+        query = map_entity.registry.Q.all_of(
+            components=[comp.Position, comp.Interaction],
+            tags=[comp.Door, comp.Position(door_xy, depth)],
+            relations=[(comp.Map, map_entity)],
+        )
+        door_entity, *_ = query.get_entities()
+        door_entity.tags |= {comp.Locked}
+        door_entity.relation_tag[comp.Key] = key_entity
 
 
 def generate(map_entity: ecs.Entity):

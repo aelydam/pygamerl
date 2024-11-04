@@ -692,11 +692,19 @@ class ToggleDoor(Interaction):
         return super().can()
 
     def perform(self) -> Action | None:
-        if self.target is None:
+        if self.target is None or not self.can():
             return None
-        if comp.Obstacle in self.target.tags:
+        if comp.Locked in self.target.tags:
+            if comp.Key in self.target.relation_tag:
+                key = self.target.relation_tag[comp.Key]
+                if key.relation_tag.get(comp.Inventory) != self.actor:
+                    self.cost = 0
+                    self.message = "The door is locked"
+                    return self
+            verb = "unlocks"
+            self.target.tags.discard(comp.Locked)
+        elif comp.Obstacle in self.target.tags:
             verb = "opens"
-            self.target.tags -= {comp.Obstacle, comp.Opaque}
             self.target.tags.discard(comp.Obstacle)
             if comp.Opaque in self.target.tags:
                 self.target.tags.discard(comp.Opaque)
@@ -708,7 +716,6 @@ class ToggleDoor(Interaction):
                 self.target.tags.discard(comp.HideSprite)
         maps.update_map_light(self.target.relation_tag[comp.Map], True)
         entities.update_fov(self.actor)
-        self.cost = 1
         aname = self.actor.components.get(comp.Name)
         if aname is not None:
             self.message = f"{aname} {verb} a door"

@@ -30,6 +30,8 @@ Currency = "Currency"
 Consumable = "Consumable"
 Identified = "Identified"
 Seen = "Seen"
+Locked = "Locked"
+Key = "Key"
 
 # Map components
 Seed = ("Seed", int)
