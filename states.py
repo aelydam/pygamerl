@@ -724,7 +724,7 @@ class LoadGameState(game_interface.State):
         self.files = self.interface.logic.list_savefiles()
         text, icons = self.item_lists()
         self.menu = gui_elements.Menu(
-            self.ui_group, text, 6, 224, icons, lines_per_item=4
+            self.ui_group, text, 6, 224, icons, lines_per_item=4, title="Load Game"
         )
         self.filename = ""
         self.background = pg.Surface(consts.SCREEN_SHAPE)
