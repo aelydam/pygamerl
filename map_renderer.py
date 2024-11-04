@@ -65,6 +65,7 @@ class EntitySprite(pg.sprite.Sprite):
         self.frame = 0
         self.angle = -1
         self.frame_offset = random.randint(0, consts.FPS)
+        self.sprite_changed = True
         self.prepare_surfaces()
 
     def prepare_surfaces(self) -> None:
@@ -79,6 +80,7 @@ class EntitySprite(pg.sprite.Sprite):
             and len(self.tiles) > 0
         ):
             return
+        self.sprite_changed = True
         self.angle = angle
         self.spr = spr
         if comp.HP in self.entity.components:
@@ -144,8 +146,10 @@ class EntitySprite(pg.sprite.Sprite):
             and visible == self.visible
             and frame == self.frame
             and light == self.light
+            and not self.sprite_changed
         ):
             return
+        self.sprite_changed = False
         if is_in_fov and self.hpbar is None and comp.HP in self.entity.components:
             self.hpbar = ui_elements.MapHPBar(self.group, self)
         self.rect = rect
