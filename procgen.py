@@ -878,7 +878,8 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
     grid = np.zeros(consts.MAP_SHAPE, np.int8)
     seed = map_entity.components[np.random.RandomState]
     # Create room for upstairs
-    room_grid = add_upstairs_room(map_entity)
+    upstairs_room = add_upstairs_room(map_entity)
+    room_grid = upstairs_room.copy()
     walls = funcs.moore(room_grid) > 0
     # Create lake
     lake = random_lake(~(room_grid | walls), seed)
@@ -915,4 +916,48 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
     grid[cave_grid | corridors] = db.tile_id["cavefloor"]
     near_room = funcs.moore(room_grid) > 0
     grid[room_grid | (corridors & near_room)] = db.tile_id["floor"]
+    #
+    room_list = disjoint_areas(room_grid & ~upstairs_room)
+    for room in room_list:
+        decorate_room(map_entity, room)
     return grid
+
+
+def decorate_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
+    seed = map_entity.components[np.random.RandomState]
+    # TODO more room types
+    if seed.randint(0, 100) < 50:
+        dining_room(map_entity, room)
+
+
+def dining_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
+    depth = map_entity.components[comp.Depth]
+    w, h = int(room.sum(axis=0).max()), int(room.sum(axis=1).max())
+    cx, cy = area_centroid(room)
+    rmoore = funcs.moore(room)
+    x_grid, y_grid = np.indices(room.shape)
+    # Spawn tables
+    if w > h:
+        table = (y_grid == int(cy)) & (funcs.moore(rmoore >= 8) >= 8)
+    else:
+        table = (x_grid == int(cx)) & (funcs.moore(rmoore >= 8) >= 8)
+    all_x, all_y = np.where(table)
+    for i in range(len(all_x)):
+        map_entity.registry.new_entity(
+            components={
+                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
+                comp.Sprite: comp.Sprite("Objects/Decor0", (4, 7)),
+            },
+            tags={comp.Obstacle},
+        )
+    # Spawn chairs
+    chairs = (funcs.moore(table, diagonals=False) > 0) & ~table & room
+    all_x, all_y = np.where(chairs)
+    for i in range(len(all_x)):
+        map_entity.registry.new_entity(
+            components={
+                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
+                comp.Sprite: comp.Sprite("Objects/Decor0", (3, 7)),
+            },
+            tags={comp.Obstacle},
+        )
