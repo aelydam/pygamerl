@@ -147,6 +147,11 @@ class Sprite:
     angle: int = 0
 
 
+OpenSprite = ("OpenSprite", Sprite)
+ClosedSprite = ("ClosedSprite", Sprite)
+LockedSprite = ("LockedSprite", Sprite)
+
+
 class Interaction(Protocol):
     def __call__(
         self, actor: ecs.Entity, target: ecs.Entity, bump: bool = False

@@ -694,6 +694,7 @@ class ToggleDoor(Interaction):
     def perform(self) -> Action | None:
         if self.target is None or not self.can():
             return None
+        spr: comp.Sprite | None = None
         if comp.Locked in self.target.tags:
             if comp.Key in self.target.relation_tag:
                 key = self.target.relation_tag[comp.Key]
@@ -703,17 +704,19 @@ class ToggleDoor(Interaction):
                     return self
             verb = "unlocks"
             self.target.tags.discard(comp.Locked)
+            spr = self.target.components.get(comp.ClosedSprite)
         elif comp.Obstacle in self.target.tags:
             verb = "opens"
             self.target.tags.discard(comp.Obstacle)
             if comp.Opaque in self.target.tags:
                 self.target.tags.discard(comp.Opaque)
-            self.target.tags |= {comp.HideSprite}
+            spr = self.target.components.get(comp.OpenSprite)
         else:
             verb = "closes"
             self.target.tags |= {comp.Obstacle, comp.Opaque}
-            if comp.HideSprite in self.target.tags:
-                self.target.tags.discard(comp.HideSprite)
+            spr = self.target.components.get(comp.ClosedSprite)
+        if spr is not None:
+            self.target.components[comp.Sprite] = spr
         maps.update_map_light(self.target.relation_tag[comp.Map], True)
         entities.update_fov(self.actor)
         aname = self.actor.components.get(comp.Name)
@@ -887,6 +890,9 @@ class OpenContainer(Interaction):
     def perform(self) -> Action | None:
         if self.target is None or not self.can():
             return None
+        spr = self.target.components.get(comp.OpenSprite)
+        if spr is not None:
+            self.target.components[comp.Sprite] = spr
         # this is just a dummy action
         # it is intended to trigger a callback in interface side
         aname = self.actor.components.get(comp.Name)

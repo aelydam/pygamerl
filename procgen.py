@@ -407,6 +407,9 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
                 comp.Name: "Door",
                 comp.Position: comp.Position((x, y), depth),
                 comp.Sprite: comp.Sprite("Objects/Door0", (0, 0)),
+                comp.OpenSprite: comp.Sprite("Objects/Door0", (6, 0)),
+                comp.ClosedSprite: comp.Sprite("Objects/Door0", (0, 0)),
+                comp.LockedSprite: comp.Sprite("Objects/Door0", (2, 0)),
                 comp.Interaction: actions.ToggleDoor,
             },
             tags=[comp.Opaque, comp.Obstacle, comp.Door],
@@ -734,6 +737,7 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
                 comp.Name: "Chest",
                 comp.Position: comp.Position(pos, depth),
                 comp.Sprite: comp.Sprite("Items/Chest0", (1, 0)),
+                comp.OpenSprite: comp.Sprite("Items/Chest1", (1, 0)),
                 comp.Interaction: actions.OpenContainer,
             },
             tags={comp.Obstacle, comp.Chest},
@@ -760,6 +764,9 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
         door_entity, *_ = query.get_entities()
         door_entity.tags |= {comp.Locked}
         door_entity.relation_tag[comp.Key] = key_entity
+        spr = door_entity.components.get(comp.LockedSprite)
+        if spr is not None:
+            door_entity.components[comp.Sprite] = spr
 
 
 def generate(map_entity: ecs.Entity):
