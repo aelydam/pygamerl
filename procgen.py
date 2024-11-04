@@ -946,6 +946,9 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
 def decorate_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
     seed = map_entity.components[np.random.RandomState]
     # TODO more room types
+    w, h = int(room.sum(axis=0).max()), int(room.sum(axis=1).max())
+    if w <= consts.MIN_ROOM_SIZE or h <= consts.MIN_ROOM_SIZE:
+        return
     roll = seed.randint(0, 100)
     if roll <= 15:
         dining_room(map_entity, room)
