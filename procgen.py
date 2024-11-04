@@ -512,6 +512,14 @@ def add_downstairs(
     cond = walkable & (funcs.moore(walkable) >= 8)
     if condition is not None:
         cond &= condition
+    # Remove all positiions with entities
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position],
+        relations=[(comp.Map, map_entity)],
+    ).get_entities()
+    for e in query:
+        x, y = e.components[comp.Position].xy
+        cond[x, y] = False
 
     for _ in range(max_count):
         cutoff = (np.mean(dijkstra[cond]) + np.max(dijkstra[cond])) / 2
@@ -732,6 +740,15 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
         np.sum(walkable & ~r & (funcs.moore(r) > 0))
         for r in room_list
     ]
+    # Remove all positiions with entities
+    noentity = walkable.copy()
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position],
+        relations=[(comp.Map, map_entity)],
+    )
+    for e in query:
+        x, y = e.components[comp.Position].xy
+        noentity[x, y] = False
     # Find rooms with only one connection
     room_list = [r for r, c in zip(room_list, room_connections) if c == 1]
     if len(room_list) < 1:
@@ -742,7 +759,7 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
     for room in room_list:
         locked_room_grid |= room
         door_tile = walkable & ~room & (funcs.moore(room) > 0)
-        available = room & (funcs.moore(door_tile) == 0)
+        available = room & noentity & (funcs.moore(door_tile) == 0)
         if np.sum(available) < 1:
             continue
         # Randomize position
@@ -766,6 +783,9 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
             kind = pick_item_kind(map_entity)
             count = pick_item_count(map_entity, kind)
             items.add_item(chest, kind, count)
+
+        if np.sum(door_tile) < 1:
+            continue
         # Spawn key somewhere else
         all_x, all_y = np.where(walkable & ~locked_room_grid)
         i = seed.randint(0, len(all_x))
