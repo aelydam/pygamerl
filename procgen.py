@@ -88,7 +88,16 @@ def spawn_enemies(map_entity: ecs.Entity, radius: int, max_count: int = 0):
     counter = 0
     # Initialize available array from walkable points
     available = walkable.copy()
-    # Consider creatures and upstairs already on the map
+    # Remove all positiions with entities
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position],
+        relations=[(comp.Map, map_entity)],
+    ).get_entities()
+    for e in query:
+        x, y = e.components[comp.Position].xy
+        available[x, y] = False
+
+    # Consider radius of creatures and upstairs already on the map
     query = (
         map_entity.registry.Q.all_of(
             components=[comp.Position, comp.HP],
@@ -132,6 +141,15 @@ def spawn_items(
     counter = 0
     # Initialize available array from walkable points
     available = walkable.copy()
+    # Remove all positiions with entities
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position],
+        relations=[(comp.Map, map_entity)],
+    ).get_entities()
+    for e in query:
+        x, y = e.components[comp.Position].xy
+        available[x, y] = False
+    # While there are available spots and still below max_count
     while (counter < max_count or max_count < 1) and np.sum(available) > 0:
         if np.sum(available) < 1:
             break
