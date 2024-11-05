@@ -169,7 +169,9 @@ def spawn_items(
 
 def respawn(map_entity: ecs.Entity):
     seed = map_entity.components[np.random.RandomState]
-    roll = seed.randint(1, consts.RESPAWN_RATE + 1)
+    depth = map_entity.components[comp.Depth]
+    rate = consts.BASE_RESPAWN_RATE - consts.DEPTH_RESPAWN_RATE * depth
+    roll = seed.randint(1, rate + 1)
     if roll <= 1:
         spawn_enemies(map_entity, consts.ENEMY_RADIUS, 1)
 
