@@ -954,6 +954,8 @@ def decorate_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
         dining_room(map_entity, room)
     elif roll <= 30:
         library_room(map_entity, room)
+    elif roll <= 45:
+        center_decor_room(map_entity, room)
 
 
 def dining_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
@@ -1017,3 +1019,25 @@ def library_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
             },
             tags={comp.Obstacle, comp.Opaque},
         )
+
+
+def center_decor_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
+    choices = [
+        ("Altar", comp.Sprite("Objects/Decor0", (0, 20))),
+        ("Statue", comp.Sprite("Objects/Decor0", (4, 20))),
+        ("Fountain", comp.Sprite("Objects/Decor0", (1, 21))),
+        ("Plaque", comp.Sprite("Objects/Decor0", (1, 18))),
+        ("Coffin", comp.Sprite("Objects/Decor0", (6, 10))),
+    ]
+    seed = map_entity.components[np.random.RandomState]
+    depth = map_entity.components[comp.Depth]
+    cx, cy = area_centroid(room)
+    name, spr = choices[seed.randint(0, len(choices))]
+    map_entity.registry.new_entity(
+        components={
+            comp.Name: name,
+            comp.Position: comp.Position((cx, cy), depth),
+            comp.Sprite: spr,
+        },
+        tags={comp.Obstacle},
+    )
