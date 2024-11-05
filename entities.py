@@ -304,7 +304,7 @@ def enemy_action(actor: ecs.Entity) -> actions.Action:
                 move = actions.MoveAction(actor, dir)
                 if move.can():
                     return move
-        elif d > range:
+        elif d > range or not enemy_infov:
             # Move towards target
             move_to = actions.MoveAction.to(actor, target.xy)
             if move_to is not None and move_to.can():
