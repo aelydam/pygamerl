@@ -938,24 +938,25 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
     grid[room_grid | (corridors & near_room)] = db.tile_id["floor"]
     #
     room_list = disjoint_areas(room_grid & ~upstairs_room)
-    for room in room_list:
-        decorate_room(map_entity, room)
+    decorate_rooms(map_entity, room_list)
     return grid
 
 
-def decorate_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
+def decorate_rooms(map_entity: ecs.Entity, room_list: list[NDArray[np.bool_]]):
     seed = map_entity.components[np.random.RandomState]
-    # TODO more room types
-    w, h = int(room.sum(axis=0).max()), int(room.sum(axis=1).max())
-    if w <= consts.MIN_ROOM_SIZE or h <= consts.MIN_ROOM_SIZE:
-        return
-    roll = seed.randint(0, 100)
-    if roll <= 15:
-        dining_room(map_entity, room)
-    elif roll <= 30:
-        library_room(map_entity, room)
-    elif roll <= 45:
-        center_decor_room(map_entity, room)
+    kinds = [dining_room, library_room, center_decor_room, None, None]
+    indices = [i for i in range(len(kinds))]
+    weights = [10.0 for k in kinds]
+    for room in room_list:
+        w, h = int(room.sum(axis=0).max()), int(room.sum(axis=1).max())
+        if w <= consts.MIN_ROOM_SIZE or h <= consts.MIN_ROOM_SIZE:
+            continue
+        prob = [w / sum(weights) for w in weights]
+        i = seed.choice(indices, p=prob)
+        weights[i] *= 0.2
+        decorate_fun = kinds[i]
+        if decorate_fun is not None:
+            decorate_fun(map_entity, room)
 
 
 def dining_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
