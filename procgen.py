@@ -755,6 +755,16 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
         return
     # Create a matrix with all locked rooms
     locked_room_grid = room_list[0]
+    # CReate a grid with upstairs position
+    query = map_entity.registry.Q.all_of(
+        components=[comp.Position],
+        tags=[comp.Upstairs],
+        relations=[(comp.Map, map_entity)],
+    )
+    upstairs_grid = np.full(walkable.shape, False)
+    for u in query:
+        uxy = u.components[comp.Position].xy
+        upstairs_grid[uxy] = True
     # Iterate over rooms
     for room in room_list:
         locked_room_grid |= room
@@ -784,8 +794,10 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
             count = pick_item_count(map_entity, kind)
             items.add_item(chest, kind, count)
 
-        if np.sum(door_tile) < 1:
+        # Don't lock the room if there is no door or if there is an upstairs
+        if np.sum(door_tile) < 1 or np.sum(room & upstairs_grid) > 0:
             continue
+
         # Spawn key somewhere else
         all_x, all_y = np.where(walkable & ~locked_room_grid)
         i = seed.randint(0, len(all_x))
