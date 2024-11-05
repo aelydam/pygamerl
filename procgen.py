@@ -1002,7 +1002,7 @@ def dining_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
                 comp.Position: comp.Position((all_x[i], all_y[i]), depth),
                 comp.Sprite: comp.Sprite("Objects/Decor0", (3, 7)),
             },
-            tags={comp.Obstacle},
+            tags={},
         )
 
 
