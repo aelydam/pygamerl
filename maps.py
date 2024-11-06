@@ -107,8 +107,10 @@ def cost_matrix(
             xy = e.components[comp.Position].xy
             if comp.Door in e.tags:
                 cost[xy] += door_cost
-            else:
+            elif comp.Initiative in e.tags:
                 cost[xy] += entity_cost
+            else:
+                cost[xy] = 0
     if explored_only:
         explored = map_entity.components[comp.Explored]
         cost[~explored] = 0
