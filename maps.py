@@ -90,7 +90,10 @@ def lightlevel(map_entity: ecs.Entity, pos: comp.Position | tuple[int, int]) -> 
 
 
 def cost_matrix(
-    map_entity: ecs.Entity, entity_cost: int = 10, door_cost: int = 1
+    map_entity: ecs.Entity,
+    entity_cost: int = 10,
+    door_cost: int = 1,
+    explored_only: bool = False,
 ) -> NDArray[np.int8]:
     grid = map_entity.components[comp.Tiles]
     cost = 1 - db.obstacle[grid]
@@ -106,6 +109,9 @@ def cost_matrix(
                 cost[xy] += door_cost
             else:
                 cost[xy] += entity_cost
+    if explored_only:
+        explored = map_entity.components[comp.Explored]
+        cost[~explored] = 0
     return cost.astype(np.int8)
 
 
@@ -133,6 +139,7 @@ def astar_path(
     entity_cost: int = 10,
     cardinal: int = 5,
     diagonal: int = 7,
+    explored_only: bool = False,
 ) -> list[tuple[int, int]]:
     map_entity = actor.relation_tag[comp.Map]
     origin = actor.components[comp.Position].xy
@@ -142,7 +149,7 @@ def astar_path(
         target = target.components[comp.Position]
     if isinstance(target, comp.Position):
         target = target.xy
-    cost = cost_matrix(map_entity, entity_cost=entity_cost)
+    cost = cost_matrix(map_entity, entity_cost=entity_cost, explored_only=explored_only)
     cost[origin] = 1
     cost[target] = 1
     # Use tcod pathfinding stuff
