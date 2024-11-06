@@ -24,38 +24,39 @@ class InGameState(game_interface.State):
         self.logic = self.interface.logic
         self.ui_group: pg.sprite.Group = pg.sprite.Group()
         font = self.interface.font
-        self.hpbar = ui_elements.Bar(
-            self.ui_group,
-            font,
-            current_fun=lambda: self.logic.player.components.get(comp.HP, 0),
-            max_fun=lambda: self.logic.player.components.get(comp.MaxHP, 0),
-            label="HP",
-        )
-        self.hungerbar = ui_elements.Bar(
-            self.ui_group,
-            font,
-            current_fun=lambda: entities.hunger(self.logic.player),
-            max_fun=lambda: consts.MAX_HUNGER,
-            y=self.hpbar.rect.bottom,
-            good_color=consts.HPBAR_BAD_COLOR,
-            bad_color=consts.HPBAR_GOOD_COLOR,
-            bad_ratio=0.8,
-            label="Hunger",
-        )
+
         self.xpbar = ui_elements.Bar(
             self.ui_group,
             font,
             current_fun=lambda: entities.xp_in_current_level(self.logic.player),
             max_fun=lambda: entities.xp_to_next_level(self.logic.player),
             text_fun=lambda: str(self.logic.player.components.get(comp.Level, 1)),
-            y=self.hungerbar.rect.bottom,
             good_color=consts.HPBAR_GOOD_COLOR,
             bad_color=consts.HPBAR_GOOD_COLOR,
             label="Level",
         )
+        self.hpbar = ui_elements.Bar(
+            self.ui_group,
+            font,
+            current_fun=lambda: self.logic.player.components.get(comp.HP, 0),
+            max_fun=lambda: self.logic.player.components.get(comp.MaxHP, 0),
+            label="HP",
+            y=self.xpbar.rect.bottom + 2,
+        )
+        self.hungerbar = ui_elements.Bar(
+            self.ui_group,
+            font,
+            current_fun=lambda: entities.hunger(self.logic.player),
+            max_fun=lambda: consts.MAX_HUNGER,
+            y=self.hpbar.rect.bottom + 2,
+            good_color=consts.HPBAR_BAD_COLOR,
+            bad_color=consts.HPBAR_GOOD_COLOR,
+            bad_ratio=0.8,
+            label="Hunger",
+        )
         self.conditions = ui_elements.ConditionsHUD(
             self.ui_group,
-            (self.xpbar.rect.x, self.xpbar.rect.bottom + 4),
+            (self.hungerbar.rect.x, self.hungerbar.rect.bottom + 4),
             font,
             self.logic,
         )
@@ -333,7 +334,9 @@ class TitleState(game_interface.State):
             ["New Game", "Last Game", "Load Game", "Quit Game"],
         )
         font = assets.font(consts.FONTNAME, consts.FONTSIZE * 3)
-        self.logo = font.render(consts.GAME_TITLE, False, "#FFFFFF").convert_alpha()
+        self.logo = font.render(
+            consts.GAME_TITLE, False, consts.TITLE_TEXT_COLOR
+        ).convert_alpha()
         if len(self.interface.logic.list_savefiles()) > 0:
             self.menu.select(1)
         else:

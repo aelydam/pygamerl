@@ -70,7 +70,7 @@ class Bar(pg.sprite.Sprite):
         current_fun: Callable[[], int],
         max_fun: Callable[[], int],
         text_fun: Callable[[], str] | None = None,
-        width: int = 200,
+        width: int = 140,
         height: int = 12,
         x: int = 16,
         y: int = 16,
@@ -207,6 +207,10 @@ class Minimap(pg.sprite.Sprite):
             y = consts.SCREEN_SHAPE[1] - h + y
         self.rect: pg.Rect = pg.Rect(x, y, w, h)
 
+        self.player_col = np.asarray(pg.Color(consts.MINIMAP_PLAYER_COLOR))[0:3]
+        self.interact_col = np.asarray(pg.Color(consts.MINIMAP_INTERACT_COLOR))[0:3]
+        self.creature_col = np.asarray(pg.Color(consts.MINIMAP_CREATURE_COLOR))[0:3]
+
     def inc_depth(self, delta: int):
         depth = self.depth + delta
         map_ = maps.get_map(self.logic.reg, depth, generate=False)
@@ -256,12 +260,13 @@ class Minimap(pg.sprite.Sprite):
         for e in query:
             ex, ey = e.components[comp.Position].xy
             if explored[ex, ey]:
+                fov_mult = 0.75 ** (1 - fov[ex, ey])
                 if comp.Player in e.tags:
-                    grid[ex, ey, :] = [0, 0, 255]
+                    grid[ex, ey, :] = self.player_col * fov_mult
                 elif comp.Interaction in e.components and not comp.HP in e.components:
-                    grid[ex, ey, :] = [255, 255, 0]
+                    grid[ex, ey, :] = self.interact_col * fov_mult
                 elif fov[ex, ey] and comp.HP in e.components:
-                    grid[ex, ey, :] = [255, 0, 0]
+                    grid[ex, ey, :] = self.creature_col * fov_mult
         self.image = pg.surfarray.make_surface(grid.astype(np.uint8))
         self.image.set_colorkey((1, 1, 1))
         self.image = pg.transform.scale_by(self.image, self.scale)
@@ -308,14 +313,15 @@ class StatsHUD(pg.sprite.Sprite):
         self.font = interface.font
         self.elements = elements
         self.text = ""
+        self.rect = pg.Rect(16, 4, 1, 1)
 
     def update(self):
         text = " ".join([f"{k}:{v()}" for k, v in self.elements.items()])
         if self.text == text:
             return
         self.image = self.font.render(text, False, "#FFFFFF")
-
-        self.rect = self.image.get_rect(topleft=(16, 0))
+        if self.image.size != self.rect.size:
+            self.rect = self.image.get_rect(topleft=self.rect.topleft)
 
 
 class MapCursor(pg.sprite.Sprite):
