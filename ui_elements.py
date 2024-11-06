@@ -519,3 +519,69 @@ class EquipmentMenu(gui_elements.Menu):
     def refresh(self):
         names, icons = self.text_and_icons()
         self.set_items(names, icons, True)
+
+
+class PathPreview(pg.sprite.Sprite):
+    def __init__(self, group: map_renderer.MapRenderer):
+        self.group = group
+        super().__init__()
+        self._layer = map_renderer.TILE_UI_LAYER
+        group.add(self)
+        self.pos: tuple[int, int] | None = None
+        self.path: list[tuple[int, int]] = list()
+        self.rect = pg.Rect(0, 0, consts.TILE_SIZE, consts.TILE_SIZE)
+        # Create surfaces
+        self.blank_image = pg.surface.Surface(self.rect.size).convert_alpha()
+        self.blank_image.fill("#00000000")
+        self.image = self.blank_image
+        self.dot_image = pg.surface.Surface(self.rect.size).convert_alpha()
+        self.dot_image.fill("#00000000")
+        center = (consts.TILE_SIZE // 2, consts.TILE_SIZE // 2)
+        radius = consts.TILE_SIZE // 8
+        pg.draw.circle(self.dot_image, "#FFFFFFCC", center, radius=radius)
+
+    def clear_image(self):
+        self.image = self.blank_image
+        self.rect = self.image.get_rect(bottomright=(-1, -1))
+
+    def update(self, *args, **kwargs):
+        pos = self.group.cursor
+        if pos is None:
+            return self.clear_image()
+        if not maps.is_in_bounds(self.group.logic.map, pos):
+            return self.clear_image()
+        explored = self.group.explored[pos]
+        if not explored:
+            return self.clear_image()
+        if pos == self.pos:
+            return
+        self.pos = pos
+        player = self.group.logic.player
+        path = maps.astar_path(player, pos, explored_only=True)
+        if len(path) < 2:
+            return self.clear_image()
+        if self.path == path:
+            return
+        self.path = path
+        # Find surface size
+        min_x, min_y = np.min(path, axis=0)
+        max_x, max_y = np.max(path, axis=0)
+        w = (max_x - min_x + 1) * consts.TILE_SIZE
+        h = (max_y - min_y + 1) * consts.TILE_SIZE
+        # Create surface
+        self.image = pg.surface.Surface((w, h)).convert_alpha()
+        self.image.fill("#00000000")
+        # Draw path surface
+        for step in path:
+            x = step[0]
+            y = step[1]
+            dest = pg.Rect(
+                (x - min_x) * consts.TILE_SIZE,
+                (y - min_y) * consts.TILE_SIZE,
+                consts.TILE_SIZE,
+                consts.TILE_SIZE,
+            )
+            self.image.blit(self.dot_image, dest)
+        # Set rect position
+        x, y = self.group.grid_to_screen(min_x, min_y)
+        self.rect = self.image.get_rect(topleft=(x, y))

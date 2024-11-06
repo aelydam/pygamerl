@@ -64,6 +64,7 @@ class InGameState(game_interface.State):
         self.minimap = ui_elements.Minimap(self.ui_group, self.logic)
         self.map_renderer = map_renderer.MapRenderer(self.interface)
         self.map_renderer.center = self.logic.player.components[comp.Position].xy
+        self.preview = ui_elements.PathPreview(self.map_renderer)
         self.hud = ui_elements.StatsHUD(
             self.ui_group,
             self.interface,
