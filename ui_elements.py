@@ -12,6 +12,7 @@ import comp
 import conditions
 import consts
 import db
+import entities
 import gui_elements
 import items
 import map_renderer
@@ -546,6 +547,8 @@ class PathPreview(pg.sprite.Sprite):
 
     def update(self, *args, **kwargs):
         pos = self.group.cursor
+        if pos == self.pos:
+            return
         if pos is None:
             return self.clear_image()
         if not maps.is_in_bounds(self.group.logic.map, pos):
@@ -553,10 +556,10 @@ class PathPreview(pg.sprite.Sprite):
         explored = self.group.explored[pos]
         if not explored:
             return self.clear_image()
-        if pos == self.pos:
-            return
         self.pos = pos
         player = self.group.logic.player
+        if entities.dist(player, pos) < 2:
+            return self.clear_image()
         path = maps.astar_path(player, pos, explored_only=True)
         if len(path) < 2:
             return self.clear_image()
