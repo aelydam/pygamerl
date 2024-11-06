@@ -958,7 +958,7 @@ def generate_dungeon(map_entity: ecs.Entity) -> NDArray[np.int8]:
 
 def decorate_rooms(map_entity: ecs.Entity, room_list: list[NDArray[np.bool_]]):
     seed = map_entity.components[np.random.RandomState]
-    kinds = [dining_room, library_room, center_decor_room, None, None]
+    kinds = [dining_room, library_room, center_decor_room, storage_room, None, None]
     indices = [i for i in range(len(kinds))]
     weights = [10.0 for k in kinds]
     for room in room_list:
@@ -1056,3 +1056,29 @@ def center_decor_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
         },
         tags={comp.Obstacle},
     )
+
+
+def storage_room(map_entity: ecs.Entity, room: NDArray[np.bool_], prob: float = 0.4):
+    seed = map_entity.components[np.random.RandomState]
+    depth = map_entity.components[comp.Depth]
+    rmoore = funcs.moore(room)
+    cx, cy = area_centroid(room)
+    x_grid, y_grid = np.indices(room.shape)
+    rand = seed.random(room.shape)
+    points = (
+        room
+        & (x_grid != int(cx))
+        & (y_grid != int(cy))
+        & (rmoore >= 8)
+        & (rand <= prob)
+    )
+    all_x, all_y = np.where(points)
+
+    for i in range(len(all_x)):
+        map_entity.registry.new_entity(
+            components={
+                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
+                comp.Sprite: comp.Sprite("Items/Chest0", (0, 1)),
+            },
+            tags={comp.Obstacle},
+        )
