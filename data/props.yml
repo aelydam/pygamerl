@@ -1,0 +1,100 @@
+Door:
+  Sprite: {sheet: Objects/Door0, tile: [0, 0]}
+  OpenSprite: {sheet: Objects/Door0, tile: [6, 0]}
+  ClosedSprite: {sheet: Objects/Door0, tile: [0, 0]}
+  LockedSprite: {sheet: Objects/Door0, tile: [2, 0]}
+  Interaction: ToggleDoor
+  tags: [Door]
+
+Torch:
+  Sprite: {sheet: "Objects/Decor0", tile: [0, 8]}
+  LightRadius: 7
+  Interaction: ToggleTorch
+  tags: [Lit]
+
+Downstairs:
+  Name: Stairs
+  Sprite: {sheet: "Objects/Tile", tile: [6, 3]}
+  Interaction: Descend
+  tags: [Downstairs]
+
+Upstairs:
+  Name: Stairs
+  Sprite: {sheet: "Objects/Tile", tile: [4, 3]}
+  Interaction: Ascend
+  tags: [Upstairs]
+
+Trap:
+  Sprite: {sheet: "Objects/Trap0", tile: [3, 3]}
+  Interaction: DisarmTrap
+  Initiative: 0
+  Range: 0
+  DamageDice: 1d4
+  AttackBonus: 10
+  XPGain: 5
+  tags: [Trap]
+
+Bones:
+  Name: ""
+  Sprite: {sheet: "Objects/Decor0", tile: [1, 12]}
+
+Boulder:
+  Sprite: {sheet: "Items/Rock", tile: [2, 1]}
+  Interaction: Boulder
+  tags: [Obstacle]
+
+Chest:
+  Sprite: {sheet: "Items/Chest0", tile: [1, 0]}
+  OpenSprite: {sheet: "Items/Chest1", tile: [1, 0]}
+  Interaction: OpenContainer
+  tags: [Obstacle, Chest]
+
+Barrel:
+  Sprite: {sheet: "Items/Chest0", tile: [0, 1]}
+  OpenSprite: {sheet: "Items/Chest1", tile: [0, 1]}
+  Interaction: OpenContainer
+  tags: [Obstacle, Chest]
+
+Table:
+  Name: ""
+  Sprite: {sheet: "Objects/Decor0", tile: [4, 7]}
+  tags: [Obstacle]
+
+Chair:
+  Name: ""
+  Sprite: {sheet: "Objects/Decor0", tile: [3, 7]}
+
+Empty Shelf:
+  Name: Shelf
+  Sprite: {sheet: "Objects/Decor0", tile: [0, 4]}
+  Interaction: OpenContainer
+  tags: [Obstacle, Opaque]
+
+Bookshelf:
+  Name: Shelf
+  Sprite: {sheet: "Objects/Decor0", tile: [5, 4]}
+  Interaction: OpenContainer
+  tags: [Obstacle, Opaque]
+
+Altar:
+  Sprite: {sheet: "Objects/Decor0", tile: [0, 20]}
+  tags: [Obstacle]
+
+Statue:
+  Sprite: {sheet: "Objects/Decor0", tile: [4, 20]}
+  tags: [Obstacle]
+
+Plaque:
+  Sprite: {sheet: "Objects/Decor0", tile: [1, 18]}
+  tags: [Obstacle]
+
+Fountain:
+  Sprite: {sheet: "Objects/Decor0", tile: [1, 21]}
+  tags: [Obstacle]
+
+Coffin:
+  Sprite: {sheet: "Objects/Decor0", tile: [6, 10]}
+  tags: [Obstacle]
+
+Throne:
+  Sprite: {sheet: "Objects/Decor0", tile: [6, 7]}

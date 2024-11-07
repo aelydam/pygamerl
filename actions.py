@@ -18,6 +18,7 @@ import funcs
 import game_logic
 import items
 import maps
+import procgen
 
 
 @dataclass
@@ -1004,12 +1005,8 @@ class Die(ActorAction):
         apos = self.actor.components[comp.Position]
         self.xy = apos.xy
         xp = self.actor.components.get(comp.XPGain)
-        self.actor.registry.new_entity(
-            components={
-                comp.Position: apos,
-                comp.Sprite: comp.Sprite("Objects/Decor0", (1, 12)),
-            }
-        )
+        map_entity = self.actor.relation_tag[comp.Map]
+        procgen.spawn_prop(map_entity, "Bones", apos.xy)
         if aname is not None:
             self.message = f"{aname} dies!"
         if self.blame is not None:

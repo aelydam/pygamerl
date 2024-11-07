@@ -72,6 +72,8 @@ def load_entity(
             else:
                 entity.tags |= {v}
             continue
+        if k == "Name" and v == "":
+            continue
         if k == "Inventory":
             if isinstance(v, list):
                 entity.components[comp.TempInventory] = {i: "1" for i in v}
@@ -89,6 +91,11 @@ def load_entity(
                 entity.components[comp.TempEquipment] = v
             elif isinstance(v, str):
                 entity.components[comp.TempEquipment] = [v]
+            continue
+        if k == "Interaction":
+            comp_key = getattr(comp, k)
+            comp_obj = getattr(actions, str(v))
+            entity.components[comp_key] = comp_obj
             continue
         if k == "Effects" or k[:2] == "On":
             if isinstance(v, dict):

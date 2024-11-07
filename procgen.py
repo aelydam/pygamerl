@@ -410,6 +410,16 @@ def prune(area: NDArray[np.bool_], min_area: int = 16) -> NDArray[np.bool_]:
     return grid
 
 
+def spawn_prop(
+    map_entity: ecs.Entity, kind: str, position: tuple[int, int]
+) -> ecs.Entity:
+    depth = map_entity.components[comp.Depth]
+    template = map_entity.registry[("props", kind)]
+    entity = template.instantiate()
+    entity.components[comp.Position] = comp.Position(position, depth)
+    return entity
+
+
 def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None):
     grid = map_entity.components[comp.Tiles]
     depth = map_entity.components[comp.Depth]
@@ -422,18 +432,8 @@ def add_doors(map_entity: ecs.Entity, condition: NDArray[np.bool_] | None = None
         doors &= condition
     all_x, all_y = np.where(doors)
     for x, y in zip(all_x, all_y):
-        door = map_entity.registry.new_entity(
-            components={
-                comp.Name: "Door",
-                comp.Position: comp.Position((x, y), depth),
-                comp.Sprite: comp.Sprite("Objects/Door0", (0, 0)),
-                comp.OpenSprite: comp.Sprite("Objects/Door0", (6, 0)),
-                comp.ClosedSprite: comp.Sprite("Objects/Door0", (0, 0)),
-                comp.LockedSprite: comp.Sprite("Objects/Door0", (2, 0)),
-                comp.Interaction: actions.ToggleDoor,
-            },
-            tags=[comp.Opaque, comp.Obstacle, comp.Door],
-        )
+        door = spawn_prop(map_entity, "Door", (x, y))
+        door.tags |= {comp.Opaque, comp.Obstacle}
 
 
 def add_torches(
@@ -467,16 +467,7 @@ def add_torches(
         all_x, all_y = np.where(available)
         i = seed.randint(0, len(all_x))
         x, y = all_x[i], all_y[i]
-        map_entity.registry.new_entity(
-            components={
-                comp.Name: "Torch",
-                comp.Position: comp.Position((int(x), int(y)), depth),
-                comp.Sprite: comp.Sprite("Objects/Decor0", (0, 8)),
-                comp.LightRadius: 7,
-                comp.Interaction: actions.ToggleTorch,
-            },
-            tags={comp.Lit},
-        )
+        torch = spawn_prop(map_entity, "Torch", (x, y))
         dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2
         available[dist2 < radius2] = False
     #
@@ -530,15 +521,7 @@ def add_downstairs(
         all_x, all_y = np.where(cond & (dijkstra >= cutoff))
         i = seed.randint(0, len(all_x))
         xy = all_x[i], all_y[i]
-        map_entity.registry.new_entity(
-            components={
-                comp.Name: "Stairs",
-                comp.Position: comp.Position(xy, depth),
-                comp.Sprite: comp.Sprite("Objects/Tile", (6, 3)),
-                comp.Interaction: actions.Descend,
-            },
-            tags=[comp.Downstairs],
-        )
+        spawn_prop(map_entity, "Downstairs", xy)
         dijkstra[xy] = 0
         tcod.path.dijkstra2d(dijkstra, cost, 2, 3, out=dijkstra)
 
@@ -568,28 +551,10 @@ def add_traps(
         x, y = all_x[i], all_y[i]
         dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2
         available[dist2 <= radius**2] = False
-        pos_comp = comp.Position((x, y), depth)
-        map_entity.registry.new_entity(
-            components={
-                comp.Name: "Trap",
-                comp.Position: pos_comp,
-                comp.Sprite: comp.Sprite("Objects/Trap0", (3, 3)),
-                comp.Initiative: 0,
-                comp.Range: 0,
-                comp.DamageDice: "1d4",
-                comp.AttackBonus: 10,
-                comp.XPGain: 5,
-                comp.Interaction: actions.DisarmTrap,
-            },
-            tags={comp.Trap, comp.Hidden},
-        )
+        trap = spawn_prop(map_entity, "Trap", (x, y))
+        trap.tags |= {comp.Hidden}
         if seed.randint(0, 100) <= 100 * bones_prob:
-            map_entity.registry.new_entity(
-                components={
-                    comp.Position: pos_comp,
-                    comp.Sprite: comp.Sprite("Objects/Decor0", (1, 12)),
-                }
-            )
+            spawn_prop(map_entity, "Bones", (x, y))
 
 
 def add_boulders(
@@ -616,15 +581,7 @@ def add_boulders(
         x, y = all_x[i], all_y[i]
         dist2 = (grid_x - x) ** 2 + (grid_y - y) ** 2
         available[dist2 <= radius**2] = False
-        map_entity.registry.new_entity(
-            components={
-                comp.Name: "Boulder",
-                comp.Position: comp.Position((x, y), depth),
-                comp.Sprite: comp.Sprite("Items/Rock", (2, 1)),
-                comp.Interaction: actions.Boulder,
-            },
-            tags={comp.Obstacle},
-        )
+        spawn_prop(map_entity, "Boulder", (x, y))
 
 
 def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
@@ -656,15 +613,7 @@ def add_upstairs_room(map_entity: ecs.Entity) -> NDArray[np.bool_]:
         y = min(max(1, point[1] - h // 2 + 1), consts.MAP_SHAPE[1] - h - 1)
         rooms |= rect_room(consts.MAP_SHAPE, x, y, w, h)
         rooms[point] = True
-        map_entity.registry.new_entity(
-            components={
-                comp.Name: "Stairs",
-                comp.Position: comp.Position(point, depth),
-                comp.Sprite: comp.Sprite("Objects/Tile", (4, 3)),
-                comp.Interaction: actions.Ascend,
-            },
-            tags=[comp.Upstairs],
-        )
+        spawn_prop(map_entity, "Upstairs", point)
     rooms[0, :] = False
     rooms[:, 0] = False
     rooms[-1, :] = False
@@ -779,16 +728,7 @@ def add_chests(map_entity: ecs.Entity, room_grid: NDArray[np.bool_]):
         i = seed.randint(0, len(all_x))
         pos = (all_x[i], all_y[i])
         # Spawn chest
-        chest = map_entity.registry.new_entity(
-            components={
-                comp.Name: "Chest",
-                comp.Position: comp.Position(pos, depth),
-                comp.Sprite: comp.Sprite("Items/Chest0", (1, 0)),
-                comp.OpenSprite: comp.Sprite("Items/Chest1", (1, 0)),
-                comp.Interaction: actions.OpenContainer,
-            },
-            tags={comp.Obstacle, comp.Chest},
-        )
+        chest = spawn_prop(map_entity, "Chest", pos)
         # Populate chest with items
         n_items = (seed.randint(1, 6) + seed.randint(1, 6)) // 2
         for _ in range(n_items):
@@ -985,25 +925,13 @@ def dining_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
     else:
         table = (x_grid == int(cx)) & (funcs.moore(rmoore >= 8) >= 8)
     all_x, all_y = np.where(table)
-    for i in range(len(all_x)):
-        map_entity.registry.new_entity(
-            components={
-                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
-                comp.Sprite: comp.Sprite("Objects/Decor0", (4, 7)),
-            },
-            tags={comp.Obstacle},
-        )
+    for x, y in zip(all_x, all_y):
+        spawn_prop(map_entity, "Table", (x, y))
     # Spawn chairs
     chairs = (funcs.moore(table, diagonals=False) > 0) & ~table & room
     all_x, all_y = np.where(chairs)
-    for i in range(len(all_x)):
-        map_entity.registry.new_entity(
-            components={
-                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
-                comp.Sprite: comp.Sprite("Objects/Decor0", (3, 7)),
-            },
-            tags={},
-        )
+    for x, y in zip(all_x, all_y):
+        spawn_prop(map_entity, "Chair", (x, y))
 
 
 def library_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
@@ -1023,57 +951,31 @@ def library_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
         if w >= 7:
             shelf &= x_grid != int(cx)
     all_x, all_y = np.where(shelf)
-    for i in range(len(all_x)):
-        k = seed.randint(4, 7)
-        if k == 4:
-            k = 0
-        map_entity.registry.new_entity(
-            components={
-                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
-                comp.Sprite: comp.Sprite("Objects/Decor0", (k, 4)),
-            },
-            tags={comp.Obstacle, comp.Opaque},
-        )
+    for x, y in zip(all_x, all_y):
+        if seed.randint(0, 10) < 5:
+            prop = "Empty Shelf"
+        else:
+            prop = "Bookshelf"
+        spawn_prop(map_entity, prop, (x, y))
 
 
 def center_decor_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
-    choices = [
-        ("Altar", comp.Sprite("Objects/Decor0", (0, 20))),
-        ("Statue", comp.Sprite("Objects/Decor0", (4, 20))),
-        ("Fountain", comp.Sprite("Objects/Decor0", (1, 21))),
-        ("Plaque", comp.Sprite("Objects/Decor0", (1, 18))),
-        ("Coffin", comp.Sprite("Objects/Decor0", (6, 10))),
-        ("Throne", comp.Sprite("Objects/Decor0", (6, 7))),
-    ]
+    choices = ["Altar", "Statue", "Fountain", "Plaque", "Coffin", "Throne"]
     seed = map_entity.components[np.random.RandomState]
     depth = map_entity.components[comp.Depth]
     w, h = int(room.sum(axis=0).max()), int(room.sum(axis=1).max())
     #
     cx, cy = area_centroid(room)
-    name, spr = choices[seed.randint(0, len(choices))]
-    map_entity.registry.new_entity(
-        components={
-            comp.Name: name,
-            comp.Position: comp.Position((cx, cy), depth),
-            comp.Sprite: spr,
-        },
-        tags={comp.Obstacle},
-    )
+    prop = choices[seed.randint(0, len(choices))]
+    spawn_prop(map_entity, prop, (cx, cy))
     #
     if min(w, h) <= consts.MIN_ROOM_SIZE + 2:
         return
     rmoore8 = funcs.moore(room) >= 8
     statues = room & rmoore8 & (funcs.moore(rmoore8) == 3)
     all_x, all_y = np.where(statues)
-    for i in range(len(all_x)):
-        map_entity.registry.new_entity(
-            components={
-                comp.Name: "Statue",
-                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
-                comp.Sprite: comp.Sprite("Objects/Decor0", (4, 20)),
-            },
-            tags={comp.Obstacle, comp.Opaque},
-        )
+    for x, y in zip(all_x, all_y):
+        spawn_prop(map_entity, "Statue", (x, y))
 
 
 def storage_room(map_entity: ecs.Entity, room: NDArray[np.bool_], prob: float = 0.4):
@@ -1092,11 +994,5 @@ def storage_room(map_entity: ecs.Entity, room: NDArray[np.bool_], prob: float = 
     )
     all_x, all_y = np.where(points)
 
-    for i in range(len(all_x)):
-        map_entity.registry.new_entity(
-            components={
-                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
-                comp.Sprite: comp.Sprite("Items/Chest0", (0, 1)),
-            },
-            tags={comp.Obstacle},
-        )
+    for x, y in zip(all_x, all_y):
+        spawn_prop(map_entity, "Barrel", (x, y))

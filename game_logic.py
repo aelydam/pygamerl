@@ -99,6 +99,7 @@ class GameLogic:
         db.load_data(self.reg, "conditions")
         db.load_data(self.reg, "items")
         db.load_data(self.reg, "creatures")
+        db.load_data(self.reg, "props")
         maps.get_map(self.reg, 0)
 
     def new_game(self) -> None:
