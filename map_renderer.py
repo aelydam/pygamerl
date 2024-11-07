@@ -59,8 +59,11 @@ class EntitySprite(pg.sprite.Sprite):
         self.hpbar: ui_elements.MapHPBar | None = None
         self.tooltip: ui_elements.MapHPBar | None = None
         self.tiles: list[list[pg.Surface]] = []
-        self.blank_surface = pg.Surface((1, 1)).convert_alpha()
+        self.blank_surface = pg.Surface(
+            (consts.TILE_SIZE, consts.TILE_SIZE)
+        ).convert_alpha()
         self.blank_surface.fill("#00000000")
+        self.image = self.blank_surface
         self.rect: pg.Rect
         self.frame = 0
         self.angle = -1
@@ -94,7 +97,7 @@ class EntitySprite(pg.sprite.Sprite):
         for j in range(consts.MAX_LIGHT_RADIUS + 1):
             tint = light_tint(consts.MAX_LIGHT_RADIUS - j)
             darkframes: list[pg.Surface] = []
-            for k, surf in enumerate(frames):
+            for surf in frames:
                 darksurf = surf.copy()
                 darksurf.fill(tint, special_flags=pg.BLEND_MULT)
                 darkframes.append(darksurf)
@@ -122,7 +125,7 @@ class EntitySprite(pg.sprite.Sprite):
             and not comp.HideSprite in self.entity.tags
             and not comp.Hidden in self.entity.tags
         )
-        if visible:
+        if visible or self.image is None:
             self.prepare_surfaces()
         self.x, self.y = pos.xy
         x, y = self.group.grid_to_screen(*pos.xy)
