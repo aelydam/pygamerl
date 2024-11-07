@@ -1043,9 +1043,12 @@ def center_decor_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
         ("Fountain", comp.Sprite("Objects/Decor0", (1, 21))),
         ("Plaque", comp.Sprite("Objects/Decor0", (1, 18))),
         ("Coffin", comp.Sprite("Objects/Decor0", (6, 10))),
+        ("Throne", comp.Sprite("Objects/Decor0", (6, 7))),
     ]
     seed = map_entity.components[np.random.RandomState]
     depth = map_entity.components[comp.Depth]
+    w, h = int(room.sum(axis=0).max()), int(room.sum(axis=1).max())
+    #
     cx, cy = area_centroid(room)
     name, spr = choices[seed.randint(0, len(choices))]
     map_entity.registry.new_entity(
@@ -1056,6 +1059,21 @@ def center_decor_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
         },
         tags={comp.Obstacle},
     )
+    #
+    if min(w, h) <= consts.MIN_ROOM_SIZE + 2:
+        return
+    rmoore8 = funcs.moore(room) >= 8
+    statues = room & rmoore8 & (funcs.moore(rmoore8) == 3)
+    all_x, all_y = np.where(statues)
+    for i in range(len(all_x)):
+        map_entity.registry.new_entity(
+            components={
+                comp.Name: "Statue",
+                comp.Position: comp.Position((all_x[i], all_y[i]), depth),
+                comp.Sprite: comp.Sprite("Objects/Decor0", (4, 20)),
+            },
+            tags={comp.Obstacle, comp.Opaque},
+        )
 
 
 def storage_room(map_entity: ecs.Entity, room: NDArray[np.bool_], prob: float = 0.4):
