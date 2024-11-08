@@ -39,7 +39,7 @@ def apply_condition_effect(condition: ecs.Entity, actor: ecs.Entity):
         return
     actor.relation_components[comp.ConditionTurns][condition] -= 1
     if actor.relation_components[comp.ConditionTurns][condition] < 1:
-        remove_action = actions.RemoveCondition(actor, condition)
+        remove_action = actions.RemoveCondition(actor, None, condition)
         game_logic.push_action(actor.registry, remove_action)
     if comp.Effects not in condition.components:
         return

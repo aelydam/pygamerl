@@ -153,7 +153,7 @@ def update_fov(actor: ecs.Entity):
         creatures = enemies_in_fov(actor)
         for e in creatures:
             if comp.Seen not in e.tags:
-                spot = actions.See(actor, e)
+                spot = actions.See(actor, None, e)
                 game_logic.push_action(actor.registry, spot)
 
 
@@ -368,7 +368,7 @@ def update_hunger(map_entity: ecs.Entity):
         was_hungry = is_hungry(e)
         if roll < 2:
             if was_hungry:
-                dmg = actions.Damage(e, "min(1d4,1d4)")
+                dmg = actions.Damage(e, None, "min(1d4,1d4)")
                 game_logic.push_action(e.registry, dmg)
             else:
                 e.components[comp.Hunger] += 1

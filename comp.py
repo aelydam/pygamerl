@@ -159,7 +159,9 @@ class Interaction(Protocol):
 
 
 class Effect(Protocol):
-    def __call__(self, actor: ecs.Entity, *args, **kwargs) -> actions.Action: ...
+    def __call__(
+        self, actor: ecs.Entity, blame: ecs.Entity | None, *args, **kwargs
+    ) -> actions.Action: ...
 
 
 Effects = ("Effects", dict[Effect, dict | list | str | int | None])

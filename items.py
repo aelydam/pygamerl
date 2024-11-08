@@ -229,7 +229,7 @@ def money(actor: ecs.Entity) -> float:
 def apply_effects(item: ecs.Entity, target: ecs.Entity) -> bool:
     if comp.Effects not in item.components:
         return False
-    actions.apply_effects(target, item.components[comp.Effects])
+    actions.apply_effects(target, item.components[comp.Effects], item)
     if comp.Consumable in item.tags:
         count = item.components.get(comp.Count, 1) - 1
         if count < 1:

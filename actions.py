@@ -40,6 +40,11 @@ class ActorAction(Action):
 
 
 @dataclass
+class Effect(ActorAction):
+    blame: ecs.Entity | None
+
+
+@dataclass
 class WaitAction(ActorAction):
     def perform(self) -> Action | None:
         initiative = self.actor.components.get(comp.Initiative, 0)
@@ -54,7 +59,7 @@ class WaitAction(ActorAction):
             seed = self.actor.registry[None].components[random.Random]
             roll = dice.dice_roll("1d20", seed)
             if roll >= 15:
-                heal = Heal(self.actor, "min(1d4,1d4)")
+                heal = Heal(self.actor, None, "min(1d4,1d4)")
                 game_logic.push_action(self.actor.registry, heal)
         self.cost = initiative
         return super().perform()
@@ -333,7 +338,9 @@ class AttackAction(ActorAction):
         tpos = self.target.components[comp.Position].xy
         self.actor.components[comp.Direction] = (tpos[0] - apos[0], tpos[1] - apos[1])
         # Push damage to action queue
-        damage = Damage(self.target, self.damage, self.crit, blame=self.actor)
+        damage = Damage(
+            self.target, blame=self.actor, amount=self.damage, critical=self.crit
+        )
         damage.append_message = True
         game_logic.push_action(self.target.registry, damage)
         self.message = text
@@ -506,7 +513,7 @@ class Search(ActorAction):
                 relations=[(comp.Map, map_entity)],
             )
             for e in query:
-                see = See(self.actor, e)
+                see = See(self.actor, None, e)
                 game_logic.push_action(self.actor.registry, see)
                 self.actor.components[comp.Direction] = d
                 found_something = True
@@ -775,7 +782,7 @@ class DisarmTrap(Interaction):
             and xp is not None
             and comp.XP in self.actor.components
         ):
-            gainxp = GainXP(self.actor, xp)
+            gainxp = GainXP(self.actor, self.target, xp)
             gainxp.append_message = True
             game_logic.push_action(self.actor.registry, gainxp)
         return self
@@ -802,7 +809,7 @@ class Descend(Interaction):
         if comp.XPGain in map_entity.components:
             xp = map_entity.components[comp.XPGain]
             if xp > 0:
-                gainxp = GainXP(self.actor, xp)
+                gainxp = GainXP(self.actor, None, xp)
                 gainxp.append_message = True
                 game_logic.push_action(self.actor.registry, gainxp)
             map_entity.components.pop(comp.XPGain)
@@ -906,7 +913,7 @@ class OpenContainer(Interaction):
 
 
 @dataclass
-class Heal(ActorAction):
+class Heal(Effect):
     amount: int | str
     critical: bool = False
 
@@ -929,7 +936,7 @@ class Heal(ActorAction):
 
 
 @dataclass
-class Eat(ActorAction):
+class Eat(Effect):
     amount: int | str
 
     def can(self) -> bool:
@@ -949,10 +956,9 @@ class Eat(ActorAction):
 
 
 @dataclass
-class Damage(ActorAction):
+class Damage(Effect):
     amount: int | str
     critical: bool = False
-    blame: ecs.Entity | None = None
 
     def can(self) -> bool:
         return comp.HP in self.actor.components
@@ -997,9 +1003,7 @@ class Damage(ActorAction):
 
 
 @dataclass
-class Die(ActorAction):
-    blame: ecs.Entity | None = None
-
+class Die(Effect):
     def perform(self) -> Action | None:
         aname = self.actor.components.get(comp.Name)
         apos = self.actor.components[comp.Position]
@@ -1011,7 +1015,7 @@ class Die(ActorAction):
             self.message = f"{aname} dies!"
         if self.blame is not None:
             if xp is not None and comp.XP in self.blame.components:
-                gain = GainXP(self.blame, xp)
+                gain = GainXP(self.blame, self.actor, xp)
                 gain.append_message = True
                 game_logic.push_action(self.actor.registry, gain)
             if comp.Player in self.blame.tags and ecs.IsA in self.actor.relation_tag:
@@ -1031,7 +1035,7 @@ class Die(ActorAction):
 
 
 @dataclass
-class GainXP(ActorAction):
+class GainXP(Effect):
     amount: int
 
     def can(self) -> bool:
@@ -1047,13 +1051,13 @@ class GainXP(ActorAction):
             aname = self.actor.components[comp.Name]
             self.message = f"{aname} gains {self.amount} points of experience"
         if entities.can_level_up(self.actor):
-            game_logic.push_action(self.actor.registry, LevelUp(self.actor))
+            game_logic.push_action(self.actor.registry, LevelUp(self.actor, None))
 
         return self
 
 
 @dataclass
-class LevelUp(ActorAction):
+class LevelUp(Effect):
     def can(self) -> bool:
         return entities.can_level_up(self.actor)
 
@@ -1075,12 +1079,12 @@ class LevelUp(ActorAction):
         if aname is not None:
             self.message = f"{aname} advances to level {new_level}!"
         if entities.can_level_up(self.actor):
-            game_logic.push_action(self.actor.registry, LevelUp(self.actor))
+            game_logic.push_action(self.actor.registry, LevelUp(self.actor, None))
         return self
 
 
 @dataclass
-class See(ActorAction):
+class See(Effect):
     target: ecs.Entity
 
     def can(self) -> bool:
@@ -1104,7 +1108,7 @@ class See(ActorAction):
 
 
 @dataclass
-class AddCondition(ActorAction):
+class AddCondition(Effect):
     condition: ecs.Entity | str
     turns: int | str
 
@@ -1131,7 +1135,7 @@ class AddCondition(ActorAction):
 
 
 @dataclass
-class RemoveCondition(ActorAction):
+class RemoveCondition(Effect):
     condition: ecs.Entity | str
 
     def can(self) -> bool:
@@ -1158,7 +1162,7 @@ class RemoveCondition(ActorAction):
 
 
 @dataclass
-class Split(ActorAction):
+class Split(Effect):
     minimum_hp: int = 3
 
     def can(self) -> bool:
@@ -1188,15 +1192,17 @@ class Split(ActorAction):
 
 
 def apply_effects(
-    actor: ecs.Entity, effects: dict[comp.Effect, dict | list | str | int | None]
+    actor: ecs.Entity,
+    effects: dict[comp.Effect, dict | list | str | int | None],
+    blame: ecs.Entity | None = None,
 ):
     for effect, args in effects.items():
         if isinstance(args, dict):
-            action = effect(actor, **args)
+            action = effect(actor, blame=blame, **args)
         elif isinstance(args, list):
-            action = effect(actor, *args)
+            action = effect(actor, blame, *args)
         elif args is not None:
-            action = effect(actor, args)
+            action = effect(actor, blame, args)
         else:
-            action = effect(actor)
+            action = effect(actor, blame)
         game_logic.push_action(actor.registry, action)
