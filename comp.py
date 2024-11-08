@@ -79,6 +79,7 @@ ActionCostMultiplier = ("ActionCostMultiplier", float)
 InitiativeMultiplier = ("InitiativeMultiplier", float)
 FOVLimit = ("FOVLimit", int)
 ConditionTurns = ("ConditionTurns", int)
+Text = ("Text", str)
 
 
 # Spawn components

@@ -196,12 +196,17 @@ class InGameState(game_interface.State):
             if isinstance(action, a):
                 return self.interface.play_sfx(sfx)
 
+    def read_callback(self, action: actions.Read):
+        if action.blame is not None:
+            self.interface.push(ReadingState(self, action.blame))
+
     def register_callbacks(self):
         self.logic.register_callback(actions.Damage, self.popup_callback)
         self.logic.register_callback(actions.Heal, self.popup_callback)
         self.logic.register_callback(actions.OpenContainer, self.container_callback)
         for action_class in audio.ACTION_SFX.keys():
             self.logic.register_callback(action_class, self.sfx_callback)
+        self.logic.register_callback(actions.Read, self.read_callback)
 
     def render(self, screen: pg.Surface):
         self.log.rect.bottomleft = (8, screen.height - 8)
@@ -825,3 +830,33 @@ class LoadGameState(game_interface.State):
         self.interface.logic.load_game(filename)
         self.interface.pop()
         self.interface.push(InGameState(self.interface))
+
+
+class ReadingState(game_interface.State):
+    def __init__(self, parent: InGameState, book: ecs.Entity):
+        super().__init__(parent)
+        self.book = book
+        self.ui_group: pg.sprite.Group = pg.sprite.Group()
+        title = items.display_name(book)
+        text = book.components.get(comp.Text, "[empty]")
+        self.textbok = gui_elements.Textbox(self.ui_group, text, 420, title)
+        self.update()
+
+    def update(self):
+        super().update()
+        w, h = self.interface.screen.size
+        self.textbok.rect.center = (w // 2, h // 2)
+        self.ui_group.update()
+
+    def render(self, screen: pg.Surface):
+        super().render(screen)
+        self.parent.render(screen)
+        self.ui_group.draw(screen)
+
+    def handle_event(self, event: pg.Event):
+        if event.type == pg.KEYUP:
+            if event.key in {pg.K_ESCAPE, pg.K_RETURN, pg.K_SPACE}:
+                self.interface.pop()
+        elif event.type == pg.MOUSEBUTTONUP:
+            if not self.textbok.rect.collidepoint(*event.pos):
+                self.interface.pop()

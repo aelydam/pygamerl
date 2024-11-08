@@ -950,13 +950,28 @@ def library_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
         shelf &= np.abs(y_grid - int(cy)) % 2 == 0
         if w >= 7:
             shelf &= x_grid != int(cx)
+    #
+    books = list(
+        map_entity.registry.Q.all_of(components=[comp.Text], tags=["books"])
+        .none_of(
+            components=[comp.Position],
+            relations=[(comp.Map, ...), (comp.Inventory, ...)],
+        )
+        .get_entities()
+    )
+    #
     all_x, all_y = np.where(shelf)
     for x, y in zip(all_x, all_y):
         if seed.randint(0, 10) < 5:
             prop = "Empty Shelf"
         else:
             prop = "Bookshelf"
-        spawn_prop(map_entity, prop, (x, y))
+        shelf = spawn_prop(map_entity, prop, (x, y))
+        if prop == "Empty Shelf":
+            continue
+        # Add book
+        kind = books[seed.randint(0, len(books))]
+        items.add_item(shelf, kind, 1)
 
 
 def center_decor_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):

@@ -1191,6 +1191,20 @@ class Split(Effect):
         return self
 
 
+class Read(Effect):
+    def can(self) -> bool:
+        return (
+            super().can()
+            and self.blame is not None
+            and comp.Text in self.blame.components
+        )
+
+    def perform(self) -> Action | None:
+        if not self.can():
+            return None
+        return self
+
+
 def apply_effects(
     actor: ecs.Entity,
     effects: dict[comp.Effect, dict | list | str | int | None],

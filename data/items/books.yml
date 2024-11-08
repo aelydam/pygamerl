@@ -1,0 +1,81 @@
+Lipsum vol I:
+  Unidentified: Book
+  Effects: Read
+  UsesVerb: reads
+  MaxStack: 4
+  Text: |
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+    Etiam auctor odio vitae elit pulvinar commodo.
+    Vivamus magna elit, ultrices id luctus eu, consectetur nec ante.
+    Suspendisse vulputate viverra tellus vitae euismod.
+    Suspendisse rutrum imperdiet neque vel faucibus.
+    Aenean lacus massa, pulvinar a tincidunt ut, convallis id dolor.
+    Aenean euismod quam id porta porta. Proin sed vulputate sapien.
+    Nulla in lacus accumsan, gravida urna ac, condimentum sem.
+    Mauris non finibus mauris.
+Lipsum vol II:
+  Unidentified: Book
+  Effects: Read
+  UsesVerb: reads
+  MaxStack: 4
+  Text: |
+    Ut malesuada mollis odio. In id facilisis erat.
+    Vestibulum quam dui, blandit sit amet suscipit eu, congue ac velit.
+    Aliquam aliquet est id justo hendrerit, ac feugiat elit mattis.
+    Proin et mauris metus. Pellentesque eget nulla ac turpis lacinia aliquet.
+    Nullam porttitor pulvinar volutpat. Cras eu pharetra leo.
+    Praesent vel luctus leo. Praesent vehicula non erat sed placerat.
+    Pellentesque auctor tellus in ultricies varius. Nam sit amet sodales eros.
+    Curabitur pharetra, lectus sit amet hendrerit pretium,
+    orci risus laoreet purus, at molestie diam ante quis felis.
+    Cras semper viverra tincidunt.
+Lipsum vol III:
+  Unidentified: Book
+  Effects: Read
+  UsesVerb: reads
+  MaxStack: 4
+  Text: |
+    Ut mi felis, pellentesque vel leo sed, vestibulum congue orci.
+    Cras ut turpis eros. Vivamus at metus augue.
+    Maecenas at augue a nisl aliquet feugiat id aliquam eros.
+    Curabitur vel quam efficitur, congue nisi non, ultrices lacus.
+    Duis at tincidunt metus, ut feugiat odio.
+    Integer ut neque sollicitudin, molestie ex at, cursus enim.
+    Praesent eget ex finibus, pretium odio et, congue lacus.
+    Proin cursus efficitur leo id consequat.
+    Morbi sit amet tempor velit, a euismod nulla.
+    Ut vel dignissim erat.
+    Morbi elementum libero et leo pharetra, congue viverra augue iaculis.
+Lipsum vol IV:
+  Unidentified: Book
+  Effects: Read
+  UsesVerb: reads
+  MaxStack: 4
+  Text: |
+    Sed sed laoreet ipsum. Nam nec luctus erat.
+    Vivamus sit amet sem vestibulum, pretium sapien sed, egestas risus.
+    Aenean tincidunt egestas cursus.
+    Donec at neque elementum, laoreet nisl ut, condimentum augue.
+    In hac habitasse platea dictumst.
+    Donec vel dapibus orci.
+    Proin scelerisque rutrum nisi, et tempor sem sollicitudin vitae.
+    Sed quis efficitur odio. Nulla eget vulputate nisi.
+    Sed eget magna a quam hendrerit suscipit in quis nisi.
+    Phasellus placerat convallis ligula, quis cursus enim feugiat et.
+    Fusce vel malesuada mauris. Nulla id metus eget diam placerat dignissim.
+    Vivamus sagittis ligula ut erat efficitur scelerisque non vitae elit.
+Lipsum vol V:
+  Unidentified: Book
+  Effects: Read
+  UsesVerb: reads
+  MaxStack: 4
+  Text: |
+    Integer quam purus, lacinia vel nulla nec, auctor finibus lacus.
+    Pellentesque aliquet tellus ac risus cursus imperdiet.
+    Maecenas viverra rhoncus dui ac aliquet.
+    Cras gravida urna a felis efficitur, sit amet finibus urna pharetra.
+    Duis non purus mattis ante rhoncus ullamcorper vel a mauris.
+    Maecenas placerat pharetra nulla, eget volutpat ante rhoncus eget.
+    Sed blandit, orci a dapibus varius, diam leo semper augue,
+    sit amet volutpat arcu quam nec neque.
+    Proin id tempus nisl, at rutrum enim.
