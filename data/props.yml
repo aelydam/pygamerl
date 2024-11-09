@@ -63,6 +63,9 @@ Table:
 Chair:
   Name: ""
   Sprite: {sheet: "Objects/Decor0", tile: [3, 7]}
+Chair2:
+  Name: ""
+  Sprite: {sheet: "Objects/Decor0", tile: [5, 7]}
 
 Empty Shelf:
   Name: Shelf

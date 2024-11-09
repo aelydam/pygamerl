@@ -931,7 +931,10 @@ def dining_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
     chairs = (funcs.moore(table, diagonals=False) > 0) & ~table & room
     all_x, all_y = np.where(chairs)
     for x, y in zip(all_x, all_y):
-        spawn_prop(map_entity, "Chair", (x, y))
+        if x > cx:
+            spawn_prop(map_entity, "Chair2", (x, y))
+        else:
+            spawn_prop(map_entity, "Chair", (x, y))
 
 
 def library_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
