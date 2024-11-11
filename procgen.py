@@ -996,21 +996,20 @@ def center_decor_room(map_entity: ecs.Entity, room: NDArray[np.bool_]):
         spawn_prop(map_entity, "Statue", (x, y))
 
 
-def storage_room(map_entity: ecs.Entity, room: NDArray[np.bool_], prob: float = 0.4):
+def storage_room(map_entity: ecs.Entity, room: NDArray[np.bool_], prob: float = 0.5):
     seed = map_entity.components[np.random.RandomState]
-    depth = map_entity.components[comp.Depth]
     rmoore = funcs.moore(room)
     cx, cy = area_centroid(room)
     x_grid, y_grid = np.indices(room.shape)
+    w, h = int(room.sum(axis=0).max()), int(room.sum(axis=1).max())
     rand = seed.random(room.shape)
-    points = (
-        room
-        & (x_grid != int(cx))
-        & (y_grid != int(cy))
-        & (rmoore >= 8)
-        & (rand <= prob)
-    )
+    points = room & (rmoore >= 8) & (rand <= prob)
+    if w > 6:
+        points &= x_grid != int(cx)
+    if h > 6:
+        points &= y_grid != int(cy)
     all_x, all_y = np.where(points)
-
+    props = ["Barrel", "Barrel", "Vase", "Logs"]
     for x, y in zip(all_x, all_y):
-        spawn_prop(map_entity, "Barrel", (x, y))
+        k = seed.randint(0, len(props))
+        spawn_prop(map_entity, props[k], (x, y))

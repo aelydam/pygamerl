@@ -17,7 +17,6 @@ Downstairs:
   Sprite: {sheet: "Objects/Tile", tile: [6, 3]}
   Interaction: Descend
   tags: [Downstairs]
-
 Upstairs:
   Name: Stairs
   Sprite: {sheet: "Objects/Tile", tile: [4, 3]}
@@ -54,12 +53,19 @@ Barrel:
   OpenSprite: {sheet: "Items/Chest1", tile: [0, 1]}
   Interaction: OpenContainer
   tags: [Obstacle, Chest]
+Vase:
+  Sprite: {sheet: "Objects/Decor0", tile: [1, 3]}
+  Interaction: OpenContainer
+  tags: [Obstacle, Chest]
+Logs:
+  Sprite: {sheet: "Objects/Decor0", tile: [6, 11]}
+  tags: [Obstacle]
+
 
 Table:
   Name: ""
   Sprite: {sheet: "Objects/Decor0", tile: [4, 7]}
   tags: [Obstacle]
-
 Chair:
   Name: ""
   Sprite: {sheet: "Objects/Decor0", tile: [3, 7]}
@@ -72,7 +78,6 @@ Empty Shelf:
   Sprite: {sheet: "Objects/Decor0", tile: [0, 4]}
   Interaction: OpenContainer
   tags: [Obstacle, Opaque]
-
 Bookshelf:
   Name: Shelf
   Sprite: {sheet: "Objects/Decor0", tile: [5, 4]}
@@ -82,22 +87,17 @@ Bookshelf:
 Altar:
   Sprite: {sheet: "Objects/Decor0", tile: [0, 20]}
   tags: [Obstacle]
-
 Statue:
   Sprite: {sheet: "Objects/Decor0", tile: [4, 20]}
   tags: [Obstacle]
-
 Plaque:
   Sprite: {sheet: "Objects/Decor0", tile: [1, 18]}
   tags: [Obstacle]
-
 Fountain:
   Sprite: {sheet: "Objects/Decor0", tile: [1, 21]}
   tags: [Obstacle]
-
 Coffin:
   Sprite: {sheet: "Objects/Decor0", tile: [6, 10]}
   tags: [Obstacle]
-
 Throne:
   Sprite: {sheet: "Objects/Decor0", tile: [6, 7]}
